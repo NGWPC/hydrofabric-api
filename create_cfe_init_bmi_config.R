@@ -1,4 +1,4 @@
-create_cfe_init_bmi_config = function(basins, data_dir){
+create_cfe_init_bmi_config = function(basins, data_dir, output_dir){
 
 # Derive initial parameters for CFE based on NWM v3 parameter files and 
 # create the BMI config files for each catchment in the selected basins
@@ -31,7 +31,7 @@ scheme <- "Schaake"
 sf1 <- data.frame()
 for (gage1 in basins) {
     str_gage1 <- ifelse(substr(gage1,1,1)=="0",substr(gage1,2,nchar(gage1)),gage1)
-    hydro_file <- paste0(data_dir,"Gage_",str_gage1,".gpkg")
+    hydro_file <- paste0(output_dir,"Gage_",str_gage1,".gpkg")
     sf0 <- read_sf(hydro_file, "divides")
     sf0$gage <- gage1
     sf1 <- rbind(sf1,sf0)
@@ -147,7 +147,7 @@ lines <- c(lines,paste0("num_timesteps=",n_timesteps))
 pars_in_order <- c("soil_params.depth","soil_params.b","soil_params.mult","soil_params.satdk",
     "soil_params.satpsi","soil_params.slop","soil_params.smcmax","soil_params.wltsmc")
 
-out_dir <- data_dir 
+out_dir <- output_dir 
 if (scheme=="Schaake") {
     out_dir <- paste0(out_dir,"CFE-S")
 } else if (scheme=="Xinanjiang") {

@@ -7,10 +7,11 @@ source('create_crosswalk_gwbucket_catchment.R')
 
 gage_ids <- eval(parse(text=args[1]))
 data_dir <- args[2]
+output_dir <- args[3]
 
 print("Running rasterize_basins")
-rasterize_basins(gage_ids, data_dir)
+rasterize_basins(gage_ids, data_dir, output_dir)
 print("Running create_crosswalk_gwbucket_catchment")
 create_crosswalk_gwbucket_catchment(data_dir)
 print("Running create_cfe_init_bmi_config")
-create_cfe_init_bmi_config(gage_ids, data_dir)
+create_cfe_init_bmi_config(gage_ids, data_dir, output_dir)
