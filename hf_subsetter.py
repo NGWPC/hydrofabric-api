@@ -19,7 +19,6 @@ import re
 import sys
 from datetime import datetime
 import tarfile
-import boto3
 from minio import Minio
 
 def hf_subsetter(gage_id, output_dir):
@@ -81,23 +80,9 @@ def hf_subsetter(gage_id, output_dir):
         write_minio(output_dir, tarfilename, s3url, s3bucket, s3prefix)
 
 
-def write_s3(path, filename, bucket_name, prefix=""):
-
-    session = boto3.Session(profile_name="218573839066_SoftwareEngineersFull")
-    s3 = session.resource('s3')
-    my_bucket = s3.Bucket(bucket_name)
-    if not prefix:
-       s3_filename = filename
-    else:
-       s3_filename = prefix + '/' + filename
-    try:
-        my_bucket.upload_file(path + filename, s3_filename)
-#   except client.meta.client.exceptions as error:
-    except:
-        print(error)
-
 def write_minio(path, filename, storage_url, bucket_name, prefix=""):
 
+    #these access keys are for testing only.  This will be updated to use the AWS Secrets Manager
     access_key = os.environ["AWS_ACCESS_KEY_ID"]
     secret_key = os.environ["AWS_SECRET_ACCESS_KEY"]
     session_token = os.environ["AWS_SESSION_TOKEN"]
