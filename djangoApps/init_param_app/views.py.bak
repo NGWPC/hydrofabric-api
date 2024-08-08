@@ -1,0 +1,41 @@
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from django.db import connection
+from collections import OrderedDict
+from .serializers import ModelSerializer, InitialParameterSerializer
+
+@api_view(['GET'])
+def get_models(request):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT model_id, name FROM public.models ORDER BY model_id ASC")
+        rows = cursor.fetchall()
+        results = [OrderedDict({"model_id": row[0], "name": row[1]}) for row in rows]
+        return Response(results, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def get_initial_parameters(request, model_type):
+    if not isinstance(model_type, str) or len(model_type) > 20:
+        return Response({"error": "Invalid model type"}, status=status.HTTP_400_BAD_REQUEST)
+
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT model_id FROM public.models WHERE name = %s", [model_type])
+        model_id = cursor.fetchone()
+        if not model_id:
+            return Response({"error": "Model not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        cursor.execute("""
+            SELECT sp.name, sp.units, sp.limits, sp.role 
+            FROM public.soil_params sp
+            WHERE sp.soil_id IN (
+                SELECT mpm.param_field_id_fk
+                FROM public.model_params_map mpm
+                JOIN public.models mdl ON mdl.model_id = mpm.model_id_fk
+                WHERE mdl.model_id = %s
+            )
+        """, [model_id[0]])
+        rows = cursor.fetchall()
+        column_names = [desc[0] for desc in cursor.description]
+        results = [OrderedDict(zip(column_names, row)) for row in rows]
+
+        return Response(results, status=status.HTTP_200_OK)
