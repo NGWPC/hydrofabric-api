@@ -3,7 +3,10 @@ args = commandArgs(trailingOnly = TRUE)
 library(hydrofabric)
 
 gauge_id = args[1]
-outfile = args[2]
-hydrofabric_data = args[3]
+outpath = args[2]
+outfile = args[3]
+hydrofabric_data = args[4]
 
-get_subset(hl_uri = gauge_id, source = hydrofabric_data, outfile = outfile)
+outpathfile = paste(outpath, outfile, sep="/")
+
+get_subset(hl_uri = gauge_id, source = hydrofabric_data, outfile = outpathfile)

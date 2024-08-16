@@ -1,4 +1,4 @@
-create_cfe_init_bmi_config = function(basins, data_dir, output_dir){
+create_cfe_init_bmi_config = function(basins, data_dir, output_dir, const_name, const_value, nwm_names, cfe_names, module_name){
 
 # Derive initial parameters for CFE based on NWM v3 parameter files and 
 # create the BMI config files for each catchment in the selected basins
@@ -24,8 +24,14 @@ end_date <- "20191231"
 n_timesteps <- length(seq(as.POSIXct(start_date,format="%Y%m%d"),as.POSIXct(end_date,format="%Y%m%d")+23*3600,by="hour"))
 
 # define surface partition scheme (infiltration scheme)
-scheme <- "Schaake"
-#scheme <- "Xinanjiang"
+
+if (model_name == "CFE-S")
+{
+    scheme <- "Schaake"
+} else if (model_name == "CFE-X")
+{
+    scheme <- "Xinanjiang"
+}
 
 # hydrofabric file for the basins (all catchments put together)
 sf1 <- data.frame()
@@ -44,11 +50,22 @@ r0 <- raster(mask_file)
 message("processing soil parameters ...")
 
 # NWM and cfe soil parameter name mapping
-pars_nwm <- c("bexp","dksat","psisat","slope","smcmax","smcwlt","AXAJ","BXAJ","XXAJ")
-pars_cfe <- c(paste0("soil_params.",c("b", "satdk","satpsi","slop","smcmax","wltsmc")),
-                "a_Xinanjiang_inflection_point_parameter",
-                "b_Xinanjiang_shape_parameter_set",
-                "x_Xinanjiang_shape_parameter")
+#pars_nwm <- c("bexp","dksat","psisat","slope","smcmax","smcwlt","AXAJ","BXAJ","XXAJ")
+#pars_cfe <- c(paste0("soil_params.",c("b", "satdk","satpsi","slop","smcmax","wltsmc")),
+#                "a_Xinanjiang_inflection_point_parameter",
+#                "b_Xinanjiang_shape_parameter_set",
+#                "x_Xinanjiang_shape_parameter")
+
+if (model_name == "CFE-S")
+{
+    pars_nwm <- nwm_names[1:6]
+    pars_cfe <- cfe_names[1:6]
+
+} else if (model_name == "CFE-X")
+{
+    pars_nwm <- nwm_names[1:9]
+    pars_cfe <- cfe_names[1:9]
+}
 
 # NWM v3 soil parameters
 soil_file <- paste0(data_dir, "soilproperties_CONUS_FullRouting.nc")
@@ -89,8 +106,11 @@ for (p1 in pars_nwm) {
 nc_close(nc)
 
 # set the remaining soil parameters of CFE to default values
-dtSoilPars[["soil_params.mult"]] <- 1000.0
-dtSoilPars[["soil_params.depth"]] <- 2.0
+#dtSoilPars[["soil_params.mult"]] <- 1000.0
+#dtSoilPars[["soil_params.depth"]] <- 2.0
+
+dtSoilPars[[const_name[8]]] <- const_value[8]
+dtSoilPars[[const_name[1]]] <- const_value[1]
 
 # Groundwater parameters
 message("processing groundwater parameters ...")
@@ -127,17 +147,26 @@ names(dtGwPars1) <- c("divide_id","gage","Cgw","expon","max_gw_storage")
 dtParsAll <- merge(dtSoilPars,dtGwPars1,by="divide_id")
 
 # set all other CFE parameters to default values 
-dtParsAll[["gw_storage"]] <- "50%"
-dtParsAll[["alpha_fc"]] <- 0.33
-dtParsAll[["soil_storage"]] <- "66.7%"
-dtParsAll[["K_lf"]] <- 0.1
-dtParsAll[["K_nash"]] <- 0.3
-dtParsAll[["nash_storage"]] <- "0.0,0.0"
+#dtParsAll[["gw_storage"]] <- "50%"
+#dtParsAll[["alpha_fc"]] <- 0.33
+#dtParsAll[["soil_storage"]] <- "66.7%"
+#dtParsAll[["K_lf"]] <- 0.1
+#dtParsAll[["K_nash"]] <- 0.3
+#dtParsAll[["nash_storage"]] <- "0.0,0.0"
+
+dtParsAll[[const_name[2]]] <- const_value[2]
+dtParsAll[[const_name[3]]] <- const_value[3]
+dtParsAll[[const_name[4]]] <- const_value[4]
+dtParsAll[[const_name[5]]] <- const_value[5]
+dtParsAll[[const_name[6]]] <- const_value[6]
+dtParsAll[[const_name[7]]] <- const_value[7]
+
 
 # The GIUH ordinates is also set to some default values here. 
 # More accurate estimates can be produced using the approached adopted in the following script in the ngen repo:
 # extern/cfe/cfe/params/src/generate_giuh_per_basin_params.py
-dtParsAll[["giuh_ordinates"]] <- "0.06,0.51,0.28,0.12,0.03"
+#dtParsAll[["giuh_ordinates"]] <- "0.06,0.51,0.28,0.12,0.03"
+dtParsAll[[const_name[9]]] <- const_value[9]
 
 # write the BMI configs file for CFE-S/CFE-X
 message("write BMI config with initial parameters ...")
