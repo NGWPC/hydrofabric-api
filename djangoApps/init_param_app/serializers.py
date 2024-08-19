@@ -33,3 +33,16 @@ class ModulesSerializer(serializers.Serializer):
     version_url = serializers.CharField(max_length=255, allow_blank=True, allow_null=True)
     commit_hash = serializers.CharField(max_length=255, allow_blank=True, allow_null=True)
     version_number = serializers.CharField(max_length=255, allow_blank=True, allow_null=True)
+
+class calibrateSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    description = serializers.CharField(max_length=255, allow_blank=True, allow_null=True)
+    min = serializers.CharField(max_length=255, allow_blank=True, allow_null=True)
+    max = serializers.CharField(max_length=255, allow_blank=True, allow_null=True)
+    data_type = serializers.CharField(max_length=255, allow_blank=True, allow_null=True)
+    units = serializers.CharField(max_length=255, allow_blank=True, allow_null=True)
+    calibrate = serializers.CharField(max_length=255, allow_blank=True, allow_null=True)
+
+class outputSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    description = serializers.CharField(max_length=255, allow_blank=True, allow_null=True)
