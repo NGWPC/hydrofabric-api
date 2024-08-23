@@ -287,8 +287,13 @@ def return_ipe(request):
     modules = request.data.get("modules")
 
     results = []
-    for module in modules:
-        resultsJSON = get_ipe(gage_id, module)
+    for module in enumerate(modules):
+
+        if module[0] > 0:
+            resultsJSON = get_ipe(gage_id, module[1], get_gpkg = False)
+        else:
+            resultsJSON = get_ipe(gage_id, module[1])
+
         if 'error' not in resultsJSON:
             x = json.loads(resultsJSON)
             results.append(x[0])

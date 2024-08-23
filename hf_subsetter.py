@@ -27,7 +27,7 @@ import yaml
 import logging
 
 
-def get_geopackage(gage_id, run_ipe = False):
+def get_geopackage(gage_id):
 
         logger = logging.getLogger(__name__)
 
@@ -56,16 +56,13 @@ def get_geopackage(gage_id, run_ipe = False):
         logger.info(status_str)
  
         #strip leading zero of gage ID for gpkg filename
-        subsetter_gage_id_filename = "Gage_"+gage_id.lstrip("0")
+        gpkg_filename = "Gage_"+gage_id.lstrip("0") + ".gpkg"
 
         #create directory for this particular subset
-        currentDateAndTime = datetime.now()
-        currentTime = currentDateAndTime.strftime("%Y%m%d_%H%M%S")        
-        subset_dir = subsetter_gage_id_filename + "_" + currentTime + "/"
-        subset_s3prefix = s3prefix + "/" + subsetter_gage_id_filename + "_" + currentTime
-        subset_dir_full = os.path.join(output_dir, subset_dir)
-        os.mkdir(subset_dir_full)
-        gpkg_filename = subsetter_gage_id_filename + ".gpkg"
+        subset_s3prefix = s3prefix + "/" + gage_id 
+        subset_dir_full = os.path.join(output_dir, gage_id)
+        if not os.path.exists(subset_dir_full):
+            os.mkdir(subset_dir_full)
 
         status_str = "Calling HF Subsetter R code"
         print(status_str)
@@ -90,25 +87,26 @@ def get_geopackage(gage_id, run_ipe = False):
         print(status_str)
         logger.info(status_str)
 
-        if run_ipe:
-            geopackage_dict = dict(creationDate = currentTime, uri = uri, subset_dir_full = subset_dir_full, gpkg_filename = gpkg_filename)
-            return geopackage_dict
-        else:
-            geopackage_dict = dict(creationDate = currentTime, uri = uri)
-            geopackage_json = json.dumps(geopackage_dict)
-            return geopackage_json
-            #return geopackage_dict 
+        currentDateAndTime = datetime.now()
+        currentTime = currentDateAndTime.strftime("%Y%m%d_%H%M%S")
 
-def get_ipe(gage_id, module):
+        geopackage_dict = dict(creationDate = currentTime, uri = uri)
+        geopackage_json = json.dumps(geopackage_dict)
+        return geopackage_json
+
+def get_ipe(gage_id, module, get_gpkg = True):
 
         logger = logging.getLogger(__name__)
 
-        geopackage_location = get_geopackage(gage_id, True)
-        if geopackage_location.get("error"):
-            geopackage_location = json.dumps(geopackage_location)
-            return geopackage_location
-        else:
-            subset_dir = geopackage_location["subset_dir_full"]
+        config = get_config()
+        output_dir = config['output_dir']
+
+        if get_gpkg:
+            results = get_geopackage(gage_id)
+            if 'error' in results: 
+                return results 
+
+        subset_dir = output_dir + "/" + gage_id + "/" 
        
         status_str = "Get IPEs for " + module
         print(status_str)
