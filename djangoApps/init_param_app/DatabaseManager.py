@@ -456,6 +456,7 @@ class DatabaseManager:
     #         return None, None
 
     def selectModuleCalibrateData(self, model_type):
+        model_type = model_type.upper()
         table_name = ""
         if model_type in ["CFE-S", "CFE-X"]:
             table_name = "cfe_params"
@@ -496,8 +497,9 @@ class DatabaseManager:
             # Debug output
             print("Column names:", column_names)
             print("Rows returned:", len(rows))
-            for row in rows:
-                print(row)
+            if  rows:
+                for row in rows:
+                    print(row)
 
             return column_names, rows
         except Exception as e:

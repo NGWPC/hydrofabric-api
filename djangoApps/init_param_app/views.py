@@ -118,6 +118,9 @@ def modules(request):
 
 @api_view(['GET'])
 def moduleMetaData(request, model_type):
+    if not isinstance(model_type, str) or len(model_type) > 20:
+        return Response({"error": "Invalid model type"}, status=status.HTTP_400_BAD_REQUEST)
+    model_type = model_type.upper()
     try:
         # Get the calibration parameters data
         calibrate_data_response = moduleCalibrateData(model_type)
@@ -130,9 +133,16 @@ def moduleMetaData(request, model_type):
         # Combine the data
         combined_data = OrderedDict()
         combined_data["module_name"] = model_type
-        combined_data["parameter_file"] = {"url": None}
-        combined_data["calibrate_parameters"] = calibrate_data_response["calibrate_parameters"]
-        combined_data["module_output_variables"] = out_variables_data_response["module_output_variables"]
+        if model_type == 'T-ROUTE':
+            print("The model type is T-ROUTE.")
+            combined_data["parameter_file"] = {"url": "s3://ngwpc-dev/DanielCumpton/T-Route/t_route_6719505.yml"}
+        else:
+            print("The model type is not T-ROUTE.")
+            combined_data["parameter_file"] = {"url": None}
+        if calibrate_data_response is not None:    
+            combined_data["calibrate_parameters"] = calibrate_data_response["calibrate_parameters"]
+        if out_variables_data_response is not None:
+            combined_data["module_output_variables"] = out_variables_data_response["module_output_variables"]
 
         return Response([combined_data], status=200)
 
@@ -142,6 +152,7 @@ def moduleMetaData(request, model_type):
 
 @api_view(['GET'])
 def get_model_parameters_total_count(request, model_type):
+    model_type = model_type.upper()
     if not isinstance(model_type, str) or len(model_type) > 20:
         return Response({"error": "Invalid model type"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -164,6 +175,7 @@ def get_model_parameters_total_count(request, model_type):
 
 @api_view(['GET'])
 def get_initial_parameters(request, model_type):
+    model_type = model_type.upper()
     if not isinstance(model_type, str) or len(model_type) > 20:
         return Response({"error": "Invalid model type"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -206,17 +218,19 @@ def get_initial_parameters(request, model_type):
         return Response({"Error executing query": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
  
 def moduleCalibrateData(model_type):
+    model_type = model_type.upper()
+    module_data = OrderedDict()
     try:
         with connection.cursor() as cursor:
             db = DatabaseManager(cursor)
             column_names, rows = db.selectModuleCalibrateData(model_type)
-
+            
             if column_names and rows:
-                module_data = OrderedDict()
                 module_data["module_name"] = model_type
-                module_data["parameter_file"] = {"url": ""}
+                module_data["parameter_file"] = {"url": None}
                 module_data["calibrate_parameters"] = []
-
+            
+            if len(rows)  != 0:
                 for row in rows:
                     param_data = {
                         "name": row[column_names.index("name")],
@@ -229,10 +243,10 @@ def moduleCalibrateData(model_type):
                         "calibratable": row[column_names.index("calibratable")]
                     }
                     module_data["calibrate_parameters"].append(param_data)
-
-                return  module_data 
             else:
-                return Response({"error": "No calibratable parameters found"}, status=404)
+                module_data = None
+                #return Response({"error": "No calibratable parameters found"}, status=404)
+        return  module_data 
     except Exception as e:
         print(f"Error executing selectModuleCalibrateData query: {e}")
         logger.error(f"Error executing query: {e}")
@@ -241,6 +255,7 @@ def moduleCalibrateData(model_type):
 
 #@api_view(['GET'])
 def moduleOutVariablesData(model_type):
+    model_type = model_type.upper()
     try:
         with connection.cursor() as cursor:
             db = DatabaseManager(cursor)
@@ -249,9 +264,10 @@ def moduleOutVariablesData(model_type):
             if column_names and rows:
                 module_data = OrderedDict()
                 module_data["module_name"] = model_type
-                module_data["parameter_file"] = {"url": ""}
+                module_data["parameter_file"] = {"url": "s3://ngwpc-dev/DanielCumpton/T-Route/t_route_6719505.yml"}
                 module_data["module_output_variables"] = []
 
+            if len(rows)  != 0:
                 for row in rows:
                     output_var_data = {
                         "name": row[column_names.index("name")],
@@ -259,10 +275,12 @@ def moduleOutVariablesData(model_type):
                     }
                     module_data["module_output_variables"].append(output_var_data)
 
-                return module_data
+                
             else:
-                return Response({"error": "No data found"}, status=404)
-
+                module_data = None
+                # return Response({"error": "No data found"}, status=404)
+        return module_data
+    
     except Exception as e:
         logger.error(f"Error executing query: {e}")
         return Response({"error": str(e)}, status=500)
