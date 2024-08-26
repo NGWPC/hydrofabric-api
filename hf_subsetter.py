@@ -29,6 +29,7 @@ import logging
 
 def get_geopackage(gage_id):
 
+        #setup logging
         logger = logging.getLogger(__name__)
 
         #get paths, etc from config.yml
@@ -47,7 +48,7 @@ def get_geopackage(gage_id):
             if not run_ipe:  error = json.dumps(error)
             return error
 
-	#call subsetter R function
+	#setup paths and geopackage name for hydrofabric subsetter R function call
 
         #append "Gages-" to id per hydrofabric naming convention for hl_uri
         subsetter_gage_id = "Gages-"+gage_id
@@ -58,7 +59,7 @@ def get_geopackage(gage_id):
         #strip leading zero of gage ID for gpkg filename
         gpkg_filename = "Gage_"+gage_id.lstrip("0") + ".gpkg"
 
-        #create directory for this particular subset
+        #create temp directory and s3 prefix for this particular subset
         subset_s3prefix = s3prefix + "/" + gage_id 
         subset_dir_full = os.path.join(output_dir, gage_id)
         if not os.path.exists(subset_dir_full):
@@ -68,6 +69,7 @@ def get_geopackage(gage_id):
         print(status_str)
         logger.info(status_str)
 
+        #Call R code for subsetter
         run_command = ["/usr/bin/Rscript ../run_subsetter.r", subsetter_gage_id, subset_dir_full, gpkg_filename, hydrofabric_dir]
         run_command_string = " ".join(run_command)
         
@@ -81,37 +83,43 @@ def get_geopackage(gage_id):
             logger.error(error_str)
             return error
 
-        #write_minio(subset_dir_full, gpkg_filename, s3url, s3bucket, subset_s3prefix)
+        # Write geopackage to s3 bucket
+        write_minio(subset_dir_full, gpkg_filename, s3url, s3bucket, subset_s3prefix)
         uri = build_uri(s3bucket, subset_s3prefix, gpkg_filename)
         status_str = "Written to S3 bucket: " + uri
         print(status_str)
         logger.info(status_str)
 
+        # Build output JSON
         currentDateAndTime = datetime.now()
         currentTime = currentDateAndTime.strftime("%Y%m%d_%H%M%S")
-
         geopackage_dict = dict(creationDate = currentTime, uri = uri)
         geopackage_json = json.dumps(geopackage_dict)
         return geopackage_json
 
 def get_ipe(gage_id, module, get_gpkg = True):
 
+        # Setup logging
         logger = logging.getLogger(__name__)
 
+        # Read config file for paths
         config = get_config()
         output_dir = config['output_dir']
 
+        # Get geopackage if needed
         if get_gpkg:
             results = get_geopackage(gage_id)
             if 'error' in results: 
                 return results 
 
-        subset_dir = output_dir + "/" + gage_id + "/" 
-       
+        # Build path for IPE temp directory
+        subset_dir = output_dir + "/" + gage_id + "/"      
+
         status_str = "Get IPEs for " + module
         print(status_str)
         logger.info(status_str)
  
+        # Call function for specific module
         if module == "CFE-S" or module == "CFE-X":
             results = cfe_ipe(gage_id, subset_dir, module)
             return results
@@ -130,12 +138,17 @@ def get_ipe(gage_id, module, get_gpkg = True):
 
 def cfe_ipe(gage_id, subset_dir, module):
 
+        # Setup logging
         logger = logging.getLogger(__name__)
 
+        # Get config file for paths
         config = get_config()
         input_dir = config['input_dir'] 
+        s3url = config['s3url']
+        s3bucket = config['s3bucket']
+        s3prefix = config['s3prefix']
 
-        #Run BMI config file R script
+        #Build input arguments for config file R script
         print("Create BMI config files with initial parameter estimates")
         #create string containing R c (combine) function and gage IDs
         #gage_id_string = ','.join(gage_id)
@@ -148,6 +161,8 @@ def cfe_ipe(gage_id, subset_dir, module):
         if module == 'CFE-S':
             importjson = open('../CFE-S.json')
         parameters = json.load(importjson)
+
+        # Create lists for passing CFE parameter names and constant values to R code
         cfe_parameters_nwm_name = []
         cfe_parameters_cfe_name =  []
         cfe_parameters_const_name = []
@@ -166,11 +181,6 @@ def cfe_ipe(gage_id, subset_dir, module):
         cfe_parameters_const_value = '"c(' + ",".join(cfe_parameters_const_value) + ')"' 
         cfe_parameters_nwm_name = '"c(' + ",".join(cfe_parameters_nwm_name) + ')"' 
         cfe_parameters_cfe_name = '"c(' + ",".join(cfe_parameters_cfe_name) + ')"' 
-
-        #print(cfe_parameters_const_name)
-        #print(cfe_parameters_const_value)
-        #print(cfe_parameters_nwm_name)
-        #print(cfe_parameters_cfe_name)
 
         run_command = ["/usr/bin/Rscript ../run_create_cfe_init_bmi_config.R",
         gage_id_string,
@@ -198,19 +208,15 @@ def cfe_ipe(gage_id, subset_dir, module):
             logger.error(error_str)
             return error
 
-        config = get_config()
-        s3url = config['s3url'] 
-        s3bucket = config['s3bucket'] 
-        s3prefix = config['s3prefix'] 
-
+        # CFE IPE R code uses Gage_6719505 format
         gage_id_full = "Gage_" + gage_id.lstrip("0")
-        s3prefix = s3prefix + "/" + gage_id_full + "/CFE-X"
+        s3prefix = s3prefix + "/" + gage_id + "/" + module
         
-        files = Path(subset_dir + "/" + module + "/" + gage_id_full).glob('*.ini')
+        files = Path(os.path.join(subset_dir, module, gage_id_full)).glob('*.ini')
         for file in files:
             print("writing: " + str(file) + " to s3")
             file_name = os.path.basename(file)
-            #write_minio(subset_dir + "/" + module + "/" + gage_id_full, file_name, s3url, s3bucket, s3prefix)
+            write_minio(subset_dir + "/" + module + "/" + gage_id_full, file_name, s3url, s3bucket, s3prefix)
 
         uri = build_uri(s3bucket, s3prefix)
         status_str = "Config files written to:  " + uri
@@ -218,7 +224,6 @@ def cfe_ipe(gage_id, subset_dir, module):
         logger.info(status_str)
 
         #write s3 location and ipe values to output json
-
         with open(file, 'r') as file:
             lines = file.readlines()
 
@@ -247,14 +252,8 @@ def cfe_ipe(gage_id, subset_dir, module):
 
         uri = build_uri(s3bucket, s3prefix)
         output[0]["parameter_file"]["url"] = uri
-
-        #outjson = output
         outjson = json.dumps(output)
-        #print("*******")
-        #print(type(outjson))
-        #pprint(output)
         return outjson
-
 
 def write_minio(path, filename, storage_url, bucket_name, prefix=""):
 
@@ -296,23 +295,3 @@ def get_config():
     with open('../config.yml', 'r') as file:
         config = yaml.safe_load(file)
     return config    
-
-#Call function for test.  
-
-#hf_config = get_config()
-#print(hf_config["hydrofabric_dir"])
-
-
-gage =  "06719505"
-
-#cfe_ipe(gage, "temp")
-
-#print(get_ipe(gage, "CFE-X"))
-
-#get_geopackage(gage)
-
-#print(get_geopackage(gage, True))
-
-#print(build_uri("ngwpc-dev", filename = "daniel")) 
-
-#write_minio("/home/hydrofabric_api/", "test.txt", "s3.amazonaws.com", "ngwpc-de")

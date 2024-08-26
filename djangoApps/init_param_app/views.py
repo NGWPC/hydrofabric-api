@@ -9,7 +9,7 @@ from .DatabaseManager import DatabaseManager
 import json
 
 import sys
-sys.path.append("/home/NGWPC-3201_3145/hydrofabric_api/")
+sys.path.append("/home/NGWPC-3201_3145/hydrofabric_api")
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='hf.log', level=logging.INFO)
