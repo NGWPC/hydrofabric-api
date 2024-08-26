@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import get_modules, get_initial_parameters,get_model_parameters_total_count,modules,moduleCalibrateData,moduleMetaData,moduleOutVariablesData
 
+
 urlpatterns = [
     path('api/initial_parameters/get_modules', get_modules, name='get_modules'),
     path('api/initial_parameters/modules', modules, name='modules'),

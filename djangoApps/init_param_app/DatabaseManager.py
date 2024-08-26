@@ -488,7 +488,6 @@ class DatabaseManager:
             m.name =  %s 
             AND p.calibratable = true
         """
-
         try:
             self.cursor.execute(query, (model_type,))
             rows = self.cursor.fetchall()

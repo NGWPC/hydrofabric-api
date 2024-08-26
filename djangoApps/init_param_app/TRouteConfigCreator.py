@@ -142,8 +142,9 @@ class TRouteConfigCreator:
     def test_create_troute_config(self):
         gpkg_file = "/home/raghav.vadhera/hydrofabric_api/s3/Gage_6719505.gpkg"
         rt_cfg_file = "t_route_6719505.yml"
-        start_date = "april 1, 2024"
+        start_date = "April 1, 2024"
         nts = 100
+        
         
         # Call the method with these inputs
         self.create_troute_config(gpkg_file, rt_cfg_file, start_date, nts)

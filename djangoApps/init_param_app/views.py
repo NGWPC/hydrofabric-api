@@ -135,7 +135,7 @@ def moduleMetaData(request, model_type):
         combined_data["module_name"] = model_type
         if model_type == 'T-ROUTE':
             print("The model type is T-ROUTE.")
-            combined_data["parameter_file"] = {"url": "s3://ngwpc-dev/DanielCumpton/T-Route/t_route_6719505.yml"}
+            combined_data["parameter_file"] = {"url": None}
         else:
             print("The model type is not T-ROUTE.")
             combined_data["parameter_file"] = {"url": None}
@@ -264,7 +264,7 @@ def moduleOutVariablesData(model_type):
             if column_names and rows:
                 module_data = OrderedDict()
                 module_data["module_name"] = model_type
-                module_data["parameter_file"] = {"url": "s3://ngwpc-dev/DanielCumpton/T-Route/t_route_6719505.yml"}
+                module_data["parameter_file"] = {"url": ""}
                 module_data["module_output_variables"] = []
 
             if len(rows)  != 0:
