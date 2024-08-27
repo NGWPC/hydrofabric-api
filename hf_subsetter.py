@@ -124,7 +124,7 @@ def get_ipe(gage_id, module, get_gpkg = True):
             results = cfe_ipe(gage_id, subset_dir, module)
             return results
         elif module == "Noah-OWP-Modular":
-            print("noah-owp")
+            noah_owp_modular_cfe(gage_id, subset_dir)
         elif module == "T-Route":
             print("T-route")
         else:
@@ -255,6 +255,140 @@ def cfe_ipe(gage_id, subset_dir, module):
         outjson = json.dumps(output)
         return outjson
 
+def noah_owp_modular_cfe(gage_id, subset_dir):
+
+    # Setup logging
+    logger = logging.getLogger(__name__)
+
+    #Get config file
+    config = get_config()
+    s3url = config['s3url']
+    s3bucket = config['s3bucket']
+    s3prefix = config['s3prefix']
+    
+    #setup output dir
+    subset_dir = os.path.join(subset_dir, 'Noah-OWP-Modular')
+    if not os.path.exists(subset_dir):
+        os.mkdir(subset_dir)
+
+
+    # Get list of catchments from gpkg
+
+    catchments = ['Cat-2885656', 'Cat-2885658', 'Cat-2885666']
+    
+    for catchment in catchments:
+        
+        startdate = '202408260000'
+        enddate = '202408260000'
+        noah_input_dir = 'test'
+
+        # Define namelist template
+
+        tslp = 'slope'
+        azimuth = 'azimuth' 
+        lat = 'lat'
+        lon = 'lon'
+        isltype = 'soil type'
+        vegtype = 'veg type'
+        sfctype = '1'
+
+        namelist = ['&timing',
+                "  " + "dt".ljust(19) +  "= 3600.0" + "                       ! timestep [seconds]",
+                "  " + "startdate".ljust(19) + "= " + "'" + startdate + "'" + "               ! UTC time start of simulation (YYYYMMDDhhmm)",
+                "  " + "enddate".ljust(19) + "= " + "'" + enddate + "'" + "               ! UTC time end of simulation (YYYYMMDDhhmm)",
+                "  " + "forcing_filename".ljust(19) + "= '.'" + "                          ! file containing forcing data",
+                "  " + "output_filename".ljust(19) + "= '.'",
+                '/',
+                "",
+                '&parameters',
+                "  " + "parameter_dir".ljust(19) + "= " + "'" + noah_input_dir + "'",
+                "  " + "general_table".ljust(19) + "= 'GENPARM.TBL'" + "                ! general param tables and misc params",
+                "  " + "soil_table".ljust(19) + "= 'SOILPARM.TBL'" + "               ! soil param table",
+                "  " + "noahowp_table".ljust(19) + "= 'MPTABLE.TBL'" + "                ! model param tables (includes veg)",
+                "  " + "soil_class_name".ljust(19) + "= 'STAS'" + "                       ! soil class data source - 'STAS' or 'STAS-RUC'",
+                "  " + "veg_class_name".ljust(19) + "= 'USGS'" + "                       ! vegetation class data source - 'MODIFIED_IGBP_MODIS_NOAH' or 'USGS'",
+                '/',
+                "",
+                '&location',
+                "  " + "lat".ljust(19) + "= " + str(lat) + "            ! latitude [degrees]  (-90 to 90)",
+                "  " + "lon".ljust(19) + "= " + str(lon) + "           ! longitude [degrees] (-180 to 180)",
+                "  " + "terrain_slope".ljust(19) + "= " + str(tslp) + "           ! terrain slope [degrees]",
+                "  " + "azimuth".ljust(19) + "= " + str(azimuth) + "           ! terrain azimuth or aspect [degrees clockwise from north]",
+                '/',
+                "",
+                "&forcing",
+                "  " + "ZREF".ljust(19) + "= 10.0" + "                         ! measurement height for wind speed (m)",
+                "  " + "rain_snow_thresh".ljust(19) + "= 0.5" + "                          ! rain-snow temperature threshold (degrees Celcius)",
+                "/",
+                "",
+                "&model_options",
+                "  " + "precip_phase_option".ljust(34) + "= 6",
+                "  " + "snow_albedo_option".ljust(34) + "= 1",
+                "  " + "dynamic_veg_option".ljust(34) + "= 4",
+                "  " + "runoff_option".ljust(34) + "= 3",
+                "  " + "drainage_option".ljust(34) + "= 8",
+                "  " + "frozen_soil_option".ljust(34) + "= 1",
+                "  " + "dynamic_vic_option".ljust(34) + "= 1",
+                "  " + "radiative_transfer_option".ljust(34) + "= 3",
+                "  " + "sfc_drag_coeff_option".ljust(34) + "= 1",
+                "  " + "canopy_stom_resist_option".ljust(34) + "= 1",
+                "  " + "crop_model_option".ljust(34) + "= 0",
+                "  " + "snowsoil_temp_time_option".ljust(34) + "= 3",
+                "  " + "soil_temp_boundary_option".ljust(34) + "= 2",
+                "  " + "supercooled_water_option".ljust(34) + "= 1",
+                "  " + "stomatal_resistance_option".ljust(34) + "= 1",
+                "  " + "evap_srfc_resistance_option".ljust(34) + "= 4",
+                "  " + "subsurface_option".ljust(34) + "= 2",
+                "/",
+                "",
+                "&structure",
+                "  " + "isltyp".ljust(17) + "= " + str(isltype) + "              ! soil texture class",
+                "  " + "nsoil".ljust(17) + "= 4              ! number of soil levels",
+                "  " + "nsnow".ljust(17) + "= 3              ! number of snow levels",
+                "  " + "nveg".ljust(17) + "= 27             ! number of vegetation type",
+                "  " + "vegtyp".ljust(17) + "= " + str(vegtype) + "             ! vegetation type",
+                "  " + "croptype".ljust(17) + "= 0              ! crop type (0 = no crops; this option is currently inactive)",
+                "  " + "sfctyp".ljust(17) + "= " + str(sfctype) + "              ! land surface type, 1:soil, 2:lake",
+                "  " + "soilcolor".ljust(17) + "= 4              ! soil color code",
+                "/",
+                "",
+                "&initial_values",
+                "  " + "dzsnso".ljust(10) + "= 0.0, 0.0, 0.0, 0.1, 0.3, 0.6, 1.0      ! level thickness [m]",
+                "  " + "sice".ljust(10) + "= 0.0, 0.0, 0.0, 0.0                     ! initial soil ice profile [m3/m3]",
+                "  " + "sh2o".ljust(10) + "= 0.3, 0.3, 0.3, 0.3                     ! initial soil liquid profile [m3/m3]",
+                "  " + "zwt".ljust(10) + "= -2.0                                   ! initial water table depth below surface [m]",
+                "/",
+                ]
+
+
+        cfg_filename = "noah-owp-modular-init-" + catchment + ".namelist.input"
+        cfg_filename_path = os.path.join(subset_dir, cfg_filename)
+        with open(cfg_filename_path, 'w') as outfile:
+                            outfile.writelines('\n'.join(namelist))
+                            outfile.write("\n")
+
+    s3prefix = s3prefix + '/' + gage_id + '/' + 'NOAH-OWP-Modular' 
+    files = Path(subset_dir).glob('*.input')
+    for file in files:
+        print("writing: " + str(file) + " to s3")
+        file_name = os.path.basename(file)
+        write_minio(subset_dir, file_name, s3url, s3bucket, s3prefix)
+
+    uri = build_uri(s3bucket, s3prefix)
+    status_str = "Config files written to:  " + uri
+    print(status_str)
+    logger.info(status_str)
+
+    importjson = open('NOAH-OWP-Modular.json')
+    output = json.load(importjson)
+
+    uri = build_uri(s3bucket, s3prefix)
+    output[0]["parameter_file"]["url"] = uri
+    outjson = json.dumps(output)
+    return outjson
+
+
+
 def write_minio(path, filename, storage_url, bucket_name, prefix=""):
 
         #these access keys are for testing only.  This will be updated to use the AWS Secrets Manager
@@ -292,6 +426,11 @@ def build_uri(bucket_name, prefix="", filename=""):
 
 def get_config():
 
-    with open('../config.yml', 'r') as file:
+    with open('config.yml', 'r') as file:
         config = yaml.safe_load(file)
-    return config    
+    return config
+
+gage_id = '06719505'
+dir = '/Hydrofabric/data/temp/06719505'
+print(noah_owp_modular_cfe(gage_id, dir))
+
