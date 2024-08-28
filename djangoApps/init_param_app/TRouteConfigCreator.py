@@ -193,7 +193,7 @@ class TRouteConfigCreator:
 # Pytest
 def test_create_troute_config():
     # Setup the input parameters
-    gpkg_file = "/home/raghav.vadhera/hydrofabric_api/s3/Gage_6719505.gpkg"
+    gpkg_file = "./s3/Gage_6719505.gpkg"
     rt_cfg_file = "t_route_6719505.yml"  # Use a temporary directory for the test file
     start_date = "April 1, 2024"
     nts = 100
