@@ -8,6 +8,7 @@ class DatabaseManager:
 
     def __init__(self,cursor):
         self.cursor = cursor
+        self.logger = logging.getLogger(__name__)  # Create a logger instance
 
     # The select method executes a generic SELECT query.
     def select(self, table, where_clause=None, params=None):
@@ -19,6 +20,7 @@ class DatabaseManager:
             return self.cursor.fetchall()
         except Exception as e:
             print(f"Error executing SELECT query: {e}")
+            self.logger.error(f"Error executing SELECT query: {e}")
             return None
         
     #  Fetches all modules and ids.
@@ -29,6 +31,7 @@ class DatabaseManager:
             return self.cursor.fetchall()
         except Exception as e:
             print(f"Error executing SELECT query: {e}")
+            self.logger.error(f"Error executing selectAllModules query: {e}")
             return None
 
 
@@ -54,6 +57,7 @@ class DatabaseManager:
             return column_names, rows
         except Exception as e:
             print(f"Error executing selectAllModulesDeatil query: {e}")
+            self.logger.error(f"Error executing selectAllModulesDetail query: {e}")
             return None, None
 
 
@@ -267,6 +271,7 @@ class DatabaseManager:
             return column_names, rows
         except Exception as e:
             print(f"Error executing selectModuleMetaData query: {e}")
+            self.logger.error(f"Error executing selectModuleMetaData query: {e}")
             return None, None
 
 
@@ -294,12 +299,14 @@ class DatabaseManager:
             ModelID = self.cursor.fetchone()[0]
         except Exception as e:
             print(f"Error executing selectModelID query: {e}")
+            self.logger.error(f"Error executing selectModelID query: {e}")
             return None, None
         try:
             self.cursor.execute(query2, (model_name,))
             ParamID = self.cursor.fetchone()[0]
         except Exception as e:
             print(f"Error executing selectParamID query: {e}")
+            self.logger.error(f"Error executing selectParamID query: {e}")
             return None, None
         
 
@@ -308,6 +315,7 @@ class DatabaseManager:
             ParamTblName = self.cursor.fetchone()[0]
         except Exception as e:
             print(f"Error executing selectParamName query4: {e}")
+            self.logger.error(f"Error executing selectParamName query: {e}")
             return None, None
         
         
@@ -331,7 +339,8 @@ class DatabaseManager:
             column_names = [desc[0] for desc in self.cursor.description]
             return column_names, rows
         except Exception as e:
-            print(f"Error executing selectInitialParamete4rs query: {e}")
+            print(f"Error executing selectInitialParameters query: {e}")
+            self.logger.error(f"Error executing selectInitialParameters query: {e}")
             return None, None
 
     def getModelParametersTotalCount(self, model_type):
@@ -353,6 +362,7 @@ class DatabaseManager:
             ParamID = self.cursor.fetchone()[0]
         except Exception as e:
             print(f"Error executing selectParamID query: {e}")
+            self.logger.error(f"Error executing selectParamID query: {e}")
             return None, None
         
 
@@ -361,6 +371,7 @@ class DatabaseManager:
             ParamTableName = self.cursor.fetchone()[0]
         except Exception as e:
             print(f"Error executing selectParamName query: {e}")
+            self.logger.error(f"Error executing selectParamName query: {e}")
             return None, None
         
         try:
@@ -368,6 +379,7 @@ class DatabaseManager:
             ModelID = self.cursor.fetchone()[0]
         except Exception as e:
             print(f"Error executing selectModelID query: {e}")
+            self.logger.error(f"Error executing selectModelID query: {e}")
             return None, None
         
         query4_1 = """SELECT COUNT(*) FROM public."""+ParamTableName
@@ -388,6 +400,7 @@ class DatabaseManager:
             return result[0] if result else None
         except Exception as e:
             print(f"Error executing selectInitialParameters query: {e}")
+            self.logger.error(f"Error executing selectInitialParameters query: {e}")
             return None
 
       
@@ -398,9 +411,9 @@ class DatabaseManager:
         try:
             self.cursor.execute(query, params)
             self.connection.commit()
-            print(f"{self.cursor.rowcount} row(s) updated")
+            self.logger.info(f"{self.cursor.rowcount} row(s) updated")
         except Exception as e:
-            print(f"Error executing UPDATE query: {e}")
+            self.logger.error(f"Error executing UPDATE query: {e}")
             self.connection.rollback()
 
     #  The delete method executes a DELETE query.change_me
@@ -409,6 +422,7 @@ class DatabaseManager:
             print(f"{self.cursor.rowcount} row(s) deleted")
         except Exception as e:
             print(f"Error executing DELETE query: {e}")
+            self.logger.error(f"Error executing DELETE query: {e}")
             self.connection.rollback()
 
 
@@ -447,7 +461,7 @@ class DatabaseManager:
     #         # Debug output
     #         print("Column names:", column_names)
     #         print("Rows returned:", len(rows))
-    #         for row in rows:
+    #         for row in rows:self.logger.error(f"Error executing selectInitialParameters query: {e}")
     #             print(row)
 
     #         return column_names, rows
@@ -503,6 +517,7 @@ class DatabaseManager:
             return column_names, rows
         except Exception as e:
             print(f"Error executing selectModuleCalibrateData query: {e}")
+            self.logger.error(f"Error executing selectModuleCalibrateData query: {e}")
             return None, None
 
 
@@ -527,6 +542,7 @@ class DatabaseManager:
             return column_names, rows
         except Exception as e:
             print(f"Error executing selectModuleOutVariablesData query: {e}")
+            self.logger.error(f"Error executing selectModuleOutVariablesData query: {e}")
             return None, None
 
 
