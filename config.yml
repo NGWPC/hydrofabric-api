@@ -3,4 +3,4 @@ output_dir: "/Hydrofabric/data/temp/"
 hydrofabric_dir: "/Hydrofabric/data/hydrofabric"
 s3url: "s3.amazonaws.com"
 s3bucket: "ngwpc-hydrofabric"
-s3prefix: ""
+s3prefix: ~

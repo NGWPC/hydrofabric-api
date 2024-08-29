@@ -9,7 +9,7 @@ from .DatabaseManager import DatabaseManager
 import json
 
 import sys
-sys.path.append("/home/NGWPC-3201_3145/hydrofabric_api")
+sys.path.append("/home/hydrofabric_api")
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='hf.log', level=logging.INFO)
@@ -290,17 +290,15 @@ def return_ipe(request):
     for module in enumerate(modules):
 
         if module[0] > 0:
-            resultsJSON = get_ipe(gage_id, module[1], get_gpkg = False)
+            module_results = get_ipe(gage_id, module[1], get_gpkg = False)
         else:
-            resultsJSON = get_ipe(gage_id, module[1])
+            module_results = get_ipe(gage_id, module[1])
 
-        if 'error' not in resultsJSON:
-            x = json.loads(resultsJSON)
-            results.append(x[0])
+        if 'error' not in module_results:
+            results.append(module_results[0])
         else:
-            results = resultsJSON
+            results = module_results 
             print(results)
             return Response(results, status=status.HTTP_404_NOT_FOUND)
 
-    results = json.dumps(results)
     return Response(results, status=status.HTTP_200_OK)
