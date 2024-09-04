@@ -10,6 +10,6 @@ urlpatterns = [
     path('api/initial_parameters/moduleCalibrateData/<str:model_type>', moduleCalibrateData, name='moduleCalibrateData'),
     path('api/initial_parameters/moduleOutVariablesData/<str:model_type>', moduleOutVariablesData, name='moduleOutVariablesData'),
     path("api/get_geopackage/geopackage/<str:gage_id>", return_geopackage, name='return_geopackage'),
-    path("api/get_geopackage/get_parameters/", return_ipe, name='return_ipe')
+    path("api/initial_parameters/get_parameters/", return_ipe, name='return_ipe')
     
 ]
