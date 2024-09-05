@@ -17,12 +17,9 @@ import os
 import subprocess
 import re
 import sys
-from datetime import datetime
-import tarfile
 from minio import Minio
 import json
 from pathlib import Path
-from pprint import pprint
 import yaml
 import logging
 import geopandas as gpd
@@ -50,7 +47,6 @@ def get_geopackage(gage_id):
         if not x:
             
             error = dict(error = "Gage ID is not valid")
-            if not run_ipe:  error = json.dumps(error)
             return error
 
 	#setup paths and geopackage name for hydrofabric subsetter R function call
@@ -65,7 +61,11 @@ def get_geopackage(gage_id):
         gpkg_filename = "Gage_"+gage_id.lstrip("0") + ".gpkg"
 
         #create temp directory and s3 prefix for this particular subset
-        subset_s3prefix = s3prefix + "/" + gage_id 
+        if s3prefix:
+            subset_s3prefix = s3prefix + "/" + gage_id
+        else:
+            subset_s3prefix = gage_id
+ 
         subset_dir_full = os.path.join(output_dir, gage_id)
         if not os.path.exists(subset_dir_full):
             os.mkdir(subset_dir_full)
@@ -83,7 +83,6 @@ def get_geopackage(gage_id):
         except:
             error_str = "Hydrofabric Subsetter R code failure"
             error = dict(error = error_str)
-            if not run_ipe:  error = json.dumps(error)
             print(error_str)
             logger.error(error_str)
             return error
@@ -95,12 +94,9 @@ def get_geopackage(gage_id):
         print(status_str)
         logger.info(status_str)
 
-        # Build output JSON
-        currentDateAndTime = datetime.now()
-        currentTime = currentDateAndTime.strftime("%Y%m%d_%H%M%S")
-        geopackage_dict = dict(creationDate = currentTime, uri = uri)
-        geopackage_json = json.dumps(geopackage_dict)
-        return geopackage_json
+        # Build output 
+        geopackage_output = dict(uri = uri)
+        return geopackage_output
 
 def get_ipe(gage_id, module, get_gpkg = True):
 
@@ -135,7 +131,6 @@ def get_ipe(gage_id, module, get_gpkg = True):
         else:
             error_str = "Module name not valid:" + module
             error = dict(error = error_str)
-            error = json.dumps(error)
             print(error_str)
             logger.error(error_str)
             return error 
@@ -208,15 +203,18 @@ def cfe_ipe(gage_id, subset_dir, module):
         except:
             error_str = "CFE IPE R code failure"
             error = dict(error = error_str) 
-            if not run_ipe:  error = json.dumps(error)
             print(error_str)
             logger.error(error_str)
             return error
 
         # CFE IPE R code uses Gage_6719505 format
         gage_id_full = "Gage_" + gage_id.lstrip("0")
-        s3prefix = s3prefix + "/" + gage_id + "/" + module
         
+        if s3prefix:
+            s3prefix = s3prefix + "/" + gage_id + "/" + module
+        else:
+            s3prefix = gage_id + "/" + module        
+
         files = Path(os.path.join(subset_dir, module, gage_id_full)).glob('*.ini')
         for file in files:
             print("writing: " + str(file) + " to s3")
@@ -257,8 +255,7 @@ def cfe_ipe(gage_id, subset_dir, module):
 
         uri = build_uri(s3bucket, s3prefix)
         output[0]["parameter_file"]["url"] = uri
-        outjson = json.dumps(output)
-        return outjson
+        return output
 
 def noah_owp_modular_cfe(gage_id, subset_dir):
 

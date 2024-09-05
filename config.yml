@@ -5,4 +5,4 @@ hydrofabric_version: "v2.1.1"
 hydrofabric_type:  "nextgen"
 s3url: "s3.amazonaws.com"
 s3bucket: "ngwpc-hydrofabric"
-s3prefix: ""
+s3prefix: ~

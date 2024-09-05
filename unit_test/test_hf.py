@@ -4,24 +4,27 @@ from hf_subsetter import get_geopackage
 import requests
 import json
 
+
+# nominal geopackage
 def test_gpkg():
     gage_id = "06719505"
-    output = "{\"creationDate\": \"20240822_224555\", \"uri\": \"s3://ngwpc-dev/DanielCumpton/Gage_6719505_20240822_224555/Gage_6719505.gpkg\"}"
+    output = '{"uri":"s3://ngwpc-hydrofabric/06719505/Gage_6719505.gpkg"}'
     url = 'http://127.0.0.1:8000/api/get_geopackage/geopackage/' + gage_id
     results = requests.get(url)
     results = results.text
     assert results == output
 
-
+# non-nominal geopackage:  bad gage ID
 def test_gpkg_bad_gage_id():
     
     gage_id = "0671950"
-    output = "{\"error\": \"Gage ID is not valid\"}"
+    output = {"error":"Gage ID is not valid"} 
     url = 'http://127.0.0.1:8000/api/get_geopackage/geopackage/' + gage_id
     results = requests.get(url)
     results = results.text
     assert results == output
 
+# nominal CFE-S and CFE-X IPE
 def test_good_ipe():
 
     f = open('good_ipe.json')
@@ -34,6 +37,7 @@ def test_good_ipe():
     results = results.text
     assert results == output
 
+# non-nominal get ipe bad gage id
 def test_get_ipe_bad_gage_id():
 
     url = 'http://127.0.0.1:8000/api/get_geopackage/get_parameters/'
@@ -42,7 +46,7 @@ def test_get_ipe_bad_gage_id():
     results = requests.post(url, data=payload, headers=headers)
     results = results.text
 
-    output = "{\"error\": \"Gage ID is not valid\"}"
+    output = {"error":"Gage ID is not valid"} 
     assert results == output
 
 def test_get_ipe_bad_module():
@@ -52,5 +56,5 @@ def test_get_ipe_bad_module():
     headers = {'Content-Type': 'application/json'}
     results = requests.post(url, data=payload, headers=headers)
     results = results.text
-    output = "{\"error\": \"Module name not valid:CFE\"}"
+    output = {"error":"Module name not valid:CFE"} 
     assert results == output
