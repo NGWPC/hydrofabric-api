@@ -125,7 +125,7 @@ def get_ipe(gage_id, module, get_gpkg = True):
             results = cfe_ipe(gage_id, subset_dir, module)
             return results
         elif module == "Noah-OWP-Modular":
-            results = noah_owp_modular_cfe(gage_id, subset_dir)
+            results = noah_owp_modular_ipe(gage_id, subset_dir)
             return results
         elif module == "T-Route":
             print("T-route")
@@ -258,7 +258,7 @@ def cfe_ipe(gage_id, subset_dir, module):
         output[0]["parameter_file"]["url"] = uri
         return output
 
-def noah_owp_modular_cfe(gage_id, subset_dir):
+def noah_owp_modular_ipe(gage_id, subset_dir):
 
     # Setup logging
     logger = logging.getLogger(__name__)
@@ -283,18 +283,48 @@ def noah_owp_modular_cfe(gage_id, subset_dir):
     # Get list of catchments from gpkg divides layer using geopandas
     gpkg_file = "Gage_"+gage_id.lstrip("0") + ".gpkg"
     gpkg_file = os.path.join(gpkg_dir, gpkg_file)    
-    divides_layer = gpd.read_file(gpkg_file, layer = "divides")
-    catchments = divides_layer["divide_id"].tolist()
+    try:
+        divides_layer = gpd.read_file(gpkg_file, layer = "divides")
+        try:
+            catchments = divides_layer["divide_id"].tolist()
+        except:
+            error_str = 'Error reading divides layer in ' + gpkg_file
+            error = dict(error = error_str) 
+            print(error_str)
+            logger.error(error_str)
+            return error
+    except:
+        error_str = 'Error opening ' + gpkg_file
+        error = dict(error = error_str) 
+        print(error_str)
+        logger.error(error_str)
+        return error
 
     #Read model attributes Hive partitioned Parquet dataset using pyarrow, remove rows containing null, convert to pandas dataframe
-    attr_path = os.path.join(hydrofabric_dir, hydrofabric_version, hydrofabric_type, 'conus_model-attributes')
-    attr = pq.read_table(attr_path)
+    attr_file = os.path.join(hydrofabric_dir, hydrofabric_version, hydrofabric_type, 'conus_model-attributes')
+    try:
+        attr = pq.read_table(attr_file)
+    except:
+        error_str = 'Error opening ' + attr_file
+        error = dict(error = error_str) 
+        print(error_str)
+        logger.error(error_str)
+        return error
+    
     attr = attr.drop_null()
     attr_df = pa.Table.to_pandas(attr)
     
     #filter rows with catchments in gpkg
     filtered = attr_df[attr_df['divide_id'].isin(catchments)]
 
+    if len(filtered) == 0:
+        error_str = 'No matching catchments in attribute file'
+        error = dict(error = error_str) 
+        print(error_str)
+        logger.error(error_str)
+        return error
+    
+    #Loop through catchments, get soil type, populate config file template, write config file to temp 
     for index, row in filtered.iterrows():
    
         catchment_id = row['divide_id']
@@ -384,7 +414,7 @@ def noah_owp_modular_cfe(gage_id, subset_dir):
                 "/",
                 ]
 
-
+    
         cfg_filename = "noah-owp-modular-init-" + catchment_id + ".namelist.input"
         cfg_filename_path = os.path.join(subset_dir, cfg_filename)
         with open(cfg_filename_path, 'w') as outfile:
@@ -396,6 +426,7 @@ def noah_owp_modular_cfe(gage_id, subset_dir):
     else:
         subset_s3prefix = gage_id  + '/' + 'NOAH-OWP-Modular'
 
+    #Get list of .input files in temp directory and copy to s3
     files = Path(subset_dir).glob('*.input')
     for file in files:
         print("writing: " + str(file) + " to s3")
@@ -407,9 +438,11 @@ def noah_owp_modular_cfe(gage_id, subset_dir):
     print(status_str)
     logger.info(status_str)
 
+    #Replace with call to database
     importjson = open('../NOAH-OWP-Modular.json')
     output = json.load(importjson)
-
+    
+    #fill in parameter files uri 
     output[0]["parameter_file"]["url"] = uri
     return output
 
