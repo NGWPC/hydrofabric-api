@@ -25,6 +25,11 @@ from pathlib import Path
 from pprint import pprint
 import yaml
 import logging
+import geopandas as gpd
+import pandas as pd
+import pyarrow.parquet as pq
+import pyarrow as pa
+
 
 
 def get_geopackage(gage_id):
@@ -265,18 +270,35 @@ def noah_owp_modular_cfe(gage_id, subset_dir):
     s3url = config['s3url']
     s3bucket = config['s3bucket']
     s3prefix = config['s3prefix']
+    hydrofabric_dir = config['hydrofabric_dir']
+    hydrofabric_version = config['hydrofabric_version']
+    hydrofabric_type = config['hydrofabric_type']
     
     #setup output dir
+    #first save the top level dir for the gpkg
+    gpkg_dir = subset_dir
     subset_dir = os.path.join(subset_dir, 'Noah-OWP-Modular')
     if not os.path.exists(subset_dir):
         os.mkdir(subset_dir)
 
 
-    # Get list of catchments from gpkg
+    # Get list of catchments from gpkg divides layer using geopandas
+    gpkg_file = Path(gpkg_dir).glob('*.gpkg')
+    divides_layer = gpd.read_file(gpkg_file, layer = "divides")
+    catchments = divides_layer["divide_id"].tolist()
 
-    catchments = ['Cat-2885656', 'Cat-2885658', 'Cat-2885666']
+    #Read model attributes Hive partitioned Parquet dataset using pyarrow, remove rows containing null, convert to pandas dataframe
+    attr_path = os.path.join(hydrofabric_dir, hydrofabric_version, hydrofabric_type, 'conus_model-attributes')
+    attr = pq.read_table(attr_path)
+    attr = attr.drop_null()
+    attr_df = pa.Table.to_pandas(attr)
     
-    for catchment in catchments:
+    #filter rows with catchments in gpkg
+    filtered = attr_df[attr_df['divide_id'].isin(catchments)]
+
+    for index, row in filtered.iterrows():
+   
+        catchment_id = row['divide_id']
         
         startdate = '202408260000'
         enddate = '202408260000'
@@ -284,14 +306,17 @@ def noah_owp_modular_cfe(gage_id, subset_dir):
 
         # Define namelist template
 
-        tslp = 'slope'
-        azimuth = 'azimuth' 
-        lat = 'lat'
-        lon = 'lon'
-        isltype = 'soil type'
-        vegtype = 'veg type'
-        sfctype = '1'
-
+        tslp = row['slope_mean']
+        azimuth = row['aspect_c_mean'] 
+        lat = row['Y']
+        lon = row['X']
+        isltype = row['ISLTYP']
+        vegtype = row['IVGTYP']
+        if vegtype == 16:
+            sfctype = '2'
+        else:
+            sfctype = '1'
+            
         namelist = ['&timing',
                 "  " + "dt".ljust(19) +  "= 3600.0" + "                       ! timestep [seconds]",
                 "  " + "startdate".ljust(19) + "= " + "'" + startdate + "'" + "               ! UTC time start of simulation (YYYYMMDDhhmm)",
@@ -361,7 +386,7 @@ def noah_owp_modular_cfe(gage_id, subset_dir):
                 ]
 
 
-        cfg_filename = "noah-owp-modular-init-" + catchment + ".namelist.input"
+        cfg_filename = "noah-owp-modular-init-" + catchment_id + ".namelist.input"
         cfg_filename_path = os.path.join(subset_dir, cfg_filename)
         with open(cfg_filename_path, 'w') as outfile:
                             outfile.writelines('\n'.join(namelist))
@@ -384,8 +409,7 @@ def noah_owp_modular_cfe(gage_id, subset_dir):
 
     uri = build_uri(s3bucket, s3prefix)
     output[0]["parameter_file"]["url"] = uri
-    outjson = json.dumps(output)
-    return outjson
+    return output
 
 
 
@@ -430,7 +454,7 @@ def get_config():
         config = yaml.safe_load(file)
     return config
 
-gage_id = '06719505'
-dir = '/Hydrofabric/data/temp/06719505'
-print(noah_owp_modular_cfe(gage_id, dir))
+#gage_id = '06719505'
+#dir = '/Hydrofabric/data/temp/06719505'
+#print(noah_owp_modular_cfe(gage_id, dir))
 

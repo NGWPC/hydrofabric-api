@@ -9,5 +9,5 @@ hydrofabric_data = args[4]
 
 outpathfile = paste(outpath, outfile, sep="/")
 
-get_subset(hl_uri = gauge_id, source = hydrofabric_data, outfile = outpathfile)
-#get_subset(hl_uri = gauge_id, source = hydrofabric_data, hf_version = "2.1.1", type = "nextgen", outfile = outpathfile)
+#get_subset(hl_uri = gauge_id, source = hydrofabric_data, outfile = outpathfile)
+get_subset(hl_uri = gauge_id, source = hydrofabric_data, hf_version = "2.1.1", type = "nextgen", outfile = outpathfile)
