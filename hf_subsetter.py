@@ -125,7 +125,8 @@ def get_ipe(gage_id, module, get_gpkg = True):
             results = cfe_ipe(gage_id, subset_dir, module)
             return results
         elif module == "Noah-OWP-Modular":
-            noah_owp_modular_cfe(gage_id, subset_dir)
+            results = noah_owp_modular_cfe(gage_id, subset_dir)
+            return results
         elif module == "T-Route":
             print("T-route")
         else:
@@ -280,7 +281,8 @@ def noah_owp_modular_cfe(gage_id, subset_dir):
 
 
     # Get list of catchments from gpkg divides layer using geopandas
-    gpkg_file = Path(gpkg_dir).glob('*.gpkg')
+    gpkg_file = "Gage_"+gage_id.lstrip("0") + ".gpkg"
+    gpkg_file = os.path.join(gpkg_dir, gpkg_file)    
     divides_layer = gpd.read_file(gpkg_file, layer = "divides")
     catchments = divides_layer["divide_id"].tolist()
 
@@ -389,26 +391,27 @@ def noah_owp_modular_cfe(gage_id, subset_dir):
                             outfile.writelines('\n'.join(namelist))
                             outfile.write("\n")
 
-    s3prefix = s3prefix + '/' + gage_id + '/' + 'NOAH-OWP-Modular' 
+    if s3prefix:
+        subset_s3prefix = s3prefix + "/" + gage_id + '/' + 'NOAH-OWP-Modular'
+    else:
+        subset_s3prefix = gage_id  + '/' + 'NOAH-OWP-Modular'
+
     files = Path(subset_dir).glob('*.input')
     for file in files:
         print("writing: " + str(file) + " to s3")
         file_name = os.path.basename(file)
-        write_minio(subset_dir, file_name, s3url, s3bucket, s3prefix)
+        write_minio(subset_dir, file_name, s3url, s3bucket, subset_s3prefix)
 
-    uri = build_uri(s3bucket, s3prefix)
+    uri = build_uri(s3bucket, subset_s3prefix)
     status_str = "Config files written to:  " + uri
     print(status_str)
     logger.info(status_str)
 
-    importjson = open('NOAH-OWP-Modular.json')
+    importjson = open('../NOAH-OWP-Modular.json')
     output = json.load(importjson)
 
-    uri = build_uri(s3bucket, s3prefix)
     output[0]["parameter_file"]["url"] = uri
     return output
-
-
 
 def write_minio(path, filename, storage_url, bucket_name, prefix=""):
 
@@ -447,7 +450,7 @@ def build_uri(bucket_name, prefix="", filename=""):
 
 def get_config():
 
-    with open('config.yml', 'r') as file:
+    with open('../config.yml', 'r') as file:
         config = yaml.safe_load(file)
     return config
 
