@@ -37,7 +37,9 @@ def get_geopackage(gage_id):
         #get paths, etc from config.yml
         config = get_config()
         output_dir = config['output_dir'] 
-        hydrofabric_dir = config['hydrofabric_dir'] 
+        hydrofabric_dir = config['hydrofabric_dir']
+        hydrofabric_version = config['hydrofabric_version']
+        hydrofabric_type = config['hydrofabric_type']
         s3url = config['s3url']
         s3bucket = config['s3bucket'] 
         s3prefix = config['s3prefix'] 
@@ -75,7 +77,13 @@ def get_geopackage(gage_id):
         logger.info(status_str)
 
         #Call R code for subsetter
-        run_command = ["/usr/bin/Rscript ../run_subsetter.r", subsetter_gage_id, subset_dir_full, gpkg_filename, hydrofabric_dir]
+        run_command = ["/usr/bin/Rscript ../run_subsetter.r",
+                        subsetter_gage_id,
+                        subset_dir_full, 
+                        gpkg_filename, 
+                        hydrofabric_dir, 
+                        hydrofabric_version.lstrip('v'),
+                        hydrofabric_type]
         run_command_string = " ".join(run_command)
         
         try:
@@ -444,6 +452,15 @@ def noah_owp_modular_ipe(gage_id, subset_dir):
     
     #fill in parameter files uri 
     output[0]["parameter_file"]["url"] = uri
+    # Get default values for calibratable initial parameters.
+    for x in range(len(output[0]["calibrate_parameters"])):
+            initial_values = output[0]["calibrate_parameters"][x]["initial_value"]
+            #If initial values are an array, get proper value for vegtype, otherwise use the single value.
+            if len(initial_values) > 1:
+                 output[0]["calibrate_parameters"][x]["initial_value"] = initial_values[vegtype - 1]
+            else:
+                 output[0]["calibrate_parameters"][x]["initial_value"] = initial_values[0]
+
     return output
 
 def write_minio(path, filename, storage_url, bucket_name, prefix=""):
