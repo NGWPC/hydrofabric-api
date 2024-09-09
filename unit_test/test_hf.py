@@ -30,7 +30,7 @@ def test_good_ipe():
     f = open('good_ipe.json')
     output = json.load(f)
 
-    url = 'http://127.0.0.1:8000/api/get_geopackage/get_parameters/'
+    url = 'http://127.0.0.1:8000/api/initial_parameters/get_parameters/'
     payload = '{"gage_id": "06719505", "modules": ["CFE-S", "CFE-X"]}'
     headers = {'Content-Type': 'application/json'}
     results = requests.post(url, data=payload, headers=headers)
@@ -40,7 +40,7 @@ def test_good_ipe():
 # non-nominal get ipe bad gage id
 def test_get_ipe_bad_gage_id():
 
-    url = 'http://127.0.0.1:8000/api/get_geopackage/get_parameters/'
+    url = 'http://127.0.0.1:8000/api/initial_parameters/get_parameters/'
     payload = '{"gage_id": "0671950", "modules": ["CFE-S", "CFE-X"]}'
     headers = {'Content-Type': 'application/json'}
     results = requests.post(url, data=payload, headers=headers)
@@ -51,10 +51,24 @@ def test_get_ipe_bad_gage_id():
 
 def test_get_ipe_bad_module():
 
-    url = 'http://127.0.0.1:8000/api/get_geopackage/get_parameters/'
+    url = 'http://127.0.0.1:8000/api/initial_parameters/get_parameters/'
     payload = '{"gage_id": "06719505", "modules": ["CFE-S", "CFE"]}' 
     headers = {'Content-Type': 'application/json'}
     results = requests.post(url, data=payload, headers=headers)
     results = results.text
     output = {"error":"Module name not valid:CFE"} 
     assert results == output
+
+# nominal NOAH-OWP-Modular
+def test_good_ipe_noah_owp():
+
+    f = open('noah_owp_modular.json')
+    output = json.load(f)
+
+    url = 'http://127.0.0.1:8000/api/initial_parameters/get_parameters/'
+    payload = '{"gage_id": "06710385", "modules": ["NOAH-OWP-Modular"]}'
+    headers = {'Content-Type': 'application/json'}
+    results = requests.post(url, data=payload, headers=headers)
+    results = results.text
+    assert results == output
+
