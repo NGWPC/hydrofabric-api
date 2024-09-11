@@ -223,7 +223,7 @@ def moduleCalibrateData(model_type):
                 for row in rows:
                     param_data = {
                         "name": row[column_names.index("name")],
-                        "initial_value": None,
+                        "initial_value": None, 
                         "description": row[column_names.index("description")],
                         "min": row[column_names.index("min")],
                         "max": row[column_names.index("max")],
@@ -272,8 +272,8 @@ def moduleOutVariablesData(model_type):
 
 @api_view(['GET'])
 def return_geopackage(request, gage_id):
-    from hf_subsetter import get_geopackage
-    results = get_geopackage(gage_id)
+    import geopackage
+    results = geopackage.get_geopackage(gage_id)
     if 'error' not in results:
         return Response(results, status=status.HTTP_200_OK)
     else:
@@ -281,7 +281,7 @@ def return_geopackage(request, gage_id):
 
 @api_view(['POST'])
 def return_ipe(request):
-    from hf_subsetter import get_ipe
+    import initial_parameters
     
     gage_id = request.data.get("gage_id")
     modules = request.data.get("modules")
@@ -290,9 +290,9 @@ def return_ipe(request):
     for module in enumerate(modules):
 
         if module[0] > 0:
-            module_results = get_ipe(gage_id, module[1], get_gpkg = False)
+            module_results = initial_parameters.get_ipe(gage_id, module[1], get_gpkg = False)
         else:
-            module_results = get_ipe(gage_id, module[1])
+            module_results = initial_parameters.get_ipe(gage_id, module[1])
 
         if 'error' not in module_results:
             results.append(module_results[0])
