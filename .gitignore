@@ -1,6 +1,9 @@
 # Ignore the source Hydrofabric data
 Hydrofabric/
 
+# There's a default log file here. Let's not commit it before we get these things moved and configurable
+hf.log
+
 # Ignore vs code settings
 .vscode/
 
