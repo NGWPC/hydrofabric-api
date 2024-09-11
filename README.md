@@ -37,7 +37,7 @@ This project allows the use of Docker and Visual Studio Code (VS Code) to create
 - Docker and Docker Compose installed on your machine.
 - Visual Studio Code (VS Code) installed with the Remote - Containers extension.
 - GitLab credentials
-- Hydrofabric Data from: s3://ngwpc-dev/DanielCumpton/hydrofabric_data.tgz in a directory at the root of this code repo called: Hydrofabric (It is already in .gitignore, to prevent accidentlaly be committing the code)
+- Hydrofabric Data from: s3://ngwpc-hydrofabric/hydrofabric_data.tgz in a directory at the root of this code repo called: Hydrofabric (It is already in .gitignore, to prevent accidentlaly be committing the code)
 - A dump of the hydrofabric_db that can be loaded to your local dev database
 
 ### Dev Container Structure
