@@ -1,0 +1,19 @@
+# Ignore the source Hydrofabric data
+Hydrofabric/
+
+# Ignore vs code settings
+.vscode/
+
+# Ignore Python bytecode files
+*.pyc
+
+# Ignore __pycache__ directories
+__pycache__/
+
+# Ignore other common Python artifacts
+*.pyo
+*.pyd
+*.db
+*.sqlite
+*.env
+*.venv

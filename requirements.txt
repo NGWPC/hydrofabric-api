@@ -1,0 +1,5 @@
+# We need to lock this down to FOSS approved versions...
+Django
+djangorestframework
+psycopg2
+requests
