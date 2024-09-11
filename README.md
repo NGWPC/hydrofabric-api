@@ -29,6 +29,27 @@
                  
 10.)  Files are written to the s3 bucket and you can see them in the temp directory (/Hydrofabric/data/temp)
 
+## Running via Docker
+
+To ease integration testing for the other teams, we've tried to simplify the basic setup requirements for running an instance of the Hydrofabric API that you can target.
+
+### Prerequisites
+- Docker installed on your machine.
+- AWS CLI
+- AWS Credentials (SoftwareEngineersFull or Admin) set as ENV vars with access to the Data Account for S3 Access
+- Sudo
+- An ENV var populated with DB_PASSWORD (speak with a team member for this)
+
+### Getting started
+We've added a Makefile with 3 targets to make things easier.
+       - make get_deps
+              This make target will connect to S3 and download a prerequisite docker image and hydrofabric data
+       - make build
+              This make target will build a docker image with the required dependencies to run the Python and R code in this repo.
+       - make run
+              This make target will start the docker container and run the django web service on port 8000
+
+
 ## Development Setup with VS Code and Docker (Dev Containers)
 
 This project allows the use of Docker and Visual Studio Code (VS Code) to create a development environment for a Python 3.11 application with PostgreSQL and the intial Hydrofabric base requirements. This guide will walk you through the setup of your development environment using devcontainer.json, docker-compose.yml, and Dockerfile.
