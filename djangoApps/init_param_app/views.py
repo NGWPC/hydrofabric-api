@@ -7,9 +7,9 @@ from .serializers import ModelSerializer, InitialParameterSerializer
 import logging
 from .DatabaseManager import DatabaseManager
 import json
+from .hf_subsetter import *
 
 import sys
-sys.path.append("/home/hydrofabric_api")
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='hf.log', level=logging.INFO)
@@ -272,7 +272,6 @@ def moduleOutVariablesData(model_type):
 
 @api_view(['GET'])
 def return_geopackage(request, gage_id):
-    from hf_subsetter import get_geopackage
     results = get_geopackage(gage_id)
     if 'error' not in results:
         return Response(results, status=status.HTTP_200_OK)
@@ -281,7 +280,6 @@ def return_geopackage(request, gage_id):
 
 @api_view(['POST'])
 def return_ipe(request):
-    from hf_subsetter import get_ipe
     
     gage_id = request.data.get("gage_id")
     modules = request.data.get("modules")
