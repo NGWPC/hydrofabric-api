@@ -25,6 +25,7 @@ ENV DB_HOST=10.6.0.173
 ENV DB_PORT=5432
 ENV DB_NAME=hydrofabric_db
 ENV DB_ENGINE=django.db.backends.postgresql_psycopg2
+ENV LD_LIBRARY_PATH=/usr/local/lib64
 
 EXPOSE 8000
 WORKDIR /workspace/djangoApps/
