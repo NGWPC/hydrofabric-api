@@ -29,25 +29,26 @@
                  
 10.)  Files are written to the s3 bucket and you can see them in the temp directory (/Hydrofabric/data/temp)
 
-## Running via Docker
+## Running via Docker (for integration / dev purposes)
 
-To ease integration testing for the other teams, we've tried to simplify the basic setup requirements for running an instance of the Hydrofabric API that you can target.
+To ease integration testing for the other teams, we've tried to simplify the basic setup requirements for running an instance of the Hydrofabric API that you can target.  This configuration targets a centralized Development Postgres DB shared by internal team members. You will need appropriate credentials and should be gentle.
 
 ### Prerequisites
 - Docker installed on your machine.
-- AWS CLI
-- AWS Credentials (SoftwareEngineersFull or Admin) set as ENV vars with access to the Data Account for S3 Access
-- Sudo
-- An ENV var populated with DB_PASSWORD (speak with a team member for this)
+- AWS CLI installed on your machine.
+- AWS Credentials (SoftwareEngineersFull or Admin) against the Data account set as ENV var appropriate for CLI access.
+- Sudo (for docker commands)  This technically is workable without sudo if you configured your docker engine appropriately, but that is... uncommon...
+- An ENV var populated with DB_PASSWORD (speak with a team member for this, and it will likely change soon)
 
 ### Getting started
 We've added a Makefile with 3 targets to make things easier.
+
        - make get_deps
-              This make target will connect to S3 and download a prerequisite docker image and hydrofabric data
+              This make target will connect to S3 and download a prerequisite docker image and hydrofabric data. Additionally it will load the docker image into your local docker registry.
        - make build
-              This make target will build a docker image with the required dependencies to run the Python and R code in this repo.
+              This make target will build a docker image with the required dependencies to run the Python and R code in this repo from the root of this repo.
        - make run
-              This make target will start the docker container and run the django web service on port 8000
+              This make target will start the docker container and run the django web service on port 8000. This should also be run from the root of this repo.
 
 
 ## Development Setup with VS Code and Docker (Dev Containers)
