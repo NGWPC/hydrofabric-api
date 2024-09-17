@@ -1,9 +1,9 @@
 #An interface between the Rscript command line arguments and the R functions
 args = commandArgs(trailingOnly = TRUE)
 
-source('/home/NGWPC-3201_GPKG_endpoint/hydrofabric_api/create_cfe_init_bmi_config.R')
-source('/home/NGWPC-3201_GPKG_endpoint/hydrofabric_api/rasterize_basins.R')
-source('/home/NGWPC-3201_GPKG_endpoint/hydrofabric_api/create_crosswalk_gwbucket_catchment.R')
+source('../create_cfe_init_bmi_config.R')
+source('../rasterize_basins.R')
+source('../create_crosswalk_gwbucket_catchment.R')
 
 gage_ids <- eval(parse(text=args[1]))
 data_dir <- args[2]
