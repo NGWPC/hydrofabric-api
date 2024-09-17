@@ -7,9 +7,11 @@ from .serializers import ModelSerializer, InitialParameterSerializer
 import logging
 from .DatabaseManager import DatabaseManager
 import json
-
 import sys
-sys.path.append("/home/hydrofabric_api")
+
+from .geopackage import *
+from .initial_parameters import *
+#sys.path.append("/home/hydrofabric_api")
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='hf.log', level=logging.INFO)
@@ -272,8 +274,8 @@ def moduleOutVariablesData(model_type):
 
 @api_view(['GET'])
 def return_geopackage(request, gage_id):
-    import geopackage
-    results = geopackage.get_geopackage(gage_id)
+    #import geopackage
+    results = get_geopackage(gage_id)
     if 'error' not in results:
         return Response(results, status=status.HTTP_200_OK)
     else:
@@ -281,7 +283,7 @@ def return_geopackage(request, gage_id):
 
 @api_view(['POST'])
 def return_ipe(request):
-    import initial_parameters
+    #import initial_parameters
     
     gage_id = request.data.get("gage_id")
     modules = request.data.get("modules")
@@ -290,9 +292,9 @@ def return_ipe(request):
     for module in enumerate(modules):
 
         if module[0] > 0:
-            module_results = initial_parameters.get_ipe(gage_id, module[1], get_gpkg = False)
+            module_results = get_ipe(gage_id, module[1], get_gpkg = False)
         else:
-            module_results = initial_parameters.get_ipe(gage_id, module[1])
+            module_results = get_ipe(gage_id, module[1])
 
         if 'error' not in module_results:
             results.append(module_results[0])

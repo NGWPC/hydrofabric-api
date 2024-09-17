@@ -3,7 +3,7 @@ import json
 import yaml
 import logging
 
-import utilities
+from .utilities import *
 
 def t_route_ipe(gage_id, subset_dir):
     ''' 
@@ -21,7 +21,7 @@ def t_route_ipe(gage_id, subset_dir):
     logger = logging.getLogger(__name__) 
 
     #Get config file
-    config = utilities.get_config()
+    config = get_config()
     s3url = config['s3url']
     s3bucket = config['s3bucket']
     s3prefix = config['s3prefix']
@@ -169,15 +169,15 @@ def t_route_ipe(gage_id, subset_dir):
     else:
         subset_s3prefix = gage_id  + '/' + 'T-Route'
 
-    utilities.write_minio(subset_dir, output_filename, s3url, s3bucket, subset_s3prefix)
+    write_minio(subset_dir, output_filename, s3url, s3bucket, subset_s3prefix)
 
-    uri = utilities.build_uri(s3bucket, subset_s3prefix)
+    uri = build_uri(s3bucket, subset_s3prefix)
     status_str = "Config files written to:  " + uri
     print(status_str)
     logger.info(status_str)
 
     #Replace with call to database
-    importjson = open('../troute.json')
+    importjson = open('init_param_app/troute.json')
     output = json.load(importjson)
     
     #fill in parameter files uri 

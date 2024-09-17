@@ -3,7 +3,8 @@ import subprocess
 import re
 import logging
 
-import utilities
+#import utilities
+from .utilities import *
 
 def get_geopackage(gage_id):     
     '''
@@ -20,7 +21,7 @@ def get_geopackage(gage_id):
     logger = logging.getLogger(__name__)
 
     #get paths, etc from config.yml
-    config = utilities.get_config()
+    config = get_config()
     output_dir = config['output_dir'] 
     hydrofabric_dir = config['hydrofabric_dir']
     hydrofabric_version = config['hydrofabric_version']
@@ -81,8 +82,8 @@ def get_geopackage(gage_id):
         return error
 
     # Write geopackage to s3 bucket
-    utilities.write_minio(subset_dir_full, gpkg_filename, s3url, s3bucket, subset_s3prefix)
-    uri = utilities.build_uri(s3bucket, subset_s3prefix, gpkg_filename)
+    write_minio(subset_dir_full, gpkg_filename, s3url, s3bucket, subset_s3prefix)
+    uri = build_uri(s3bucket, subset_s3prefix, gpkg_filename)
     status_str = "Written to S3 bucket: " + uri
     print(status_str)
     logger.info(status_str)

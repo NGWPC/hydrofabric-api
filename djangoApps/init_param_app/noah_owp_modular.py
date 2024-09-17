@@ -8,7 +8,7 @@ import pandas as pd
 import pyarrow.parquet as pq
 import pyarrow as pa
 
-import utilities
+from .utilities import *
 
 def noah_owp_modular_ipe(gage_id, subset_dir):
     ''' 
@@ -26,7 +26,7 @@ def noah_owp_modular_ipe(gage_id, subset_dir):
     logger = logging.getLogger(__name__)
 
     #Get config file
-    config = utilities.get_config()
+    config = get_config()
     s3url = config['s3url']
     s3bucket = config['s3bucket']
     s3prefix = config['s3prefix']
@@ -127,8 +127,8 @@ def noah_owp_modular_ipe(gage_id, subset_dir):
                 "",
                 '&location',
                 "  " + "lat".ljust(19) + "= " + str(lat) + "            ! latitude [degrees]  (-90 to 90)",
-                "  " + "lon".ljust(19) + "= " + str(lon) + "           ! longitude [degrees] (-180 to 180)",
-                "  " + "terrain_slope".ljust(19) + "= " + str(tslp) + "           ! terrain slope [degrees]",
+                "  " + "lon".ljust(19) + "= " + str(lon) + "          ! longitude [degrees] (-180 to 180)",
+                "  " + "terrain_slope".ljust(19) + "= " + str(tslp) + "            ! terrain slope [degrees]",
                 "  " + "azimuth".ljust(19) + "= " + str(azimuth) + "           ! terrain azimuth or aspect [degrees clockwise from north]",
                 '/',
                 "",
@@ -193,15 +193,15 @@ def noah_owp_modular_ipe(gage_id, subset_dir):
     for file in files:
         print("writing: " + str(file) + " to s3")
         file_name = os.path.basename(file)
-        utilities.write_minio(subset_dir, file_name, s3url, s3bucket, subset_s3prefix)
+        write_minio(subset_dir, file_name, s3url, s3bucket, subset_s3prefix)
 
-    uri = utilities.build_uri(s3bucket, subset_s3prefix)
+    uri = build_uri(s3bucket, subset_s3prefix)
     status_str = "Config files written to:  " + uri
     print(status_str)
     logger.info(status_str)
 
     #Replace with call to database
-    importjson = open('../NOAH-OWP-Modular.json')
+    importjson = open('init_param_app/NOAH-OWP-Modular.json')
     output = json.load(importjson)
     
     #fill in parameter files uri 

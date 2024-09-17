@@ -1,10 +1,11 @@
 import logging
 
-import geopackage
-import cfe
-import noah_owp_modular
-import t_route
-import utilities
+#import geopackage
+from .geopackage import *
+from .cfe import *
+from .noah_owp_modular import *
+from .t_route import *
+from .utilities import *
 
 def get_ipe(gage_id, module, get_gpkg = True):     
     '''
@@ -23,12 +24,12 @@ def get_ipe(gage_id, module, get_gpkg = True):
     logger = logging.getLogger(__name__)
 
     # Read config file for paths
-    config = utilities.get_config()
+    config = get_config()
     output_dir = config['output_dir']
 
     # Get geopackage if needed
     if get_gpkg:
-        results = geopackage.get_geopackage(gage_id)
+        results = get_geopackage(gage_id)
         if 'error' in results: 
             return results 
 
@@ -41,13 +42,13 @@ def get_ipe(gage_id, module, get_gpkg = True):
 
     # Call function for specific module
     if module == "CFE-S" or module == "CFE-X":
-        results = cfe.cfe_ipe(gage_id, subset_dir, module)
+        results = cfe_ipe(gage_id, subset_dir, module)
         return results
     elif module == "Noah-OWP-Modular":
-        results = noah_owp_modular.noah_owp_modular_ipe(gage_id, subset_dir)
+        results = noah_owp_modular_ipe(gage_id, subset_dir)
         return results
     elif module == "T-Route":
-        results = t_route.t_route_ipe(gage_id, subset_dir)
+        results = t_route_ipe(gage_id, subset_dir)
         return results
     else:
         error_str = "Module name not valid:" + module

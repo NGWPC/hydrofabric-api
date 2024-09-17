@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import logging
 
-import utilities
+from .utilities import *
 
 def cfe_ipe(gage_id, subset_dir, module):
     ''' 
@@ -23,7 +23,7 @@ def cfe_ipe(gage_id, subset_dir, module):
     logger = logging.getLogger(__name__)
 
     # Get config file for paths
-    config = utilities.get_config()
+    config = get_config()
     input_dir = config['input_dir'] 
     s3url = config['s3url']
     s3bucket = config['s3bucket']
@@ -36,9 +36,9 @@ def cfe_ipe(gage_id, subset_dir, module):
 
     #this will be replaced with a call to the database when connectivity is available in the container
     if module == 'CFE-X':
-        importjson = open('../CFE-X.json')
+        importjson = open('init_param_app/CFE-X.json')
     if module == 'CFE-S':
-        importjson = open('../CFE-S.json')
+        importjson = open('init_param_app/CFE-S.json')
     parameters = json.load(importjson)
 
     # Create lists for passing CFE parameter names and constant values to R code
@@ -98,9 +98,9 @@ def cfe_ipe(gage_id, subset_dir, module):
     for file in files:
         print("writing: " + str(file) + " to s3")
         file_name = os.path.basename(file)
-        utilities.write_minio(subset_dir + "/" + module + "/" + gage_id_full, file_name, s3url, s3bucket, s3prefix)
+        write_minio(subset_dir + "/" + module + "/" + gage_id_full, file_name, s3url, s3bucket, s3prefix)
 
-    uri = utilities.build_uri(s3bucket, s3prefix)
+    uri = build_uri(s3bucket, s3prefix)
     status_str = "Config files written to:  " + uri
     print(status_str)
     logger.info(status_str)
@@ -117,14 +117,14 @@ def cfe_ipe(gage_id, subset_dir, module):
 
     #this will be replaced with a call to the database when the connection is possible in the container
     if module == 'CFE-S':
-        importjson = open('../calibratable_cfe-s.json')
+        importjson = open('init_param_app/calibratable_cfe-s.json')
     if module == 'CFE-X':
-        importjson = open('../calibratable_cfe-x.json')
+        importjson = open('init_param_app/calibratable_cfe-x.json')
     output = json.load(importjson)
 
     for x in range(len(output[0]["calibrate_parameters"])):
         output[0]["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[output[0]["calibrate_parameters"][x]["name"]]
         
-    uri = utilities.build_uri(s3bucket, s3prefix)
+    uri = build_uri(s3bucket, s3prefix)
     output[0]["parameter_file"]["url"] = uri
     return output
