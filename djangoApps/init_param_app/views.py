@@ -7,9 +7,10 @@ from .serializers import ModelSerializer, InitialParameterSerializer
 import logging
 from .DatabaseManager import DatabaseManager
 import json
-from .hf_subsetter import *
-
 import sys
+
+from .geopackage import *
+from .initial_parameters import *
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='hf.log', level=logging.INFO)
@@ -223,7 +224,7 @@ def moduleCalibrateData(model_type):
                 for row in rows:
                     param_data = {
                         "name": row[column_names.index("name")],
-                        "initial_value": None,
+                        "initial_value": None, 
                         "description": row[column_names.index("description")],
                         "min": row[column_names.index("min")],
                         "max": row[column_names.index("max")],
@@ -280,7 +281,6 @@ def return_geopackage(request, gage_id):
 
 @api_view(['POST'])
 def return_ipe(request):
-    
     gage_id = request.data.get("gage_id")
     modules = request.data.get("modules")
 

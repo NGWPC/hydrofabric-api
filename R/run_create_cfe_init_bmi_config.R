@@ -14,11 +14,6 @@ nwm_names <- eval(parse(text=args[6]))
 cfe_names <- eval(parse(text=args[7]))
 model_name <- args[8]
 
-print(const_names)
-print(const_values)
-print(nwm_names)
-print(cfe_names)
-
 print("Running rasterize_basins")
 rasterize_basins(gage_ids, data_dir, output_dir)
 print("Running create_crosswalk_gwbucket_catchment")
