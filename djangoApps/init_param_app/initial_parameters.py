@@ -7,13 +7,14 @@ from .noah_owp_modular import *
 from .t_route import *
 from .utilities import *
 
-def get_ipe(gage_id, module, get_gpkg = True):     
+def get_ipe(gage_id, module, module_metadata, get_gpkg = True):     
     '''
     Build initial parameter estimates (IPE) for a module.  
 
     Parameters:
     gage_id (str):  The gage ID, e.g., 06710385
-    module str: Module name
+    module (str): Module name
+    module_metadata (dict):  dictionary containing URI, initial parameters, output variables
     get_gpkg (bool):  Option to not create a geopackage if false
 
     Returns:
@@ -42,13 +43,13 @@ def get_ipe(gage_id, module, get_gpkg = True):
 
     # Call function for specific module
     if module == "CFE-S" or module == "CFE-X":
-        results = cfe_ipe(gage_id, subset_dir, module)
+        results = cfe_ipe(gage_id, subset_dir, module, module_metadata)
         return results
     elif module == "Noah-OWP-Modular":
-        results = noah_owp_modular_ipe(gage_id, subset_dir)
+        results = noah_owp_modular_ipe(gage_id, subset_dir, module_metadata)
         return results
     elif module == "T-Route":
-        results = t_route_ipe(gage_id, subset_dir)
+        results = t_route_ipe(gage_id, subset_dir, module_metadata)
         return results
     else:
         error_str = "Module name not valid:" + module

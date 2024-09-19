@@ -271,6 +271,24 @@ def moduleOutVariablesData(model_type):
         logger.error(f"Error executing query: {e}")
         return Response({"error": str(e)}, status=500)
 
+def get_module_metadata(module_name):
+
+        calibrate_data_response = moduleCalibrateData(module_name)
+        #calibrate_data = calibrate_data_response.data[0]  # Assuming the structure is consistent
+
+        # Get the output variables data
+        out_variables_data_response = moduleOutVariablesData(module_name)
+        #out_variables_data = out_variables_data_response.data[0]  # Assuming the structure is consistent
+
+        # Combine the data
+        combined_data = OrderedDict()
+        combined_data["module_name"] = module_name
+        combined_data["parameter_file"] = {"url": None}
+        combined_data["calibrate_parameters"] = calibrate_data_response["calibrate_parameters"]
+        combined_data["module_output_variables"] = out_variables_data_response["module_output_variables"]
+
+        return combined_data
+
 @api_view(['GET'])
 def return_geopackage(request, gage_id):
     results = get_geopackage(gage_id)

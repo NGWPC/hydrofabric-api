@@ -6,7 +6,7 @@ import logging
 
 from .utilities import *
 
-def cfe_ipe(gage_id, subset_dir, module):
+def cfe_ipe(gage_id, subset_dir, module, module_metadata):
     ''' 
     Build initial parameter estimates (IPE) for CFE-S and CFE-X 
 
@@ -14,6 +14,7 @@ def cfe_ipe(gage_id, subset_dir, module):
     gage_id (str):  The gage ID, e.g., 06710385
     subset_dir (str):  Path to gage id directory where the module directory will be made. 
     module (str): Module name to specify CFE-S or CFE-X
+    module_metadata (dict):  dictionary containing URI, initial parameters, output variables
     
     Returns:
     dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
@@ -122,9 +123,9 @@ def cfe_ipe(gage_id, subset_dir, module):
         importjson = open('init_param_app/calibratable_cfe-x.json')
     output = json.load(importjson)
 
-    for x in range(len(output[0]["calibrate_parameters"])):
-        output[0]["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[output[0]["calibrate_parameters"][x]["name"]]
+    for x in range(len(module_metadata[0]["calibrate_parameters"])):
+        module_metadata[0]["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[module_metadata[0]["calibrate_parameters"][x]["name"]]
         
     uri = build_uri(s3bucket, s3prefix)
-    output[0]["parameter_file"]["url"] = uri
-    return output
+    module_metadata[0]["parameter_file"]["url"] = uri
+    return module_metadata
