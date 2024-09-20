@@ -177,10 +177,6 @@ def t_route_ipe(gage_id, subset_dir, module_metadata):
     print(status_str)
     logger.info(status_str)
 
-    #Replace with call to database
-    importjson = open('init_param_app/troute.json')
-    output = json.load(importjson)
-    
     #fill in parameter files uri 
     module_metadata[0]["parameter_file"]["url"] = uri
 

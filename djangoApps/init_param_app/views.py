@@ -212,8 +212,7 @@ def moduleCalibrateData(model_type):
                         "min": row[column_names.index("min")],
                         "max": row[column_names.index("max")],
                         "data_type": row[column_names.index("data_type")],
-                        "units": row[column_names.index("units")],
-                        "calibratable": row[column_names.index("calibratable")]
+                        "units": row[column_names.index("units")]
                     }
                     module_data.append(param_data)
                 return  module_data 
@@ -221,10 +220,11 @@ def moduleCalibrateData(model_type):
                 module_data = []
                 return module_data 
     except Exception as e:
-        print(f"Error executing selectModuleCalibrateData query: {e}")
-        logger.error(f"Error executing query: {e}")
+        error_str = {"Error": "Error executing selectModuleCalibrateData query: {e}"}
+        logger.error(error_str)
+        return error_str
 
-#@api_view(['GET'])
+
 def moduleOutVariablesData(model_type):
     try:
         with connection.cursor() as cursor:
@@ -232,46 +232,43 @@ def moduleOutVariablesData(model_type):
             column_names, rows = db.selectModuleOutVariablesData(model_type)
 
             if column_names and rows:
-                module_data = OrderedDict()
-                module_data["module_name"] = model_type
-                module_data["parameter_file"] = {"url": ""}
-                module_data["module_output_variables"] = []
+                module_data = []
 
                 for row in rows:
                     output_var_data = {
-                        "name": row[column_names.index("name")],
+                        "variable": row[column_names.index("name")],
                         "description": row[column_names.index("description")]
                     }
-                    module_data["module_output_variables"].append(output_var_data)
+                    module_data.append(output_var_data)
 
                 return module_data
             else:
-                return Response({"error": "No data found"}, status=404)
+                error_str = {"error": "No data found for model outputs"}
+                logger.error(error_str)
+                return error_str
 
     except Exception as e:
-        logger.error(f"Error executing query: {e}")
-        return Response({"error": str(e)}, status=500)
+        error_str = {"Error":  "Error executing moduleOutVariablesData query: {e}"}
+        logger.error(error_str)
+        return error_str
 
 def get_module_metadata(module_name):
 
         module_name = module_name.upper()
         calibrate_data_response = moduleCalibrateData(module_name)
-        #calibrate_data = calibrate_data_response.data[0]  # Assuming the structure is consistent
-
+        
         # Get the output variables data
         out_variables_data_response = moduleOutVariablesData(module_name)
-        #out_variables_data = out_variables_data_response.data[0]  # Assuming the structure is consistent
-
+        
         # Combine the data
         combined_data = OrderedDict()
-        #combined_data = {}
         combined_data["module_name"] = module_name
-        combined_data["parameter_file"] = {"url": None}
+        combined_data["parameter_file"] = {"uri": None}
         if not calibrate_data_response:
             combined_data["calibrate_parameters"] = [] 
         else: 
             combined_data["calibrate_parameters"] = calibrate_data_response
-        combined_data["module_output_variables"] = out_variables_data_response["module_output_variables"]
+        combined_data["output_variables"] = out_variables_data_response
 
         return [combined_data]
 
