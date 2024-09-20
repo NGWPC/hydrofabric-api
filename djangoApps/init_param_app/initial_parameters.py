@@ -1,13 +1,14 @@
 import logging
 
 #import geopackage
-from .geopackage import *
-from .cfe import *
-from .noah_owp_modular import *
-from .t_route import *
-from .utilities import *
+from init_param_app.geopackage import *
+from init_param_app.cfe import *
+from init_param_app.noah_owp_modular import *
+from init_param_app.t_route import *
+from init_param_app.utilities import *
+from init_param_app.snow17 import *
 
-def get_ipe(gage_id, module, get_gpkg = True):     
+def get_ipe(gage_id, module, ipe_json_dict, get_gpkg = True):
     '''
     Build initial parameter estimates (IPE) for a module.  
 
@@ -49,6 +50,9 @@ def get_ipe(gage_id, module, get_gpkg = True):
         return results
     elif module == "T-Route":
         results = t_route_ipe(gage_id, subset_dir)
+        return results
+    elif module == "Snow17" or "SNOW17":
+        results = snow17_ipe(gage_id, subset_dir, ipe_json_dict)
         return results
     else:
         error_str = "Module name not valid:" + module

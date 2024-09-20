@@ -1,4 +1,5 @@
 import os
+import inspect
 import subprocess
 import re
 import logging
@@ -6,7 +7,7 @@ import logging
 #import utilities
 from .utilities import *
 
-def get_geopackage(gage_id):     
+def get_geopackage(gage_id):
     '''
     Creates a geopackage containing a subset of the hydrofabric  
     
@@ -54,9 +55,20 @@ def get_geopackage(gage_id):
     else:
         subset_s3prefix = gage_id
 
+
     subset_dir_full = os.path.join(output_dir, gage_id)
-    if not os.path.exists(subset_dir_full):
-        os.mkdir(subset_dir_full)
+
+    current_filename = __file__
+    try:
+        if not os.path.exists(subset_dir_full):
+            current_line = inspect.currentframe().f_lineno - 1
+            error_str = f"error, geopkg dir {subset_dir_full} not found. {current_filename}::{current_line}"
+            return error_str
+    except Exception as e:
+        current_line = inspect.currentframe().f_lineno
+        error_str = f"error, {current_filename}::{current_line}-{e}"
+        return error_str
+
 
     status_str = "Calling HF Subsetter R code"
     print(status_str)
@@ -84,7 +96,7 @@ def get_geopackage(gage_id):
     # Write geopackage to s3 bucket
     write_minio(subset_dir_full, gpkg_filename, s3url, s3bucket, subset_s3prefix)
     uri = build_uri(s3bucket, subset_s3prefix, gpkg_filename)
-    status_str = "Written to S3 bucket: " + uri
+    status_str = "Written to S3 bucket: " + str(uri)
     print(status_str)
     logger.info(status_str)
 

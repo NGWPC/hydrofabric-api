@@ -5,12 +5,12 @@ from django.db import connection
 from collections import OrderedDict
 from .serializers import ModelSerializer, InitialParameterSerializer
 import logging
-from .DatabaseManager import DatabaseManager
+from init_param_app.DatabaseManager import DatabaseManager
 import json
 import sys
 
-from .geopackage import *
-from .initial_parameters import *
+from init_param_app.geopackage import get_geopackage
+from init_param_app.initial_parameters import get_ipe
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='hf.log', level=logging.INFO)
@@ -128,7 +128,7 @@ def moduleMetaData(request, model_type):
         #calibrate_data = calibrate_data_response.data[0]  # Assuming the structure is consistent
 
         # Get the output variables data
-        out_variables_data_response = moduleOutVariablesData( model_type)
+        out_variables_data_response = moduleOutVariablesData(model_type)
         #out_variables_data = out_variables_data_response.data[0]  # Assuming the structure is consistent
 
         # Combine the data
@@ -286,11 +286,22 @@ def return_ipe(request):
 
     results = []
     for module in enumerate(modules):
+        calibratable_params_resp_dict = {}
+        output_params_resp_dict = {}
+        calibratable_params_resp_dict = moduleCalibrateData(module[1])
+        output_params_resp_dict = moduleOutVariablesData(module[1])
+
+        # Combine the data
+        ipe_json_dict = OrderedDict()
+        ipe_json_dict["module_name"] = module[1]
+        ipe_json_dict["parameter_file"] = {"url": None}
+        ipe_json_dict["calibrate_parameters"] = calibratable_params_resp_dict["calibrate_parameters"]
+        ipe_json_dict["module_output_variables"] = output_params_resp_dict["module_output_variables"]
 
         if module[0] > 0:
-            module_results = get_ipe(gage_id, module[1], get_gpkg = False)
+            module_results = get_ipe(gage_id, module[1], ipe_json_dict, get_gpkg = False)
         else:
-            module_results = get_ipe(gage_id, module[1])
+            module_results = get_ipe(gage_id, module[1], ipe_json_dict)
 
         if 'error' not in module_results:
             results.append(module_results[0])
