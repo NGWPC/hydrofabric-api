@@ -1,6 +1,5 @@
 import os
 import logging
-import json
 from pathlib import Path
 
 import geopandas as gpd
@@ -10,13 +9,14 @@ import pyarrow as pa
 
 from .utilities import *
 
-def noah_owp_modular_ipe(gage_id, subset_dir):
+def noah_owp_modular_ipe(gage_id, subset_dir, module_metadata):
     ''' 
     Build initial parameter estimates (IPE) for NOAH-OWP-Modular 
 
     Parameters:
     gage_id (str):  The gage ID, e.g., 06710385
     subset_dir (str):  Path to gage id directory where the module directory will be made.
+    module_metadata (dict):  dictionary containing URI, initial parameters, output variables
     
     Returns:
     dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
@@ -184,9 +184,9 @@ def noah_owp_modular_ipe(gage_id, subset_dir):
                             outfile.write("\n")
 
     if s3prefix:
-        subset_s3prefix = s3prefix + "/" + gage_id + '/' + 'NOAH-OWP-Modular'
+        subset_s3prefix = s3prefix + "/" + gage_id + '/' + 'Noah-OWP-Modular'
     else:
-        subset_s3prefix = gage_id  + '/' + 'NOAH-OWP-Modular'
+        subset_s3prefix = gage_id  + '/' + 'Noah-OWP-Modular'
 
     #Get list of .input files in temp directory and copy to s3
     files = Path(subset_dir).glob('*.input')
@@ -199,21 +199,18 @@ def noah_owp_modular_ipe(gage_id, subset_dir):
     status_str = "Config files written to:  " + uri
     print(status_str)
     logger.info(status_str)
-
-    #Replace with call to database
-    importjson = open('init_param_app/NOAH-OWP-Modular.json')
-    output = json.load(importjson)
-    
+ 
     #fill in parameter files uri 
-    output[0]["parameter_file"]["url"] = uri
+    module_metadata[0]["parameter_file"]["uri"] = uri
     
     # Get default values for calibratable initial parameters.
-    for x in range(len(output[0]["calibrate_parameters"])):
-            initial_values = output[0]["calibrate_parameters"][x]["initial_value"]
+    for x in range(len(module_metadata[0]["calibrate_parameters"])):
+            initial_values = module_metadata[0]["calibrate_parameters"][x]["initial_value"]
+            print(initial_values)
             #If initial values are an array, get proper value for vegtype, otherwise use the single value.
             if len(initial_values) > 1:
-                 output[0]["calibrate_parameters"][x]["initial_value"] = initial_values[vegtype - 1]
+                 module_metadata[0]["calibrate_parameters"][x]["initial_value"] = initial_values[vegtype - 1]
             else:
-                 output[0]["calibrate_parameters"][x]["initial_value"] = initial_values[0]
+                 module_metadata[0]["calibrate_parameters"][x]["initial_value"] = initial_values[0]
 
-    return output
+    return module_metadata
