@@ -229,7 +229,7 @@ def moduleOutVariablesData(model_type):
     try:
         with connection.cursor() as cursor:
             db = DatabaseManager(cursor)
-            column_names, rows = db.selectModuleOutVariablesData(model_type)
+            column_names, rows = db.selectModuleOutVariablesData(model_type.upper())
 
             if column_names and rows:
                 module_data = []
@@ -254,8 +254,7 @@ def moduleOutVariablesData(model_type):
 
 def get_module_metadata(module_name):
 
-        module_name = module_name.upper()
-        calibrate_data_response = moduleCalibrateData(module_name)
+        calibrate_data_response = moduleCalibrateData(module_name.upper())
         
         # Get the output variables data
         out_variables_data_response = moduleOutVariablesData(module_name)

@@ -120,5 +120,5 @@ def cfe_ipe(gage_id, subset_dir, module, module_metadata):
         module_metadata[0]["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[module_metadata[0]["calibrate_parameters"][x]["name"]]
         
     uri = build_uri(s3bucket, s3prefix)
-    module_metadata[0]["parameter_file"]["url"] = uri
+    module_metadata[0]["parameter_file"]["uri"] = uri
     return module_metadata

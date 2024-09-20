@@ -184,9 +184,9 @@ def noah_owp_modular_ipe(gage_id, subset_dir, module_metadata):
                             outfile.write("\n")
 
     if s3prefix:
-        subset_s3prefix = s3prefix + "/" + gage_id + '/' + 'NOAH-OWP-Modular'
+        subset_s3prefix = s3prefix + "/" + gage_id + '/' + 'Noah-OWP-Modular'
     else:
-        subset_s3prefix = gage_id  + '/' + 'NOAH-OWP-Modular'
+        subset_s3prefix = gage_id  + '/' + 'Noah-OWP-Modular'
 
     #Get list of .input files in temp directory and copy to s3
     files = Path(subset_dir).glob('*.input')
@@ -201,7 +201,7 @@ def noah_owp_modular_ipe(gage_id, subset_dir, module_metadata):
     logger.info(status_str)
  
     #fill in parameter files uri 
-    module_metadata[0]["parameter_file"]["url"] = uri
+    module_metadata[0]["parameter_file"]["uri"] = uri
     
     # Get default values for calibratable initial parameters.
     for x in range(len(module_metadata[0]["calibrate_parameters"])):

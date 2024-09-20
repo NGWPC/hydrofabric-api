@@ -178,7 +178,7 @@ def t_route_ipe(gage_id, subset_dir, module_metadata):
     logger.info(status_str)
 
     #fill in parameter files uri 
-    module_metadata[0]["parameter_file"]["url"] = uri
+    module_metadata[0]["parameter_file"]["uri"] = uri
 
     return module_metadata
 
