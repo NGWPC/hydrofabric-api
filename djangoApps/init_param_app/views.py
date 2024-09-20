@@ -309,6 +309,40 @@ def return_ipe(request):
     return Response(results, status=status.HTTP_200_OK)
 
 
+class GetObservationalData(APIView):
+    data_type = 'OBSERVATIONAL'
+
+    def get(self, request):
+        results = None
+        loc_status = status.HTTP_200_OK
+        gage_id = request.query_params.get('gage_id')
+        source = request.query_params.get('source')
+        gage_file_mgmt = GageFileManagement()
+        gage_file_mgmt.start_minio_client()
+
+        # Check DB HFFiles table for pre-existing data
+        mydata = HFFiles.objects.filter(gage_id=gage_id, source=source, data_type=self.data_type).values()
+        if not mydata:
+            # Return/Log error missing gage_id
+            loc_status = status.HTTP_422_UNPROCESSABLE_ENTITY
+            results = f"Non-Headwater Basin gage requested - {gage_id} with source {source}"
+            log_string = f"Database missing gage_id - {gage_id} with source {source}. This may be a non-headwater gage id request and will be missing"
+            logger.warning(log_string)
+        else:
+            # Check S3 for file from DB call.
+            # Return file URL in schema dict
+            uri = mydata[0].get('uri')
+            if not gage_file_mgmt.file_exists(uri):
+                loc_status = status.HTTP_422_UNPROCESSABLE_ENTITY
+                results = f"Non-Headwater Basin gage requested - {gage_id} with source {source}"
+                log_string = f"S3 bucket missing gage_id - {gage_id} with source {source}. Database entry uri is {uri}. Also might be a AWS S3 Credentials issue"
+                logger.error(log_string)
+            else:
+                results = dict(uri=uri)
+
+        return Response(results, status=loc_status)
+
+
 class HFFilesCreate(generics.CreateAPIView):
     # API endpoint that allows creation of a new HFFiles
     queryset = HFFiles.objects.all(),
@@ -337,31 +371,3 @@ class HFFilesDelete(generics.RetrieveDestroyAPIView):
     # API endpoint that allows a HFFiles record to be deleted.
     queryset = HFFiles.objects.all()
     serializer_class = HFFilesSerializers
-
-
-class GetObservationalData(APIView):
-    data_type = 'OBSERVATIONAL'
-
-    def get(self, request):
-        results = None
-        loc_status = status.HTTP_200_OK
-        gage_id = request.query_params.get('gage_id')
-        source = request.query_params.get('source')
-        gage_file_mgmt = GageFileManagement()
-
-        # Check DB HFFiles table for pre-existing data
-        mydata = HFFiles.objects.filter(gage_id=gage_id, source=source, data_type=self.data_type).values()
-        if not mydata:
-            # Return/Log error missing gage_id
-            loc_status = status.HTTP_422_UNPROCESSABLE_ENTITY
-            results = f"Missing gage_id - {gage_id} with source {source} missing from database"
-        else:
-            # Check S3 for file from DB call.
-            # Return file URL in schema dict
-            uri = mydata[0].get('uri')
-            if not gage_file_mgmt.file_exists(uri):
-                loc_status = status.HTTP_422_UNPROCESSABLE_ENTITY
-                results = f"Missing gage_id - {gage_id} with source {source} missing from S3"
-            else:
-                results = dict(uri=uri)
-        return Response(results, status=loc_status)

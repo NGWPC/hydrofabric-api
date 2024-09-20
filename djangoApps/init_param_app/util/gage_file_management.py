@@ -4,6 +4,8 @@ Performs file management for data stored on the NGWPC S3 including managing the 
 
 from datetime import datetime
 from os.path import join
+import logging
+logger = logging.getLogger(__name__)
 
 from ..enums import FileTypeEnum
 from .file_management import FileManagement
@@ -43,7 +45,6 @@ class GageFileManagement(FileManagement):
 
     def __build_data_path(self):
         self.s3_path = join(self.domain, self.gage_id, self.data_type, self.source, self.formatted_datetime)
-        print(self.s3_path)
 
     def get_directory_for_file(self) -> str:
         """
