@@ -5,13 +5,14 @@ import logging
 
 from .utilities import *
 
-def t_route_ipe(gage_id, subset_dir):
-    ''' 
+def t_route_ipe(gage_id, subset_dir, module_metadata):
+    '''
     Build initial parameter estimates (IPE) for T-Route 
 
     Parameters:
     gage_id (str):  The gage ID, e.g., 06710385
     subset_dir (str):  Path to gage id directory where the module directory will be made.
+    module_metadata (dict):  dictionary containing URI, initial parameters, output variables
     
     Returns:
     dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
@@ -176,13 +177,9 @@ def t_route_ipe(gage_id, subset_dir):
     print(status_str)
     logger.info(status_str)
 
-    #Replace with call to database
-    importjson = open('init_param_app/troute.json')
-    output = json.load(importjson)
-    
     #fill in parameter files uri 
-    output[0]["parameter_file"]["url"] = uri
+    module_metadata[0]["parameter_file"]["uri"] = uri
 
-    return output
+    return module_metadata
 
     logger.info(f"TRoute config successfully created at {output_filename}.")

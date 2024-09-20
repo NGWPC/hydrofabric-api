@@ -474,7 +474,8 @@ class DatabaseManager:
             p.max, 
             p.data_type, 
             p.units, 
-            p.calibratable 
+            p.calibratable,
+            p.default_value 
         FROM 
             modules m
         JOIN 

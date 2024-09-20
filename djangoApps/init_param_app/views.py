@@ -166,31 +166,14 @@ def get_model_parameters_total_count(request, model_type):
 
 
 
-@api_view(['GET'])
-def get_initial_parameters(request, model_type):
+def get_initial_parameters(model_type):
     if not isinstance(model_type, str) or len(model_type) > 20:
-        return Response({"error": "Invalid model type"}, status=status.HTTP_400_BAD_REQUEST)
+        error_str =  {"error": "Invalid model type"}
+        logger.error(error_str)
 
     # Execute the query
     try:
         with connection.cursor() as cursor:
-            # cursor.execute("SELECT model_id FROM public.models WHERE name = %s", [model_type])
-            # model_id = cursor.fetchone()
-            # if not model_id:
-            #     return Response({"error": "Model not found"}, status=status.HTTP_404_NOT_FOUND)
-
-            # cursor.execute("""
-            #     SELECT sp.name, sp.units, sp.limits, sp.role 
-            #     FROM public.soil_params sp
-            #     WHERE sp.soil_id IN (
-            #         SELECT mpm.paramtry:_field_id_fk
-            #         FROM public.model_params_map mpm
-            #         JOIN public.models mdl ON mdl.model_id = mpm.model_id_fk
-            #         WHERE mdl.model_id = %s
-            #     )
-            # """, [model_id[0]])
-            # rows = cursor.fetchall()
-            # column_names = [desc[0] for desc in cursor.description]
             db = DatabaseManager(cursor)
             column_names, rows = db.selectInitialParameters(model_type)
             if column_names and rows:
@@ -200,14 +183,17 @@ def get_initial_parameters(request, model_type):
                     for row in rows
                 ]
                 results = [OrderedDict(zip(column_names, row)) for row in cleaned_rows]
-                return Response(results, status=status.HTTP_200_OK)
+                return results
             else:
-                return Response({"error": "No data found"}, status=status.HTTP_404_NOT_FOUND)
+                error_str =  {"error": "No initial parameter data found"}
+                logger.error(error_str)
+                return error_str
         
     except Exception as e:
         print(f"Error executing query: {e}")
-        logger.error(f"Error executing query: {e}")
-        return Response({"Error executing query": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        error_str = {"error": "Error executing query"}
+        logger.error(error_str)
+        return error_str
  
 def moduleCalibrateData(model_type):
     try:
@@ -216,60 +202,74 @@ def moduleCalibrateData(model_type):
             column_names, rows = db.selectModuleCalibrateData(model_type)
 
             if column_names and rows:
-                module_data = OrderedDict()
-                module_data["module_name"] = model_type
-                module_data["parameter_file"] = {"url": ""}
-                module_data["calibrate_parameters"] = []
 
+                module_data = []  
                 for row in rows:
                     param_data = {
                         "name": row[column_names.index("name")],
-                        "initial_value": None, 
+                        "initial_value": row[column_names.index("default_value")], 
                         "description": row[column_names.index("description")],
                         "min": row[column_names.index("min")],
                         "max": row[column_names.index("max")],
                         "data_type": row[column_names.index("data_type")],
-                        "units": row[column_names.index("units")],
-                        "calibratable": row[column_names.index("calibratable")]
+                        "units": row[column_names.index("units")]
                     }
-                    module_data["calibrate_parameters"].append(param_data)
-
+                    module_data.append(param_data)
                 return  module_data 
             else:
-                return Response({"error": "No calibratable parameters found"}, status=404)
+                module_data = []
+                return module_data 
     except Exception as e:
-        print(f"Error executing selectModuleCalibrateData query: {e}")
-        logger.error(f"Error executing query: {e}")
-        return Response({"error": str(e)}, status=500)
-    
+        error_str = {"Error": "Error executing selectModuleCalibrateData query: {e}"}
+        logger.error(error_str)
+        return error_str
 
-#@api_view(['GET'])
+
 def moduleOutVariablesData(model_type):
     try:
         with connection.cursor() as cursor:
             db = DatabaseManager(cursor)
-            column_names, rows = db.selectModuleOutVariablesData(model_type)
+            column_names, rows = db.selectModuleOutVariablesData(model_type.upper())
 
             if column_names and rows:
-                module_data = OrderedDict()
-                module_data["module_name"] = model_type
-                module_data["parameter_file"] = {"url": ""}
-                module_data["module_output_variables"] = []
+                module_data = []
 
                 for row in rows:
                     output_var_data = {
-                        "name": row[column_names.index("name")],
+                        "variable": row[column_names.index("name")],
                         "description": row[column_names.index("description")]
                     }
-                    module_data["module_output_variables"].append(output_var_data)
+                    module_data.append(output_var_data)
 
                 return module_data
             else:
-                return Response({"error": "No data found"}, status=404)
+                error_str = {"error": "No data found for model outputs"}
+                logger.error(error_str)
+                return error_str
 
     except Exception as e:
-        logger.error(f"Error executing query: {e}")
-        return Response({"error": str(e)}, status=500)
+        error_str = {"Error":  "Error executing moduleOutVariablesData query: {e}"}
+        logger.error(error_str)
+        return error_str
+
+def get_module_metadata(module_name):
+
+        calibrate_data_response = moduleCalibrateData(module_name.upper())
+        
+        # Get the output variables data
+        out_variables_data_response = moduleOutVariablesData(module_name)
+        
+        # Combine the data
+        combined_data = OrderedDict()
+        combined_data["module_name"] = module_name
+        combined_data["parameter_file"] = {"uri": None}
+        if not calibrate_data_response:
+            combined_data["calibrate_parameters"] = [] 
+        else: 
+            combined_data["calibrate_parameters"] = calibrate_data_response
+        combined_data["output_variables"] = out_variables_data_response
+
+        return [combined_data]
 
 @api_view(['GET'])
 def return_geopackage(request, gage_id):
@@ -284,13 +284,17 @@ def return_ipe(request):
     gage_id = request.data.get("gage_id")
     modules = request.data.get("modules")
 
+    #print(get_initial_parameters("CFE-S"))
+
     results = []
     for module in enumerate(modules):
 
         if module[0] > 0:
-            module_results = get_ipe(gage_id, module[1], get_gpkg = False)
+            metadata = get_module_metadata(module[1])
+            module_results = get_ipe(gage_id, module[1], metadata, get_gpkg = False)
         else:
-            module_results = get_ipe(gage_id, module[1])
+            metadata = get_module_metadata(module[1])
+            module_results = get_ipe(gage_id, module[1], metadata)
 
         if 'error' not in module_results:
             results.append(module_results[0])
