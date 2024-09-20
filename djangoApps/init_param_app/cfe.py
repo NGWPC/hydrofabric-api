@@ -116,13 +116,6 @@ def cfe_ipe(gage_id, subset_dir, module, module_metadata):
         key, value = line.strip().split('=')
         cfg_file_ipes[key.strip()] = value.strip()
 
-    #this will be replaced with a call to the database when the connection is possible in the container
-    if module == 'CFE-S':
-        importjson = open('init_param_app/calibratable_cfe-s.json')
-    if module == 'CFE-X':
-        importjson = open('init_param_app/calibratable_cfe-x.json')
-    output = json.load(importjson)
-
     for x in range(len(module_metadata[0]["calibrate_parameters"])):
         module_metadata[0]["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[module_metadata[0]["calibrate_parameters"][x]["name"]]
         

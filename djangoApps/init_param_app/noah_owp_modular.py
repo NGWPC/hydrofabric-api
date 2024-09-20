@@ -1,6 +1,5 @@
 import os
 import logging
-import json
 from pathlib import Path
 
 import geopandas as gpd
@@ -200,17 +199,14 @@ def noah_owp_modular_ipe(gage_id, subset_dir, module_metadata):
     status_str = "Config files written to:  " + uri
     print(status_str)
     logger.info(status_str)
-
-    #Replace with call to database
-    importjson = open('init_param_app/NOAH-OWP-Modular.json')
-    output = json.load(importjson)
-    
+ 
     #fill in parameter files uri 
     module_metadata[0]["parameter_file"]["url"] = uri
     
     # Get default values for calibratable initial parameters.
     for x in range(len(module_metadata[0]["calibrate_parameters"])):
             initial_values = module_metadata[0]["calibrate_parameters"][x]["initial_value"]
+            print(initial_values)
             #If initial values are an array, get proper value for vegtype, otherwise use the single value.
             if len(initial_values) > 1:
                  module_metadata[0]["calibrate_parameters"][x]["initial_value"] = initial_values[vegtype - 1]
