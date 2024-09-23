@@ -67,6 +67,7 @@ if (model_name == "CFE-S")
     pars_cfe <- cfe_names[1:9]
 }
 
+
 # NWM v3 soil parameters
 soil_file <- paste0(data_dir, "soilproperties_CONUS_FullRouting.nc")
 nc <- nc_open(soil_file)
@@ -182,7 +183,7 @@ if (scheme=="Schaake") {
 } else if (scheme=="Xinanjiang") {
     out_dir <- paste0(out_dir,"CFE-X")
     pars_in_order <- c(pars_in_order, "a_Xinanjiang_inflection_point_parameter",
-                "b_Xinanjiang_shape_parameter_set","x_Xinanjiang_shape_parameter")
+                "b_Xinanjiang_shape_parameter","x_Xinanjiang_shape_parameter")
 }
 
 pars_in_order <- c(pars_in_order,"max_gw_storage","Cgw","expon","gw_storage","alpha_fc","soil_storage","K_lf",

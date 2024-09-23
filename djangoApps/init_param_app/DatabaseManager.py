@@ -465,6 +465,8 @@ class DatabaseManager:
             table_name = "noah_owp_modular_params"
         elif model_type == "Snow17" or model_type == "SNOW17":
             table_name = "snow17_params"
+        elif model_type == "SAC-SMA":
+            table_name = "sac_sma_params"
         else:
             return None, None
 

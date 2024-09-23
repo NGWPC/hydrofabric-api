@@ -1,21 +1,26 @@
 import logging
 
 #import geopackage
-from init_param_app.geopackage import *
-from init_param_app.cfe import *
-from init_param_app.noah_owp_modular import *
-from init_param_app.t_route import *
-from init_param_app.utilities import *
-from init_param_app.snow17 import *
 
 #def get_ipe(gage_id, module, ipe_json_dict, get_gpkg = True):
 def get_ipe(gage_id, module, module_metadata, get_gpkg=True):
+
+from .geopackage import *
+from .cfe import *
+from .noah_owp_modular import *
+from .t_route import *
+from .sac_sma import *
+from .utilities import *
+from .snow17 import *
+
+def get_ipe(gage_id, module, module_metadata, get_gpkg = True):     
     '''
     Build initial parameter estimates (IPE) for a module.  
 
     Parameters:
     gage_id (str):  The gage ID, e.g., 06710385
-    module str: Module name
+    module (str): Module name
+    module_metadata (dict):  dictionary containing URI, initial parameters, output variables
     get_gpkg (bool):  Option to not create a geopackage if false
 
     Returns:
@@ -40,6 +45,7 @@ def get_ipe(gage_id, module, module_metadata, get_gpkg=True):
 
     status_str = "Get IPEs for " + module
     print(status_str)
+    print(module_metadata)
     logger.info(status_str)
 
     # Call function for specific module
@@ -52,8 +58,13 @@ def get_ipe(gage_id, module, module_metadata, get_gpkg=True):
     elif module == "T-Route":
         results = t_route_ipe(gage_id, subset_dir, module_metadata)
         return results
+<<<<<<< djangoApps/init_param_app/initial_parameters.py
     elif module.upper() == "SNOW17":
         results = snow17_ipe(gage_id, subset_dir, module_metadata)
+=======
+    elif module == "Sac-SMA":
+        results = sac_sma_ipe(gage_id, subset_dir, module_metadata)
+>>>>>>> djangoApps/init_param_app/initial_parameters.py
         return results
     else:
         error_str = "Module name not valid:" + module
