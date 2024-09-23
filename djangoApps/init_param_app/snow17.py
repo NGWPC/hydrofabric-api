@@ -12,7 +12,19 @@ from init_param_app.utilities import *
 
 logger = logging.getLogger(__name__)
 
-def snow17_ipe(gage_id, subset_dir, ipe_json_dict):
+def snow17_ipe(gage_id, subset_dir, module_metadata_list):
+    '''
+        Build initial parameter estimates (IPE) for Snow17
+
+        Parameters:
+        gage_id (str):  The gage ID, e.g., 06710385
+        subset_dir (str):  Path to gage id directory where the module directory will be made.
+        module_metadata (dict):  dictionary containing URI, initial parameters, output variables
+
+        Returns:
+        dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
+    '''
+
     # Setup logging
     #logger = logging.getLogger(__name__)
 
@@ -54,13 +66,13 @@ def snow17_ipe(gage_id, subset_dir, ipe_json_dict):
         #print(row['divide_id'], row['areasqkm'])
         catch_dict[str(catchments[index])] = {"areasqkm": str(areas[index])}
 
-    response = create_snow17_input(gage_id, catch_dict, attr_file, output_dir, ipe_json_dict)
+    response = create_snow17_input(gage_id, catch_dict, attr_file, output_dir, module_metadata_list)
 
     return response
 
 
 #def create_snow17_input(catids: List[str], snow17_input_dir: str)->None:
-def create_snow17_input(gage_id, catch_dict, attr_file, snow17_output_dir: str, ipe_json_dict):
+def create_snow17_input(gage_id, catch_dict, attr_file, snow17_output_dir: str, module_metadata_list):
 
     if not os.path.exists(snow17_output_dir):
         os.makedirs(snow17_output_dir, exist_ok=True)
@@ -122,7 +134,7 @@ def create_snow17_input(gage_id, catch_dict, attr_file, snow17_output_dir: str, 
 
     response = []
 
-    #for key in catch_dict.keys(): LOOP CATCH_IDs HERE!!
+    #for key in catch_dict.keys(): LOOP CATCH_IDs HERE (from filtered dataframe)!!
     for index, row in filtered.iterrows():
         catchment_id = row['divide_id']
         param_list = ['hru_id ' + str(catchment_id),
@@ -152,7 +164,9 @@ def create_snow17_input(gage_id, catch_dict, attr_file, snow17_output_dir: str, 
                       'adc10 0.970',
                       'adc11 1.000']
 
-        ipe_json_dict = set_ipe_json_values(param_list, ipe_json_dict)
+        # NOTE: use record 0 from module_metadata_list as a template, then append a deep copy to response at end of
+        #       this method and return
+        module_metadata_rec = set_ipe_json_values(param_list, module_metadata_list[0])
 
         #for catID in catids:
         #input_file = os.path.join(snow17_input_dir, 'snow17-init-' + str(catchment_id) + '.namelist.input')
@@ -213,24 +227,25 @@ def create_snow17_input(gage_id, catch_dict, attr_file, snow17_output_dir: str, 
 
             #subset_dir_full = os.path.join(output_dir, s3_file_list[idx])
 
-            write_minio(output_dir, s3_file_list[idx], s3url, s3bucket, s3prefix)
-            uri = build_uri(s3bucket, s3prefix, s3_file_list[idx])
+            write_minio(output_dir, s3_file_list[idx], s3url, s3bucket, subset_s3prefix)
+            #uri = build_uri(s3bucket, s3prefix, s3_file_list[idx])  #do not use filename, only dir
+            uri = build_uri(s3bucket, subset_s3prefix)
             status_str = "Written to S3 bucket: " + str(uri)
             print(status_str)
 
-            ipe_json_dict['parameter_file']['uri'] = uri
+            module_metadata_rec['parameter_file']['uri'] = uri
             logger.info(status_str)
 
-        deep_copy_ipe_dict = copy.deepcopy(ipe_json_dict)
+        deep_copy_ipe_dict = copy.deepcopy(module_metadata_rec)
         response.append(deep_copy_ipe_dict)
 
     return response
 
 
-def set_ipe_json_values(param_list, ipe_json_dict)-> dict:
-    print("inside set_ipe_json_values")
-    local_ipe_json_dict = ipe_json_dict
-    local_param_list = param_list
+def set_ipe_json_values(param_list, module_metadata_rec)-> dict:
+    #print("inside set_ipe_json_values")
+    #local_module_metadata_list = module_metadata_list
+    #local_param_list = param_list
 
     #for x in range(len(output[0]["calibrate_parameters"])):
     #    output[0]["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[output[0]["calibrate_parameters"][x]["name"]]
@@ -241,9 +256,9 @@ def set_ipe_json_values(param_list, ipe_json_dict)-> dict:
         key_value_split = str.split(param_list[idx], ' ')
         param_list_dict[key_value_split[0]] = key_value_split[1]
 
-    for idx in range(len(ipe_json_dict['calibrate_parameters'])):
-        key_name = ipe_json_dict['calibrate_parameters'][idx]['name']
-        ipe_json_dict['calibrate_parameters'][idx]['initial_value'] = param_list_dict[key_name]
+    for idx in range(len(module_metadata_rec['calibrate_parameters'])):
+        key_name = module_metadata_rec['calibrate_parameters'][idx]['name']
+        module_metadata_rec['calibrate_parameters'][idx]['initial_value'] = param_list_dict[key_name]
 
-    return ipe_json_dict
+    return module_metadata_rec
 

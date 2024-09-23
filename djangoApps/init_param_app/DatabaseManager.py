@@ -476,7 +476,8 @@ class DatabaseManager:
             p.max, 
             p.data_type, 
             p.units, 
-            p.calibratable 
+            p.calibratable,
+            p.default_value 
         FROM 
             modules m
         JOIN 
@@ -486,7 +487,7 @@ class DatabaseManager:
         JOIN 
             param_tables pt ON pt.id = m.param_id
           WHERE 
-            m.name =  %s 
+            m.name =  '{model_type}' 
             AND p.calibratable = true
         """
 
