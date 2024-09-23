@@ -5,6 +5,7 @@ from .geopackage import *
 from .cfe import *
 from .noah_owp_modular import *
 from .t_route import *
+from .sac_sma import *
 from .utilities import *
 
 def get_ipe(gage_id, module, module_metadata, get_gpkg = True):     
@@ -39,6 +40,7 @@ def get_ipe(gage_id, module, module_metadata, get_gpkg = True):
 
     status_str = "Get IPEs for " + module
     print(status_str)
+    print(module_metadata)
     logger.info(status_str)
 
     # Call function for specific module
@@ -50,6 +52,9 @@ def get_ipe(gage_id, module, module_metadata, get_gpkg = True):
         return results
     elif module == "T-Route":
         results = t_route_ipe(gage_id, subset_dir, module_metadata)
+        return results
+    elif module == "Sac-SMA":
+        results = sac_sma_ipe(gage_id, subset_dir, module_metadata)
         return results
     else:
         error_str = "Module name not valid:" + module
