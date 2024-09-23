@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from .models import HFFiles
 
 class ModelSerializer(serializers.Serializer):
     model_id = serializers.IntegerField()
@@ -42,7 +43,12 @@ class calibrateSerializer(serializers.Serializer):
     data_type = serializers.CharField(max_length=255, allow_blank=True, allow_null=True)
     units = serializers.CharField(max_length=255, allow_blank=True, allow_null=True)
     calibrate = serializers.CharField(max_length=255, allow_blank=True, allow_null=True)
-
+"""
 class outputSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=255)
     description = serializers.CharField(max_length=255, allow_blank=True, allow_null=True)
+"""
+class HFFilesSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = HFFiles
+        fields = '__all__'
