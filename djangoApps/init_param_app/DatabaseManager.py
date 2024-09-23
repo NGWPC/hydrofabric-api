@@ -463,6 +463,8 @@ class DatabaseManager:
             table_name = "t_route_params"
         elif model_type == "NOAH-OWP-MODULAR":
             table_name = "noah_owp_modular_params"
+        elif model_type == "SAC-SMA":
+            table_name = "sac_sma_params"
         else:
             return None, None
 
