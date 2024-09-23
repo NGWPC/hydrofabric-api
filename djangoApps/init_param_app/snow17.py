@@ -19,7 +19,7 @@ def snow17_ipe(gage_id, subset_dir, module_metadata_list):
         Parameters:
         gage_id (str):  The gage ID, e.g., 06710385
         subset_dir (str):  Path to gage id directory where the module directory will be made.
-        module_metadata (dict):  dictionary containing URI, initial parameters, output variables
+        module_metadata_list (dict):  list dictionary containing URI, initial parameters, output variables
 
         Returns:
         dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
@@ -39,18 +39,11 @@ def snow17_ipe(gage_id, subset_dir, module_metadata_list):
     hydrofabric_type = config['hydrofabric_type']
 
     # get attrib file
-    #hydrofabric_data_root = str(config['hydrofabric_data_root'])
-    #home_var = os.getenv("HOME")
-    #hydrofabric_data_root = hydrofabric_dir.replace("$HOME", home_var) + "/Hydrofabric/data/hydrofabric"
     attr_file = os.path.join(hydrofabric_dir, hydrofabric_version, hydrofabric_type, 'conus_model-attributes')
 
     # setup output dir
     # first save the top level dir for the gpkg
     gpkg_dir = subset_dir
-    #subset_dir = os.path.join(subset_dir, 'snow17')
-    # subset dir HAS to already exist as its where the
-    #if not os.path.exists(subset_dir):
-    #    os.mkdir(subset_dir)
 
     # Get list of catchments from gpkg divides layer using geopandas
     #file = 'Gage_6700000.gpkg'
@@ -67,11 +60,10 @@ def snow17_ipe(gage_id, subset_dir, module_metadata_list):
         catch_dict[str(catchments[index])] = {"areasqkm": str(areas[index])}
 
     response = create_snow17_input(gage_id, catch_dict, attr_file, output_dir, module_metadata_list)
-
+    logger.info("snow_17::snow17_ipe:returning response as " + str(response))
     return response
 
 
-#def create_snow17_input(catids: List[str], snow17_input_dir: str)->None:
 def create_snow17_input(gage_id, catch_dict, attr_file, snow17_output_dir: str, module_metadata_list):
 
     if not os.path.exists(snow17_output_dir):
@@ -102,35 +94,6 @@ def create_snow17_input(gage_id, catch_dict, attr_file, snow17_output_dir: str, 
     # Read hydrofabric attribute file (THESE ARE NOT USED BY SNOW17)
     #dfa = pd.read_parquet(attr_file)
     #dfa.set_index("divide_id", inplace=True)
-
-    '''REFERENCE param_list
-    param_list = ['hru_id HHWM8IL HHWM8IU',
-            'hru_area 2994.7 1271.3',
-            'latitude 47.78 47.78',
-            'elev 1612.50 2153.35',
-            'scf 2.15177 1.86124',
-            'mfmax 0.930472 0.754924',
-            'mfmin 0.137 0.160',
-            'uadj 0.003103 0.208042',
-            'si 1515.00 1515.00',
-            'pxtemp 0.713424 0.220934',
-            'nmf 0.150 0.150',
-            'tipm 0.200 0.050',
-            'mbase 0.000 0.000',
-            'plwhc 0.030 0.030',
-            'daygm 0.300 0.200',
-            'adc1 0.050 0.050',
-            'adc2 0.090 0.090',
-            'adc3 0.160 0.160',
-            'adc4 0.310 0.310',
-            'adc5 0.540 0.540',
-            'adc6 0.740 0.740',
-            'adc7 0.840 0.840',
-            'adc8 0.890 0.890',
-            'adc9 0.930 0.930',
-            'adc10 0.970 0.970',
-            'adc11 1.000 1.000']
-    '''
 
     response = []
 
@@ -168,9 +131,6 @@ def create_snow17_input(gage_id, catch_dict, attr_file, snow17_output_dir: str, 
         #       this method and return
         module_metadata_rec = set_ipe_json_values(param_list, module_metadata_list[0])
 
-        #for catID in catids:
-        #input_file = os.path.join(snow17_input_dir, 'snow17-init-' + str(catchment_id) + '.namelist.input')
-        #param_file = os.path.join(snow17_input_dir, 'snow17_params-' + str(catchment_id) + '.HHWM8.txt')
         input_file = os.path.join(snow17_output_dir, 'snow17-init-' + str(catchment_id) + '.namelist.input')
         param_file = os.path.join(snow17_output_dir, 'snow17_params-' + str(catchment_id) + '.HHWM8.txt')
 
@@ -238,18 +198,12 @@ def create_snow17_input(gage_id, catch_dict, attr_file, snow17_output_dir: str, 
 
         deep_copy_ipe_dict = copy.deepcopy(module_metadata_rec)
         response.append(deep_copy_ipe_dict)
+        logger.info("snow17:create_snow17_input:appended deep copy dict to response " + str(deep_copy_ipe_dict))
 
     return response
 
 
 def set_ipe_json_values(param_list, module_metadata_rec)-> dict:
-    #print("inside set_ipe_json_values")
-    #local_module_metadata_list = module_metadata_list
-    #local_param_list = param_list
-
-    #for x in range(len(output[0]["calibrate_parameters"])):
-    #    output[0]["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[output[0]["calibrate_parameters"][x]["name"]]
-
     # convert param list to dict to make it searchable by key
     param_list_dict = {}
     for idx in range(len(param_list)):
@@ -260,5 +214,6 @@ def set_ipe_json_values(param_list, module_metadata_rec)-> dict:
         key_name = module_metadata_rec['calibrate_parameters'][idx]['name']
         module_metadata_rec['calibrate_parameters'][idx]['initial_value'] = param_list_dict[key_name]
 
+    logger.info("snow17::set_ipe_json_values: set the ipe initial values " + str(module_metadata_rec))
     return module_metadata_rec
 
