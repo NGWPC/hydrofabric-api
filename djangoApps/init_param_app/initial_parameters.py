@@ -1,12 +1,17 @@
 import logging
 
 #import geopackage
+
+#def get_ipe(gage_id, module, ipe_json_dict, get_gpkg = True):
+def get_ipe(gage_id, module, module_metadata, get_gpkg=True):
+
 from .geopackage import *
 from .cfe import *
 from .noah_owp_modular import *
 from .t_route import *
 from .sac_sma import *
 from .utilities import *
+from .snow17 import *
 
 def get_ipe(gage_id, module, module_metadata, get_gpkg = True):     
     '''
@@ -53,12 +58,35 @@ def get_ipe(gage_id, module, module_metadata, get_gpkg = True):
     elif module == "T-Route":
         results = t_route_ipe(gage_id, subset_dir, module_metadata)
         return results
+    elif module.upper() == "SNOW17":
+        results = snow17_ipe(gage_id, subset_dir, module_metadata)
+        return results
     elif module == "Sac-SMA":
         results = sac_sma_ipe(gage_id, subset_dir, module_metadata)
         return results
     else:
         error_str = "Module name not valid:" + module
-        error = dict(error = error_str)
+        error = dict(error=error_str)
         print(error_str)
         logger.error(error_str)
-        return error 
+        return error
+
+
+        # if module == "CFE-S" or module == "CFE-X":
+    #     results = cfe_ipe(gage_id, subset_dir, module)
+    #     return results
+    # elif module == "Noah-OWP-Modular":
+    #     results = noah_owp_modular_ipe(gage_id, subset_dir)
+    #     return results
+    # elif module == "T-Route":
+    #     results = t_route_ipe(gage_id, subset_dir)
+    #     return results
+    # elif module == "Snow17" or "SNOW17":
+    #     results = snow17_ipe(gage_id, subset_dir, ipe_json_dict)
+    #     return results
+    # else:
+    #     error_str = "Module name not valid:" + module
+    #     error = dict(error = error_str)
+    #     print(error_str)
+    #     logger.error(error_str)
+    #     return error
