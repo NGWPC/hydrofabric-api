@@ -11,12 +11,12 @@ from .models import HFFiles
 from .util.gage_file_management import GageFileManagement
 from .serializers import HFFilesSerializers
 import logging
-from .DatabaseManager import DatabaseManager
+from init_param_app.DatabaseManager import DatabaseManager
 import json
 import sys
 
-from .geopackage import *
-from .initial_parameters import *
+from init_param_app.geopackage import get_geopackage
+from init_param_app.initial_parameters import get_ipe
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='hf.log', level=logging.INFO)
@@ -71,58 +71,6 @@ def modules(request):
         print(f"Error executing query: {e}")
         logger.error(f"Error executing query: {e}")
         return Response({"Error executing query": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-# @api_view(['GET'])
-# def moduleMetaDataT(request):
-#         try:
-#             with connection.cursor() as cursor:
-#                 db = DatabaseManager(cursor)
-#                 column_names, rows = db.selectModuleMetaData()
-
-#                 if column_names and rows:
-#                     module_data = OrderedDict()
-#                     module_data["module_name"] = 'NOAH-OWP-MODULAR'
-#                     module_data["parameter_file"] = {"url": ""}
-#                     module_data["calibrate_parameters"] = []
-#                     module_data["module_output_variables"] = []
-
-#                     # Separate out calibratable parameters and output variables
-#                     calibrate_params_set = set()
-#                     output_vars_set = set()
-
-#                     for row in rows:
-#                         param_name = row[column_names.index("param_name")]
-#                         if param_name and param_name not in calibrate_params_set:
-#                             param_data = {
-#                                 "name": param_name,
-#                                 "initial_value": "",
-#                                 "description": row[column_names.index("param_description")],
-#                                 "min": row[column_names.index("param_min")],
-#                                 "max": row[column_names.index("param_max")],
-#                                 "data_type": row[column_names.index("param_data_type")],
-#                                 "units": row[column_names.index("param_units")]
-#                             }
-#                             module_data["calibrate_parameters"].append(param_data)
-#                             calibrate_params_set.add(param_name)
-
-#                         output_var_name = row[column_names.index("output_var_name")]
-#                         if output_var_name and output_var_name not in output_vars_set:
-#                             output_var_data = {
-#                                 "name": output_var_name,
-#                                 "description": row[column_names.index("output_var_description")]
-#                             }
-#                             module_data["module_output_variables"].append(output_var_data)
-#                             output_vars_set.add(output_var_name)
-
-#                     return Response([module_data], status=200)
-#                 else:
-#                     return Response({"error": "No data found"}, status=404)
-
-#         except Exception as e:
-#             print(f"Error executing selectModuleMetaData query: {e}")
-#             return Response({"error": str(e)}, status=500)
-
 
 @api_view(['GET'])
 def moduleMetaData(request, model_type):
@@ -196,10 +144,10 @@ def get_initial_parameters(model_type):
         
     except Exception as e:
         print(f"Error executing query: {e}")
-        error_str = {"error": "Error executing query"}
-        logger.error(error_str)
-        return error_str
- 
+        logger.error(f"Error executing query: {e}")
+        return Response({"Error executing query": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 def moduleCalibrateData(model_type):
     try:
         with connection.cursor() as cursor:
@@ -259,23 +207,23 @@ def moduleOutVariablesData(model_type):
 
 def get_module_metadata(module_name):
 
-        calibrate_data_response = moduleCalibrateData(module_name.upper())
-        
-        # Get the output variables data
-        out_variables_data_response = moduleOutVariablesData(module_name)
-        
-        # Combine the data
-        combined_data = OrderedDict()
-        combined_data["module_name"] = module_name
-        combined_data["parameter_file"] = {"uri": None}
-        if not calibrate_data_response:
-            combined_data["calibrate_parameters"] = [] 
-        else: 
-            combined_data["calibrate_parameters"] = calibrate_data_response
-        combined_data["output_variables"] = out_variables_data_response
+    calibrate_data_response = moduleCalibrateData(module_name.upper())
 
-        return [combined_data]
+    # Get the output variables data
+    out_variables_data_response = moduleOutVariablesData(module_name)
 
+    # Combine the data
+    combined_data = OrderedDict()
+    combined_data["module_name"] = module_name
+    combined_data["parameter_file"] = {"uri": None}
+    if not calibrate_data_response:
+        combined_data["calibrate_parameters"] = []
+    else:
+        combined_data["calibrate_parameters"] = calibrate_data_response
+
+    combined_data["output_variables"] = out_variables_data_response
+
+    return [combined_data]
 
 @api_view(['GET'])
 def return_geopackage(request, gage_id):
@@ -295,7 +243,6 @@ def return_ipe(request):
 
     results = []
     for module in enumerate(modules):
-
         if module[0] > 0:
             metadata = get_module_metadata(module[1])
             module_results = get_ipe(gage_id, module[1], metadata, get_gpkg = False)

@@ -463,6 +463,8 @@ class DatabaseManager:
             table_name = "t_route_params"
         elif model_type == "NOAH-OWP-MODULAR":
             table_name = "noah_owp_modular_params"
+        elif model_type == "Snow17" or model_type == "SNOW17":
+            table_name = "snow17_params"
         elif model_type == "SAC-SMA":
             table_name = "sac_sma_params"
         else:
@@ -487,7 +489,7 @@ class DatabaseManager:
         JOIN 
             param_tables pt ON pt.id = m.param_id
           WHERE 
-            m.name =  %s 
+            m.name =  '{model_type}' 
             AND p.calibratable = true
         """
 
