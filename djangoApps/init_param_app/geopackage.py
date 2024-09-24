@@ -61,12 +61,13 @@ def get_geopackage(gage_id):
     current_filename = __file__
     try:
         if not os.path.exists(subset_dir_full):
+            os.mkdir(subset_dir_full)
             current_line = inspect.currentframe().f_lineno - 1
-            error_str = f"error, geopkg dir {subset_dir_full} not found. {current_filename}::{current_line}"
-            return error_str
+            status_str = f"geopkg dir {subset_dir_full} not found, creating directory. {current_filename}::{current_line}"
+            logger.info(status_str)
     except Exception as e:
         current_line = inspect.currentframe().f_lineno
-        error_str = f"error, {current_filename}::{current_line}-{e}"
+        error_str = f"error creating directory {subset_dir_full}, {current_filename}::{current_line}-{e}"
         return error_str
 
 
