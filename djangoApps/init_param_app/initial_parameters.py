@@ -58,13 +58,11 @@ def get_ipe(gage_id, module, module_metadata, get_gpkg = True):
     elif module == "T-Route":
         results = t_route_ipe(gage_id, subset_dir, module_metadata)
         return results
-<<<<<<< djangoApps/init_param_app/initial_parameters.py
     elif module.upper() == "SNOW17":
         results = snow17_ipe(gage_id, subset_dir, module_metadata)
-=======
+        return results
     elif module == "Sac-SMA":
         results = sac_sma_ipe(gage_id, subset_dir, module_metadata)
->>>>>>> djangoApps/init_param_app/initial_parameters.py
         return results
     else:
         error_str = "Module name not valid:" + module
