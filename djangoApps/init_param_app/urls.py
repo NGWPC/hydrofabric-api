@@ -5,10 +5,10 @@ from .views import get_modules, return_geopackage, return_ipe, GetObservationalD
 urlpatterns = [
     path('hydrofabric/2.1/modules/', get_modules, name='get_modules'),
     path("hydrofabric/2.1/modules/parameters/", return_ipe, name='return_ipe'),
-    path("hydrofabric/2.1/geopackages/<str:gage_id>", return_geopackage, name='return_geopackage'),
+    path("hydrofabric/2.1/geopackages", return_geopackage, name='return_geopackage'),
     path('hydrofabric/2.1/observational', GetObservationalData.as_view(), name='observationalDataQuery'),
     path('create/', HFFilesCreate.as_view(), name='create-HFFiles'),
-    path('', HFFilesList.as_view()),
+    path('list/', HFFilesList.as_view()),
     path('<int:pk>/', HFFilesDetail.as_view(), name='retrieve-HFFiles'),
     path('update/<int:pk>/', HFFilesUpdate.as_view(), name='update-HFFiles'),
     path('delete/<int:pk>/', HFFilesDelete.as_view(), name='delete-HFFiles'),
