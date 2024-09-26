@@ -1,9 +1,9 @@
 from django.urls import path
-from .views import get_modules, return_geopackage, return_ipe, GetObservationalData, HFFilesCreate, HFFilesList, \
+from .views import modules, return_geopackage, return_ipe, GetObservationalData, HFFilesCreate, HFFilesList, \
     HFFilesDetail, HFFilesUpdate, HFFilesDelete
 
 urlpatterns = [
-    path('hydrofabric/2.1/modules/', get_modules, name='get_modules'),
+    path('hydrofabric/2.1/modules/', modules, name='modules'),
     path("hydrofabric/2.1/modules/parameters/", return_ipe, name='return_ipe'),
     path("hydrofabric/2.1/geopackages/<str:gage_id>", return_geopackage, name='return_geopackage'),
     path('hydrofabric/2.1/observational', GetObservationalData.as_view(), name='observationalDataQuery'),

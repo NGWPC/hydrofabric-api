@@ -2,9 +2,6 @@ import logging
 
 #import geopackage
 
-#def get_ipe(gage_id, module, ipe_json_dict, get_gpkg = True):
-def get_ipe(gage_id, module, module_metadata, get_gpkg=True):
-
 from .geopackage import *
 from .cfe import *
 from .noah_owp_modular import *
@@ -70,23 +67,3 @@ def get_ipe(gage_id, module, module_metadata, get_gpkg = True):
         print(error_str)
         logger.error(error_str)
         return error
-
-
-        # if module == "CFE-S" or module == "CFE-X":
-    #     results = cfe_ipe(gage_id, subset_dir, module)
-    #     return results
-    # elif module == "Noah-OWP-Modular":
-    #     results = noah_owp_modular_ipe(gage_id, subset_dir)
-    #     return results
-    # elif module == "T-Route":
-    #     results = t_route_ipe(gage_id, subset_dir)
-    #     return results
-    # elif module == "Snow17" or "SNOW17":
-    #     results = snow17_ipe(gage_id, subset_dir, ipe_json_dict)
-    #     return results
-    # else:
-    #     error_str = "Module name not valid:" + module
-    #     error = dict(error = error_str)
-    #     print(error_str)
-    #     logger.error(error_str)
-    #     return error

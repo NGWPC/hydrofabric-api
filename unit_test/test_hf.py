@@ -15,7 +15,7 @@ def test_gpkg():
 def test_gpkg_bad_gage_id():
     
     gage_id = "0671038"
-    output = {"error":"Gage ID is not valid"} 
+    output = {'error': 'Hydrofabric subsetting failed; check gage id.'} 
     url = 'http://127.0.0.1:8000/hydrofabric/2.1/geopackages/' + gage_id
     results = requests.get(url)
     results = results.text
@@ -43,7 +43,7 @@ def test_get_ipe_bad_gage_id():
     results = requests.post(url, data=payload, headers=headers)
     results = results.text
 
-    output = {"error":"Gage ID is not valid"} 
+    output = {'error': 'Hydrofabric subsetting failed; check gage id.'} 
     assert results == output
 
 def test_get_ipe_bad_module():

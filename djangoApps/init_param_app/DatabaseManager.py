@@ -38,12 +38,12 @@ class DatabaseManager:
          
         query = """
         SELECT 
-        m.description,array_agg(mg.group_name) AS groups, m.name, m.version_url, m.commit_hash, m.version_number
+        m.name, array_agg(mg.group_name) AS groups 
         FROM modules m
-        JOIN module_group_map mgm ON m.id = mgm.id
-        JOIN module_groups mg ON mgm.id = mg.id
-        GROUP BY m.id, m.description, m.name, m.version_url, m.commit_hash, m.version_number
-        ORDER BY m.id ASC;
+        JOIN module_group_map mgm ON m.id = mgm.module_id
+        JOIN module_groups mg ON mgm.group_id = mg.id
+        GROUP BY m.name
+        ORDER BY m.name ASC;
         """
         
 
@@ -459,13 +459,13 @@ class DatabaseManager:
         table_name = ""
         if model_type in ["CFE-S", "CFE-X"]:
             table_name = "cfe_params"
-        elif model_type == "T-ROUTE":
+        elif model_type == "T-Route":
             table_name = "t_route_params"
-        elif model_type == "NOAH-OWP-MODULAR":
+        elif model_type == "Noah-OWP-Modular":
             table_name = "noah_owp_modular_params"
         elif model_type == "Snow17" or model_type == "SNOW17":
             table_name = "snow17_params"
-        elif model_type == "SAC-SMA":
+        elif model_type == "Sac-SMA":
             table_name = "sac_sma_params"
         else:
             return None, None
