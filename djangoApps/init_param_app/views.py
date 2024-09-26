@@ -11,12 +11,12 @@ from .models import HFFiles
 from .util.gage_file_management import GageFileManagement
 from .serializers import HFFilesSerializers
 import logging
-from init_param_app.DatabaseManager import DatabaseManager
+from .DatabaseManager import DatabaseManager
 import json
 import sys
 
-from init_param_app.geopackage import get_geopackage
-from init_param_app.initial_parameters import get_ipe
+from .geopackage import get_geopackage
+from .initial_parameters import get_ipe
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='hf.log', level=logging.INFO)
@@ -72,52 +72,6 @@ def modules(request):
         logger.error(f"Error executing query: {e}")
         return Response({"Error executing query": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@api_view(['GET'])
-def moduleMetaData(request, model_type):
-    try:
-        # Get the calibration parameters data
-        calibrate_data_response = moduleCalibrateData(model_type)
-        #calibrate_data = calibrate_data_response.data[0]  # Assuming the structure is consistent
-
-        # Get the output variables data
-        out_variables_data_response = moduleOutVariablesData(model_type)
-        #out_variables_data = out_variables_data_response.data[0]  # Assuming the structure is consistent
-
-        # Combine the data
-        combined_data = OrderedDict()
-        combined_data["module_name"] = model_type
-        combined_data["parameter_file"] = {"url": None}
-        combined_data["calibrate_parameters"] = calibrate_data_response["calibrate_parameters"]
-        combined_data["module_output_variables"] = out_variables_data_response["module_output_variables"]
-
-        return Response([combined_data], status=200)
-
-    except Exception as e:
-        logger.error(f"Error executing query: {e}")
-        return Response({"error": str(e)}, status=500)
-
-
-@api_view(['GET'])
-def get_model_parameters_total_count(request, model_type):
-    if not isinstance(model_type, str) or len(model_type) > 20:
-        return Response({"error": "Invalid model type"}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Execute the query
-    try:
-        with connection.cursor() as cursor:
-            db = DatabaseManager(cursor)
-            total_count = db.getModelParametersTotalCount(model_type)
-            if total_count is not None:
-                return Response({"total_count": total_count}, status=status.HTTP_200_OK)
-            else:
-                return Response({"error": "Model not found"}, status=status.HTTP_404_NOT_FOUND)
-
-    except Exception as e:
-        print(f"Error executing query: {e}")
-        logger.error(f"Error executing query: {e}")
-        return Response({"Error executing query": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 
 def get_initial_parameters(model_type):
     if not isinstance(model_type, str) or len(model_type) > 20:
@@ -148,7 +102,7 @@ def get_initial_parameters(model_type):
         return Response({"Error executing query": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-def moduleCalibrateData(model_type):
+def module_calibrate_data(model_type):
     try:
         with connection.cursor() as cursor:
             db = DatabaseManager(cursor)
@@ -178,7 +132,7 @@ def moduleCalibrateData(model_type):
         return error_str
 
 
-def moduleOutVariablesData(model_type):
+def module_out_variables_data(model_type):
     try:
         with connection.cursor() as cursor:
             db = DatabaseManager(cursor)
@@ -207,10 +161,10 @@ def moduleOutVariablesData(model_type):
 
 def get_module_metadata(module_name):
 
-    calibrate_data_response = moduleCalibrateData(module_name.upper())
+    calibrate_data_response = module_calibrate_data(module_name.upper())
 
     # Get the output variables data
-    out_variables_data_response = moduleOutVariablesData(module_name)
+    out_variables_data_response = module_out_variables_data(module_name)
 
     # Combine the data
     combined_data = OrderedDict()
@@ -226,7 +180,10 @@ def get_module_metadata(module_name):
     return [combined_data]
 
 @api_view(['GET'])
-def return_geopackage(request, gage_id):
+def return_geopackage(request):
+    gage_id = request.query_params.get('gage_id')
+    source = request.query_params.get('source')
+    domain = request.query_params.get('domain')
     results = get_geopackage(gage_id)
     if 'error' not in results:
         return Response(results, status=status.HTTP_200_OK)
@@ -237,6 +194,8 @@ def return_geopackage(request, gage_id):
 @api_view(['POST'])
 def return_ipe(request):
     gage_id = request.data.get("gage_id")
+    source = request.data.get("source")
+    domain = request.data.get("domain")
     modules = request.data.get("modules")
 
     #print(get_initial_parameters("CFE-S"))
@@ -268,11 +227,12 @@ class GetObservationalData(APIView):
         loc_status = status.HTTP_200_OK
         gage_id = request.query_params.get('gage_id')
         source = request.query_params.get('source')
+        domain = request.query_params.get('domain')
         gage_file_mgmt = GageFileManagement()
         gage_file_mgmt.start_minio_client()
 
         # Check DB HFFiles table for pre-existing data
-        mydata = HFFiles.objects.filter(gage_id=gage_id, source=source, data_type=self.data_type).values()
+        mydata = HFFiles.objects.filter(gage_id=gage_id, source=source, domain=domain, data_type=self.data_type).values()
         if not mydata:
             # Return/Log error missing gage_id
             loc_status = status.HTTP_422_UNPROCESSABLE_ENTITY

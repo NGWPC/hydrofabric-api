@@ -2,9 +2,6 @@ import logging
 
 #import geopackage
 
-#def get_ipe(gage_id, module, ipe_json_dict, get_gpkg = True):
-def get_ipe(gage_id, module, module_metadata, get_gpkg=True):
-
 from .geopackage import *
 from .cfe import *
 from .noah_owp_modular import *
