@@ -72,53 +72,6 @@ def modules(request):
         logger.error(f"Error executing query: {e}")
         return Response({"Error executing query": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-""" Dead code delete
-@api_view(['GET'])
-def moduleMetaData(request, model_type):
-    try:
-        # Get the calibration parameters data
-        calibrate_data_response = moduleCalibrateData(model_type)
-        #calibrate_data = calibrate_data_response.data[0]  # Assuming the structure is consistent
-
-        # Get the output variables data
-        out_variables_data_response = moduleOutVariablesData(model_type)
-        #out_variables_data = out_variables_data_response.data[0]  # Assuming the structure is consistent
-
-        # Combine the data
-        combined_data = OrderedDict()
-        combined_data["module_name"] = model_type
-        combined_data["parameter_file"] = {"url": None}
-        combined_data["calibrate_parameters"] = calibrate_data_response["calibrate_parameters"]
-        combined_data["module_output_variables"] = out_variables_data_response["module_output_variables"]
-
-        return Response([combined_data], status=200)
-
-    except Exception as e:
-        logger.error(f"Error executing query: {e}")
-        return Response({"error": str(e)}, status=500)
-
-
-@api_view(['GET'])
-def get_model_parameters_total_count(request, model_type):
-    if not isinstance(model_type, str) or len(model_type) > 20:
-        return Response({"error": "Invalid model type"}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Execute the query
-    try:
-        with connection.cursor() as cursor:
-            db = DatabaseManager(cursor)
-            total_count = db.getModelParametersTotalCount(model_type)
-            if total_count is not None:
-                return Response({"total_count": total_count}, status=status.HTTP_200_OK)
-            else:
-                return Response({"error": "Model not found"}, status=status.HTTP_404_NOT_FOUND)
-
-    except Exception as e:
-        print(f"Error executing query: {e}")
-        logger.error(f"Error executing query: {e}")
-        return Response({"Error executing query": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-
 
 def get_initial_parameters(model_type):
     if not isinstance(model_type, str) or len(model_type) > 20:
@@ -147,7 +100,7 @@ def get_initial_parameters(model_type):
         print(f"Error executing query: {e}")
         logger.error(f"Error executing query: {e}")
         return Response({"Error executing query": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    """
+
 
 def module_calibrate_data(model_type):
     try:
