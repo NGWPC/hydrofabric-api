@@ -1,7 +1,7 @@
 import os
 import inspect
 #import subprocess
-from subprocess import PIPE, run
+from subprocess import run
 import logging
 
 #import utilities
@@ -75,9 +75,6 @@ def get_geopackage(gage_id):
                     hydrofabric_dir, 
                     hydrofabric_version.lstrip('v'),
                     hydrofabric_type]
-    run_command_string = " ".join(run_command)
-    run_command_string = "'"+run_command_string+"'"
-    run_command_string = ['echo', 'daniel']
 
     result = run(run_command, capture_output=True)
 

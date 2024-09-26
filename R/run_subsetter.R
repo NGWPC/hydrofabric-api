@@ -15,7 +15,7 @@ hydrofabric_type = args[6]
 outpathfile = paste(outpath, outfile, sep="/")
 
 tryCatch( {
-get_subset(hl_uri = gauge_id, source = hydrofabric_data, hf_version = hydrofabric_version, type = hydrofabric_type, outfile = outpathfile)
+get_subset(hl_uri = gauge_id, source = hydrofabric_data, hf_version = hydrofabric_version, type = hydrofabric_type, outfile = outpathfile, overwrite = TRUE)
 },
 error = function(cond) {
     message(paste('error', conditionMessage(cond), sep=':'))
