@@ -50,18 +50,13 @@ def modules(request):
         with connection.cursor() as cursor:
             db = DatabaseManager(cursor)
             column_names, rows = db.selectAllModulesDetail()
+            print(rows)
             if column_names and rows:
                 results = []
                 for row in rows:
                     result = OrderedDict()
-                    result["description"] = row[column_names.index("description")]
-                    result["groups"] = row[column_names.index("groups")]
                     result["module_name"] = row[column_names.index("name")]
-                    result["module_version"] = {
-                        "version_url": row[column_names.index("version_url")],
-                        "commit_hash": row[column_names.index("commit_hash")],
-                        "version_number": row[column_names.index("version_number")]
-                    }
+                    result["groups"] = row[column_names.index("groups")]
                     results.append(result)
 
                 # Wrap results in the "modules" key
@@ -136,7 +131,7 @@ def module_out_variables_data(model_type):
     try:
         with connection.cursor() as cursor:
             db = DatabaseManager(cursor)
-            column_names, rows = db.selectModuleOutVariablesData(model_type.upper())
+            column_names, rows = db.selectModuleOutVariablesData(model_type)
 
             if column_names and rows:
                 module_data = []
@@ -161,7 +156,8 @@ def module_out_variables_data(model_type):
 
 def get_module_metadata(module_name):
 
-    calibrate_data_response = module_calibrate_data(module_name.upper())
+    # Get initial parameter data
+    calibrate_data_response = module_calibrate_data(module_name)
 
     # Get the output variables data
     out_variables_data_response = module_out_variables_data(module_name)
@@ -188,7 +184,7 @@ def return_geopackage(request):
     if 'error' not in results:
         return Response(results, status=status.HTTP_200_OK)
     else:
-        return Response(results, status=status.HTTP_404_NOT_FOUND)
+        return Response(results, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
 @api_view(['POST'])
