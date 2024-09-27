@@ -1,7 +1,7 @@
 import os
 import inspect
-import subprocess
-import re
+#import subprocess
+from subprocess import run
 import logging
 
 #import utilities
@@ -31,13 +31,6 @@ def get_geopackage(gage_id):
     s3bucket = config['s3bucket'] 
     s3prefix = config['s3prefix'] 
 
-    #validate that gage input is in the proper format (8 digits) 
-    x = bool(re.search("\d{8}", gage_id))
-    if not x:
-        
-        error = dict(error = "Gage ID is not valid")
-        return error
-
     #setup paths and geopackage name for hydrofabric subsetter R function call
 
     #append "Gages-" to id per hydrofabric naming convention for hl_uri
@@ -55,7 +48,6 @@ def get_geopackage(gage_id):
     else:
         subset_s3prefix = gage_id
 
-
     subset_dir_full = os.path.join(output_dir, gage_id)
 
     current_filename = __file__
@@ -68,32 +60,30 @@ def get_geopackage(gage_id):
     except Exception as e:
         current_line = inspect.currentframe().f_lineno
         error_str = f"error creating directory {subset_dir_full}, {current_filename}::{current_line}-{e}"
+        logger.error(error_str)
         return error_str
-
 
     status_str = "Calling HF Subsetter R code"
     print(status_str)
     logger.info(status_str)
 
     #Call R code for subsetter
-    run_command = ["/usr/bin/Rscript ../R/run_subsetter.R",
+    run_command = ["/usr/bin/Rscript", "../R/run_subsetter.R",
                     subsetter_gage_id,
                     subset_dir_full, 
                     gpkg_filename, 
                     hydrofabric_dir, 
                     hydrofabric_version.lstrip('v'),
                     hydrofabric_type]
-    run_command_string = " ".join(run_command)
-    
-    try:
-        subprocess.call(run_command_string, shell=True)
-    except:
-        error_str = "Hydrofabric Subsetter R code failure"
-        error = dict(error = error_str)
-        print(error_str)
+
+    result = run(run_command, capture_output=True)
+
+    if 'error' in str(result.stderr):
+        error_str = 'Hydrofabric subsetting failed; check gage id.'
+        error = {'error':  error_str}
         logger.error(error_str)
         return error
-
+    
     # Write geopackage to s3 bucket
     write_minio(subset_dir_full, gpkg_filename, s3url, s3bucket, subset_s3prefix)
     uri = build_uri(s3bucket, subset_s3prefix, gpkg_filename)
