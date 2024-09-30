@@ -1,8 +1,9 @@
 input_dir: "/Hydrofabric/data/input/"
-output_dir: "/Hydrofabric/data/temp/"
 hydrofabric_dir: "/Hydrofabric/data/hydrofabric"
 hydrofabric_version: "v2.1.1"
 hydrofabric_type:  "nextgen"
+hydrofabric_output_version: "2.1"
 s3url: "s3.amazonaws.com"
+s3uri: "s3://ngwpc-hydrofabric/"
 s3bucket: "ngwpc-hydrofabric"
 s3prefix: ~

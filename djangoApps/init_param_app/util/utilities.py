@@ -70,7 +70,7 @@ def get_config():
     Returns:
     yaml object
     '''
-
-    with open('../config.yml', 'r') as file:
+    directory = os.getcwd() + "/config.yml"
+    with open(directory, 'r') as file:
         config = yaml.safe_load(file)
     return config
