@@ -23,7 +23,7 @@ import geopandas as gpd
 import pandas as pd
 import pyarrow.parquet as pq
 import pyarrow as pa
-from init_param_app.utilities import *
+from .util.utilities import *
 
 #setup logging
 logger = logging.getLogger(__name__)

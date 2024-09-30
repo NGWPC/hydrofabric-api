@@ -1,8 +1,8 @@
 import requests
-'''
+
 url = 'http://127.0.0.1:8000/hydrofabric/2.1/modules/parameters/'
-payload = '{"gage_id": "06710385", "domain":"CONUS", "source":"USGS", "modules": ["Noah-OWP-Modular"]}'
-#payload = '{"gage_id": "06710385", "modules": ["CFE-S", "CFE-X"]}'
+payload = '{"gage_id": "01123000", "domain":"CONUS", "source":"USGS", "modules": ["Noah-OWP-Modular"]}'
+#payload = '{"gage_id": "01123000", "modules": ["CFE-S", "CFE-X"]}'
 #payload = '{"gage_id": "06710385", "modules": ["CFE-S"]}'
 #payload = '{"gage_id": "06710385", "modules": ["T-Route"]}'
 #payload = '{"gage_id": "06710385", "modules": ["CFE-S", "Noah-OWP-Modular", "T-Route"]}'
@@ -15,7 +15,8 @@ gage_id = "06710385"
 source = 'USGS'
 domain = 'CONUS'
 rest_of_url = f"?gage_id={gage_id}&source={source}&domain={domain}"
-url = 'http://127.0.0.1:8000/hydrofabric/2.1/geopackages/' + rest_of_url
+url = 'http://127.0.0.1:8000/hydrofabric/2.1/geopackages' + rest_of_url
+'''
 results = requests.get(url)
 results = results.text
 print(results)
