@@ -8,6 +8,7 @@ from collections import OrderedDict
 from rest_framework.views import APIView
 
 from .models import HFFiles
+from .util.enums import FileTypeEnum
 from .util.gage_file_management import GageFileManagement
 from .serializers import HFFilesSerializers
 import logging
@@ -50,7 +51,6 @@ def modules(request):
         with connection.cursor() as cursor:
             db = DatabaseManager(cursor)
             column_names, rows = db.selectAllModulesDetail()
-            print(rows)
             if column_names and rows:
                 results = []
                 for row in rows:
@@ -68,9 +68,118 @@ def modules(request):
         return Response({"Error executing query": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(['GET'])
+def return_geopackage(request):
+    http_200 = status.HTTP_200_OK
+    http_422 = status.HTTP_422_UNPROCESSABLE_ENTITY
+    gage_id = request.query_params.get('gage_id')
+    source = request.query_params.get('source')
+    domain = request.query_params.get('domain')
+    gage_file_mgmt = GageFileManagement()
+    results = None
+    loc_status = http_200
+
+    # Determine if this has already been computed, Check DB HFFiles table and S3 for pre-existing data
+    file_found, results = gage_file_mgmt.file_exists(gage_id, domain, source, FileTypeEnum.GEOPACKAGE)
+    if not file_found:
+        results = get_geopackage(gage_id, source, domain)
+        if 'error' in results:
+            loc_status = http_422
+
+    return Response(results, status=loc_status)
+
+
+@api_view(['POST'])
+def return_ipe(request):
+    gage_id = request.data.get("gage_id")
+    source = request.data.get("source")
+    domain = request.data.get("domain")
+    modules = request.data.get("modules")
+    gage_file_mgmt = GageFileManagement()
+
+    # Determine if IPE files already exists for this module and gage
+    params_exists = gage_file_mgmt.param_files_exists(gage_id, domain, source, FileTypeEnum.PARAMS, modules)
+    #Determine if GEOPACKAGE is necessary and file for this gage exists
+    if len(params_exists) != len(modules):
+        # Geopackage file needed
+        file_found, results = gage_file_mgmt.file_exists(gage_id, domain, source, FileTypeEnum.GEOPACKAGE)
+        if file_found:
+            # Get the Geopackage file from S3 and put into local directory
+            gage_file_mgmt.get_file_from_s3(gage_id, domain, source, FileTypeEnum.GEOPACKAGE)
+        else:
+            # Build the Geopackage file from scratch
+            results = get_geopackage(gage_id, source, domain, keep_file=True)
+
+    results = []
+    for module in enumerate(modules):
+        metadata = get_module_metadata(module[1])
+        module_results = get_ipe(gage_id, module[1], metadata)
+
+        if 'error' not in module_results:
+            results.append(module_results[0])
+        else:
+            results = module_results
+            print(results)
+            return Response(results, status=status.HTTP_404_NOT_FOUND)
+    """
+    TODO:
+        Remove all temp files
+    """
+    return Response(results, status=status.HTTP_200_OK)
+
+
+class GetObservationalData(APIView):
+
+    def get(self, request):
+        loc_status = status.HTTP_200_OK
+        gage_id = request.query_params.get('gage_id')
+        source = request.query_params.get('source')
+        domain = request.query_params.get('domain')
+        gage_file_mgmt = GageFileManagement()
+
+        # Check DB and HFFiles table for pre-existing data
+        file_found, results = gage_file_mgmt.file_exists(gage_id, domain, source, FileTypeEnum.OBSERVATIONAL)
+        if not file_found:
+            loc_status = status.HTTP_422_UNPROCESSABLE_ENTITY
+            results = f"Non-Headwater Basin gage or missing data for gage_id - {gage_id}, source -  {source}, domain - {domain}"
+            log_string = f"Database or S3 bucket missing gage_id - {gage_id}, data type - {FileTypeEnum.OBSERVATIONAL}, source -  {source}, domain - {domain}."
+            logger.error(log_string)
+
+        return Response(results, status=loc_status)
+
+
+class HFFilesCreate(generics.CreateAPIView):
+    # API endpoint that allows creation of a new HFFiles
+    queryset = HFFiles.objects.all(),
+    serializer_class = HFFilesSerializers
+
+
+class HFFilesList(generics.ListAPIView):
+    # API endpoint that allows HFFiles to be viewed.
+    queryset = HFFiles.objects.all()
+    serializer_class = HFFilesSerializers
+
+
+class HFFilesDetail(generics.RetrieveAPIView):
+    # API endpoint that returns a single HFFiles by pk.
+    queryset = HFFiles.objects.all()
+    serializer_class = HFFilesSerializers
+
+
+class HFFilesUpdate(generics.RetrieveUpdateAPIView):
+    # API endpoint that allows a HFFiles record to be updated.
+    queryset = HFFiles.objects.all()
+    serializer_class = HFFilesSerializers
+
+
+class HFFilesDelete(generics.RetrieveDestroyAPIView):
+    # API endpoint that allows a HFFiles record to be deleted.
+    queryset = HFFiles.objects.all()
+    serializer_class = HFFilesSerializers
+
 def get_initial_parameters(model_type):
     if not isinstance(model_type, str) or len(model_type) > 20:
-        error_str =  {"error": "Invalid model type"}
+        error_str = {"error": "Invalid model type"}
         logger.error(error_str)
 
     # Execute the query
@@ -87,10 +196,10 @@ def get_initial_parameters(model_type):
                 results = [OrderedDict(zip(column_names, row)) for row in cleaned_rows]
                 return results
             else:
-                error_str =  {"error": "No initial parameter data found"}
+                error_str = {"error": "No initial parameter data found"}
                 logger.error(error_str)
                 return error_str
-        
+
     except Exception as e:
         print(f"Error executing query: {e}")
         logger.error(f"Error executing query: {e}")
@@ -150,7 +259,7 @@ def module_out_variables_data(model_type):
                 return error_str
 
     except Exception as e:
-        error_str = {"Error":  "Error executing moduleOutVariablesData query: {e}"}
+        error_str = {"Error": "Error executing moduleOutVariablesData query: {e}"}
         logger.error(error_str)
         return error_str
 
@@ -175,106 +284,4 @@ def get_module_metadata(module_name):
 
     return [combined_data]
 
-@api_view(['GET'])
-def return_geopackage(request):
-    gage_id = request.query_params.get('gage_id')
-    source = request.query_params.get('source')
-    domain = request.query_params.get('domain')
-    results = get_geopackage(gage_id)
-    if 'error' not in results:
-        return Response(results, status=status.HTTP_200_OK)
-    else:
-        return Response(results, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-
-@api_view(['POST'])
-def return_ipe(request):
-    gage_id = request.data.get("gage_id")
-    source = request.data.get("source")
-    domain = request.data.get("domain")
-    modules = request.data.get("modules")
-
-    #print(get_initial_parameters("CFE-S"))
-
-    results = []
-    for module in enumerate(modules):
-        if module[0] > 0:
-            metadata = get_module_metadata(module[1])
-            module_results = get_ipe(gage_id, module[1], metadata, get_gpkg = False)
-        else:
-            metadata = get_module_metadata(module[1])
-            module_results = get_ipe(gage_id, module[1], metadata)
-
-        if 'error' not in module_results:
-            results.append(module_results[0])
-        else:
-            results = module_results
-            print(results)
-            return Response(results, status=status.HTTP_404_NOT_FOUND)
-
-    return Response(results, status=status.HTTP_200_OK)
-
-
-class GetObservationalData(APIView):
-    data_type = 'OBSERVATIONAL'
-
-    def get(self, request):
-        results = None
-        loc_status = status.HTTP_200_OK
-        gage_id = request.query_params.get('gage_id')
-        source = request.query_params.get('source')
-        domain = request.query_params.get('domain')
-        gage_file_mgmt = GageFileManagement()
-        gage_file_mgmt.start_minio_client()
-
-        # Check DB HFFiles table for pre-existing data
-        mydata = HFFiles.objects.filter(gage_id=gage_id, source=source, domain=domain, data_type=self.data_type).values()
-        if not mydata:
-            # Return/Log error missing gage_id
-            loc_status = status.HTTP_422_UNPROCESSABLE_ENTITY
-            results = f"Non-Headwater Basin gage requested - {gage_id} with source {source}"
-            log_string = f"Database missing gage_id - {gage_id} with source {source}. This may be a non-headwater gage id request and will be missing"
-            logger.warning(log_string)
-        else:
-            # Check S3 for file from DB call.
-            # Return file URL in schema dict
-            uri = mydata[0].get('uri')
-            if not gage_file_mgmt.file_exists(uri):
-                loc_status = status.HTTP_422_UNPROCESSABLE_ENTITY
-                results = f"Non-Headwater Basin gage requested - {gage_id} with source {source}"
-                log_string = f"S3 bucket missing gage_id - {gage_id} with source {source}. Database entry uri is {uri}. Also might be a AWS S3 Credentials issue"
-                logger.error(log_string)
-            else:
-                results = dict(uri=uri)
-
-        return Response(results, status=loc_status)
-
-
-class HFFilesCreate(generics.CreateAPIView):
-    # API endpoint that allows creation of a new HFFiles
-    queryset = HFFiles.objects.all(),
-    serializer_class = HFFilesSerializers
-
-
-class HFFilesList(generics.ListAPIView):
-    # API endpoint that allows HFFiles to be viewed.
-    queryset = HFFiles.objects.all()
-    serializer_class = HFFilesSerializers
-
-
-class HFFilesDetail(generics.RetrieveAPIView):
-    # API endpoint that returns a single HFFiles by pk.
-    queryset = HFFiles.objects.all()
-    serializer_class = HFFilesSerializers
-
-
-class HFFilesUpdate(generics.RetrieveUpdateAPIView):
-    # API endpoint that allows a HFFiles record to be updated.
-    queryset = HFFiles.objects.all()
-    serializer_class = HFFilesSerializers
-
-
-class HFFilesDelete(generics.RetrieveDestroyAPIView):
-    # API endpoint that allows a HFFiles record to be deleted.
-    queryset = HFFiles.objects.all()
-    serializer_class = HFFilesSerializers
