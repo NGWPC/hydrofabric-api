@@ -26,7 +26,7 @@ def get_ipe(gage_id, module, module_metadata):
 
     # Read config file for paths
     config = get_config()
-    output_dir = config['output_dir']
+    output_dir = config['output_temp_dir']
 
     # Build path for IPE temp directory
     subset_dir = output_dir + "/" + gage_id + "/"      

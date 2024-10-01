@@ -33,7 +33,7 @@ def snow17_ipe(gage_id, subset_dir, module_metadata_list):
     s3url = config['s3url']
     s3bucket = config['s3bucket']
     s3prefix = config['s3prefix']
-    output_dir = config['output_dir']
+    output_dir = config['output_temp_dir']
     hydrofabric_dir = config['hydrofabric_dir']
     hydrofabric_version = config['hydrofabric_version']
     hydrofabric_type = config['hydrofabric_type']
@@ -170,7 +170,7 @@ def create_snow17_input(gage_id, catch_dict, attr_file, snow17_output_dir: str, 
 
         # get config info
         config = get_config()
-        output_dir = config['output_dir']
+        output_dir = config['output_temp_dir']
         s3url = config['s3url']
         s3bucket = config['s3bucket']
         s3prefix = config['s3prefix']

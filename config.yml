@@ -1,5 +1,6 @@
 input_dir: "/Hydrofabric/data/input/"
 hydrofabric_dir: "/Hydrofabric/data/hydrofabric"
+output_temp_dir: "/Hydrofabric/data/hydrofabric/temp"
 hydrofabric_version: "v2.1.1"
 hydrofabric_type:  "nextgen"
 hydrofabric_output_version: "2.1"

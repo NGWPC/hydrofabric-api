@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 def sac_sma_ipe(gage_id, subset_dir,module_metadata):
     # setup output dir
     config = get_config()
-    #output_dir = config['output_dir']
+    #output_dir = config['output_temp_dir']
     hydrofabric_dir = config['hydrofabric_dir']
     hydrofabric_version = config['hydrofabric_version']
     hydrofabric_type = config['hydrofabric_type']
