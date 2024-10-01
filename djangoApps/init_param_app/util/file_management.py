@@ -3,25 +3,27 @@ This module manages files that have a gage dependency for CRUD DB operations and
 """
 import os
 import logging
-logger = logging.getLogger(__name__)
-
 from minio import Minio, S3Error
+from .utilities import get_config
 
+logger = logging.getLogger(__name__)
 
 class FileManagement:
     # these access keys are for testing only.  This will be updated to use the AWS Secrets Manager
 
     def __init__(self):
-        self.s3_url = "s3.amazonaws.com"
-        self.s3_bucket = "ngwpc-hydrofabric"
-        self.s3_uri = 's3://ngwpc-hydrofabric/'
+        self.access_key = os.environ["AWS_ACCESS_KEY_ID"]
+        self.secret_key = os.environ["AWS_SECRET_ACCESS_KEY"]
+        self.session_token = os.environ["AWS_SESSION_TOKEN"]
+        config = get_config()
+        self.s3_url = config['s3url']
+        self.s3_bucket = config["s3bucket"]
+        self.s3_uri = config['s3uri']
+        self.hydro_version = config['hydrofabric_output_version']
         self.s3_path = None
         self.full_s3_path = None
         self.input_filename = None
         self.input_path = None
-        self.access_key = os.environ["AWS_ACCESS_KEY_ID"]
-        self.secret_key = os.environ["AWS_SECRET_ACCESS_KEY"]
-        self.session_token = os.environ["AWS_SESSION_TOKEN"]
         self.client = None
 
     def start_minio_client(self):
@@ -36,7 +38,7 @@ class FileManagement:
             bucket_exists = False
         return bucket_exists
 
-    def file_exists(self, object_name):
+    def s3_file_exists(self, object_name):
         try:
             object_name = object_name.removeprefix(self.s3_uri)
 
@@ -59,3 +61,15 @@ class FileManagement:
         self.full_s3_path = "s3://" + self.s3_bucket + "/" + self.s3_path
         status_string = "Hydrofabric data written to " + self.full_s3_path
         logger.info(status_string)
+
+    def retrieve_minio(self, object_name, local_dir):
+        self.start_minio_client()
+        try:
+            object_name = object_name.removeprefix(self.s3_uri)
+            file_name = os.path.basename(object_name)
+            local_dir = os.path.join(local_dir, file_name)
+            self.client.fget_object(self.s3_bucket, object_name, local_dir)
+            logger.debug(f"File '{object_name}' successfully downloaded to '{local_dir}'.")
+        except Exception as e:
+            logger.error(f"Error downloading file: {e}")
+
