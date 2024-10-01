@@ -42,7 +42,6 @@ def get_ipe(gage_id, module, module_metadata, get_gpkg = True):
 
     status_str = "Get IPEs for " + module
     print(status_str)
-    print(module_metadata)
     logger.info(status_str)
 
     # Call function for specific module

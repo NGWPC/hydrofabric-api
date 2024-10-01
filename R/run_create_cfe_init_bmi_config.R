@@ -5,7 +5,7 @@ source('../R/create_cfe_init_bmi_config.R')
 source('../R/rasterize_basins.R')
 source('../R/create_crosswalk_gwbucket_catchment.R')
 
-gage_ids <- eval(parse(text=args[1]))
+gage_ids <- args[1]
 data_dir <- args[2]
 output_dir <- args[3]
 const_names <- eval(parse(text=args[4]))

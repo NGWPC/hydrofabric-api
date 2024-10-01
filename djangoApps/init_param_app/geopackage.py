@@ -40,7 +40,8 @@ def get_geopackage(gage_id):
     logger.info(status_str)
 
     #strip leading zero of gage ID for gpkg filename
-    gpkg_filename = "Gage_"+gage_id.lstrip("0") + ".gpkg"
+    #gpkg_filename = "Gage_"+gage_id.lstrip("0") + ".gpkg"
+    gpkg_filename = "Gage_" + gage_id + ".gpkg"
 
     #create temp directory and s3 prefix for this particular subset
     if s3prefix:

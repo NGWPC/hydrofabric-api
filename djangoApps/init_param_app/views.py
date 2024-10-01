@@ -50,13 +50,14 @@ def modules(request):
         with connection.cursor() as cursor:
             db = DatabaseManager(cursor)
             column_names, rows = db.selectAllModulesDetail()
-            print(rows)
+            print(column_names)
             if column_names and rows:
                 results = []
                 for row in rows:
                     result = OrderedDict()
                     result["module_name"] = row[column_names.index("name")]
                     result["groups"] = row[column_names.index("groups")]
+                    result["description"] = row[column_names.index("description")]
                     results.append(result)
 
                 # Wrap results in the "modules" key
