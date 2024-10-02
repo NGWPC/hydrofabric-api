@@ -15,7 +15,7 @@ class HFFiles(models.Model):
     update_time = models.DateTimeField(default=timezone.now)
 
     class Meta:
-        #managed = False
+        managed = False
         db_table = 'restapi_hffiles'
 
     # method to return all fields

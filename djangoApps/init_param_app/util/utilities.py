@@ -1,6 +1,10 @@
 import os
 from minio import Minio
+from django.conf import settings
 import yaml
+import logging
+
+logger = logging.getLogger(__name__)
 
 def write_minio(path, filename, storage_url, bucket_name, prefix=""):
     '''
@@ -70,7 +74,10 @@ def get_config():
     Returns:
     yaml object
     '''
-    directory = os.getcwd() + "/config.yml"
+    # Get the grandparent directory of BASE_DIR
+    grandparent_dir = os.path.dirname(settings.BASE_DIR)
+    directory = os.path.join(grandparent_dir, "config.yml")
+
     with open(directory, 'r') as file:
         config = yaml.safe_load(file)
     return config
