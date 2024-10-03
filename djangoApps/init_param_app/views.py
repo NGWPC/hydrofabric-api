@@ -206,7 +206,6 @@ def return_ipe(request):
             modules_output_list.append(module_results)
         else:
             results = module_results
-            print(results)
             return Response(results, status=status.HTTP_404_NOT_FOUND)
         
     results = {"modules": modules_output_list}
