@@ -44,7 +44,7 @@ def sac_sma_ipe(gage_id, subset_dir,module_metadata):
     # first save the top level dir for the gpkg
     gpkg_dir = subset_dir
   
-    gpkg_file = "Gage_" + gage_id.lstrip("0") + ".gpkg"
+    gpkg_file = "Gage_" + gage_id + ".gpkg"
     gpkg_file = os.path.join(gpkg_dir, gpkg_file)
     try:
         divides_layer = gpd.read_file(gpkg_file, layer = "divides")
@@ -238,7 +238,7 @@ def create_sac_sma_input(gage_id,catch_dict, attr_file, subset_dir: str, module_
     logger.info(status_str)
 
     #fill in parameter files uri 
-    module_metadata[0]["parameter_file"]["uri"] = uri
+    module_metadata["parameter_file"]["uri"] = uri
 
     # Temp Hack till we get the initial values based on Mark's email and list of documents
     # Create an empty dictionary
@@ -265,16 +265,16 @@ def create_sac_sma_input(gage_id,catch_dict, attr_file, subset_dir: str, module_
     # Get default values for calibratable initial parameters from initial_value_dict.
 
 # Check if "calibrate_parameters" exists in combined_data
-    print(type(module_metadata[0]["calibrate_parameters"]))
-    if "calibrate_parameters" in module_metadata[0]:
-        print("Yes calibrate_parameters is in module_metadata[0]")
-        for idx in range(len(module_metadata[0]["calibrate_parameters"])):
-            param = module_metadata[0]["calibrate_parameters"][idx]  # Access the list element by index
+    print(type(module_metadata["calibrate_parameters"]))
+    if "calibrate_parameters" in module_metadata:
+        print("Yes calibrate_parameters is in module_metadata")
+        for idx in range(len(module_metadata["calibrate_parameters"])):
+            param = module_metadata["calibrate_parameters"][idx]  # Access the list element by index
             # Now access dictionary keys inside the parameter
             key_name = param.get("name")  # Assuming each list element is a dictionary
             print(f"Parameter {idx}: {key_name}")
             #key_name = module_metadata['calibrate_parameters'][idx]['name']
-            module_metadata[0]["calibrate_parameters"][idx]["initial_value"] = initial_value_dict[key_name]        
+            module_metadata["calibrate_parameters"][idx]["initial_value"] = initial_value_dict[key_name]        
         
     return module_metadata
 

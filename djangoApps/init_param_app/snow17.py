@@ -47,7 +47,7 @@ def snow17_ipe(gage_id, subset_dir, module_metadata_list):
 
     # Get list of catchments from gpkg divides layer using geopandas
     #file = 'Gage_6700000.gpkg'
-    gpkg_file = "Gage_" + gage_id.lstrip("0") + ".gpkg"
+    gpkg_file = "Gage_" + gage_id + ".gpkg"
     gpkg_file = os.path.join(gpkg_dir, gpkg_file)
     divides_layer = gpd.read_file(gpkg_file, layer="divides")
     catchments = divides_layer["divide_id"].tolist()
@@ -129,7 +129,7 @@ def create_snow17_input(gage_id, catch_dict, attr_file, snow17_output_dir: str, 
 
         # NOTE: use record 0 from module_metadata_list as a template, then append a deep copy to response at end of
         #       this method and return
-        module_metadata_rec = set_ipe_json_values(param_list, module_metadata_list[0])
+        module_metadata_rec = set_ipe_json_values(param_list, module_metadata_list)
 
         input_file = os.path.join(snow17_output_dir, 'snow17-init-' + str(catchment_id) + '.namelist.input')
         param_file = os.path.join(snow17_output_dir, 'snow17_params-' + str(catchment_id) + '.HHWM8.txt')

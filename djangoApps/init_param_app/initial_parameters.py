@@ -54,7 +54,7 @@ def get_ipe(gage_id, module, module_metadata, get_gpkg = True):
     elif module == "T-Route":
         results = t_route_ipe(gage_id, subset_dir, module_metadata)
         return results
-    elif module.upper() == "SNOW17":
+    elif module == "Snow17":
         results = snow17_ipe(gage_id, subset_dir, module_metadata)
         return results
     elif module == "Sac-SMA":

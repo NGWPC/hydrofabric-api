@@ -164,6 +164,7 @@ def get_module_metadata(module_name):
     out_variables_data_response = module_out_variables_data(module_name)
 
     # Combine the data
+
     combined_data = OrderedDict()
     combined_data["module_name"] = module_name
     combined_data["parameter_file"] = {"uri": None}
@@ -173,8 +174,12 @@ def get_module_metadata(module_name):
         combined_data["calibrate_parameters"] = calibrate_data_response
 
     combined_data["output_variables"] = out_variables_data_response
-
-    return [combined_data]
+   
+    #modules_list = [combined_data]
+    #modules_dict = {"modules": modules_list}
+    #print(type(modules_dict))  
+    
+    return combined_data
 
 @api_view(['GET'])
 def return_geopackage(request):
@@ -197,7 +202,7 @@ def return_ipe(request):
 
     #print(get_initial_parameters("CFE-S"))
 
-    results = []
+    modules_output_list = []
     for module in enumerate(modules):
         if module[0] > 0:
             metadata = get_module_metadata(module[1])
@@ -207,12 +212,15 @@ def return_ipe(request):
             module_results = get_ipe(gage_id, module[1], metadata)
 
         if 'error' not in module_results:
-            results.append(module_results[0])
+            #results.append(module_results["modules"])
+            modules_output_list.append(module_results)
         else:
             results = module_results
             print(results)
             return Response(results, status=status.HTTP_404_NOT_FOUND)
-
+        
+    
+    results = {"modules": modules_output_list}
     return Response(results, status=status.HTTP_200_OK)
 
 

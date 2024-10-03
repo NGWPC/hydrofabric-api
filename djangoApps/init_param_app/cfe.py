@@ -111,9 +111,14 @@ def cfe_ipe(gage_id, subset_dir, module, module_metadata):
         key, value = line.strip().split('=')
         cfg_file_ipes[key.strip()] = value.strip()
 
-    for x in range(len(module_metadata[0]["calibrate_parameters"])):
-        module_metadata[0]["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[module_metadata[0]["calibrate_parameters"][x]["name"]]
+    #print(module_metadata["modules"][]["calibrate_parameters"])
+    print(type(module_metadata["calibrate_parameters"]))
+    print(module_metadata["calibrate_parameters"])
+    
+    for x in range(len(module_metadata["calibrate_parameters"])):
+        module_metadata["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[module_metadata["calibrate_parameters"][x]["name"]]
         
     uri = build_uri(s3bucket, s3prefix)
-    module_metadata[0]["parameter_file"]["uri"] = uri
+    module_metadata["parameter_file"]["uri"] = uri
+    
     return module_metadata

@@ -43,7 +43,7 @@ def noah_owp_modular_ipe(gage_id, subset_dir, module_metadata):
 
 
     # Get list of catchments from gpkg divides layer using geopandas
-    gpkg_file = "Gage_"+gage_id.lstrip("0") + ".gpkg"
+    gpkg_file = "Gage_" + gage_id + ".gpkg"
     gpkg_file = os.path.join(gpkg_dir, gpkg_file)    
     try:
         divides_layer = gpd.read_file(gpkg_file, layer = "divides")
@@ -201,16 +201,15 @@ def noah_owp_modular_ipe(gage_id, subset_dir, module_metadata):
     logger.info(status_str)
  
     #fill in parameter files uri 
-    module_metadata[0]["parameter_file"]["uri"] = uri
+    module_metadata["parameter_file"]["uri"] = uri
     
     # Get default values for calibratable initial parameters.
-    for x in range(len(module_metadata[0]["calibrate_parameters"])):
-            initial_values = module_metadata[0]["calibrate_parameters"][x]["initial_value"]
-            print(initial_values)
+    for x in range(len(module_metadata["calibrate_parameters"])):
+            initial_values = module_metadata["calibrate_parameters"][x]["initial_value"]
             #If initial values are an array, get proper value for vegtype, otherwise use the single value.
             if len(initial_values) > 1:
-                 module_metadata[0]["calibrate_parameters"][x]["initial_value"] = initial_values[vegtype - 1]
+                 module_metadata["calibrate_parameters"][x]["initial_value"] = initial_values[vegtype - 1]
             else:
-                 module_metadata[0]["calibrate_parameters"][x]["initial_value"] = initial_values[0]
+                 module_metadata["calibrate_parameters"][x]["initial_value"] = initial_values[0]
 
     return module_metadata
