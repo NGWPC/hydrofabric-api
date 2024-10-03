@@ -20,7 +20,7 @@ from .geopackage import get_geopackage
 from .initial_parameters import get_ipe
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename='hf.log', level=logging.INFO)
+logging.basicConfig(filename='hf.log', level=logging.DEBUG)
 
 
 # Execute the query  to fetch all models and model_ids.
@@ -85,6 +85,8 @@ def return_geopackage(request):
         results = get_geopackage(gage_id, source, domain)
         if 'error' in results:
             loc_status = http_422
+    else:
+        logger.debug(f"Prexisting Geopackage found for gage_id - {gage_id}, domain - {domain}, source - {source}")
 
     return Response(results, status=loc_status)
 

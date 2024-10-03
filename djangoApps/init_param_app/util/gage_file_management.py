@@ -4,6 +4,8 @@ Performs file management for data stored on the NGWPC S3 including managing the 
 import os
 from datetime import datetime
 from os.path import join
+import shutil
+from django.conf import settings
 import logging
 
 from .enums import FileTypeEnum
@@ -50,11 +52,32 @@ class GageFileManagement(FileManagement):
         :param gage_id: The gage the directory was requested for
         :return: String of a local directory to use for temp file storage
         """
-        path_string = f"/data/{data_type}/" if gage_id is None else f"/data/{data_type}/{gage_id}/"
-        cwd = os.getcwd() + path_string
-        if not os.path.exists(cwd):
-            os.makedirs(cwd)
-        return cwd
+        path_string = f"data/{data_type}/" if gage_id is None else f"data/{data_type}/{gage_id}/"
+        
+        grandparent_dir = os.path.dirname(settings.BASE_DIR)
+        directory = os.path.join(grandparent_dir, path_string)
+        logger.debug(f"local temp directory = {directory}")
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        return directory
+
+    def delete_local_temp_directory(self, directory):
+        """
+        Deletes a local directory used to put created data files into, prior to being transferred S3 and the HFFILES table.
+        Checks if directory exists and removes
+
+        :param data_type: The type of data retrieved (Ex. GEOPACKAGE, Observational, Forcing ... etc)
+        :param gage_id: The gage the directory was requested for
+        :return: String of a local directory to use for temp file storage
+        """
+        if os.path.exists(directory):
+            try:
+                shutil.rmtree(directory)
+                logger.debug(f"Directory '{directory}' deleted successfully (non-empty).")
+            except Exception as e:
+                logger.error(f"Error deleting directory '{directory}': {e}")
+
+        
 
     def param_files_exists(self, gage_id, domain, source, data_type, modules):
         """
@@ -140,14 +163,8 @@ class GageFileManagement(FileManagement):
                               uri=self.full_s3_path, domain=self.domain, data_type=self.data_type, source=self.source,
                               update_time=now)
         new_hffiles.save()
-        # Remove local file
-        local_file = os.path.expanduser(self.input_path + self.input_filename)
-        try:
-            os.remove(local_file)
-        except Exception as e:
-            logging.warning(f"Error deleting {local_file}: {e}")
 
-        return result, self.full_s3_path
+        return self.full_s3_path
 
     def get_file_from_s3(self, gage_id, domain, source, data_type):
         #Find file in HFFles table
@@ -164,4 +181,4 @@ class GageFileManagement(FileManagement):
         return gage_id + "_hourly_discharge.csv"
 
     def get_geopackage_filename(self, gage_id):
-        return 'gage_' + self.gage_id + ".gpkg"
+        return 'Gage_' + gage_id + ".gpkg"
