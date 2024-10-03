@@ -50,7 +50,6 @@ def modules(request):
         with connection.cursor() as cursor:
             db = DatabaseManager(cursor)
             column_names, rows = db.selectAllModulesDetail()
-            print(column_names)
             if column_names and rows:
                 results = []
                 for row in rows:
@@ -164,7 +163,6 @@ def get_module_metadata(module_name):
     out_variables_data_response = module_out_variables_data(module_name)
 
     # Combine the data
-
     combined_data = OrderedDict()
     combined_data["module_name"] = module_name
     combined_data["parameter_file"] = {"uri": None}
@@ -172,12 +170,7 @@ def get_module_metadata(module_name):
         combined_data["calibrate_parameters"] = []
     else:
         combined_data["calibrate_parameters"] = calibrate_data_response
-
     combined_data["output_variables"] = out_variables_data_response
-   
-    #modules_list = [combined_data]
-    #modules_dict = {"modules": modules_list}
-    #print(type(modules_dict))  
     
     return combined_data
 
@@ -200,8 +193,6 @@ def return_ipe(request):
     domain = request.data.get("domain")
     modules = request.data.get("modules")
 
-    #print(get_initial_parameters("CFE-S"))
-
     modules_output_list = []
     for module in enumerate(modules):
         if module[0] > 0:
@@ -212,14 +203,12 @@ def return_ipe(request):
             module_results = get_ipe(gage_id, module[1], metadata)
 
         if 'error' not in module_results:
-            #results.append(module_results["modules"])
             modules_output_list.append(module_results)
         else:
             results = module_results
             print(results)
             return Response(results, status=status.HTTP_404_NOT_FOUND)
         
-    
     results = {"modules": modules_output_list}
     return Response(results, status=status.HTTP_200_OK)
 
