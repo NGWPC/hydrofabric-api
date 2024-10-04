@@ -23,7 +23,9 @@ import geopandas as gpd
 import pandas as pd
 import pyarrow.parquet as pq
 import pyarrow as pa
+from .utilities_transform import *
 from .util.utilities import *
+
 
 #setup logging
 logger = logging.getLogger(__name__)
@@ -143,7 +145,7 @@ def create_sac_sma_input(gage_id,catch_dict, attr_file, subset_dir: str, module_
             'rserv 0.3000 0.3000']
     '''
 
-
+    #  Get the initial params names from DB
     #for key in catch_dict.keys():
     # In the future the constant values will be replaced by catchment ID computation as suggested by Marl's email
     #Loop through catchments, get soil type, populate config file template, write config file to temp 
@@ -151,6 +153,8 @@ def create_sac_sma_input(gage_id,catch_dict, attr_file, subset_dir: str, module_
         catchment_id = row['divide_id']
         param_list = ['hru_id ' + str(catchment_id),
                       'hru_area ' + str(catch_dict[str(catchment_id)]['areasqkm']),
+                      'latitude ' + str(row['Y']),
+                      'longtitude ' + str(row['X']),                     
                       'uztwm 29.7257',
                       'uzfwm 22.8335',
                       'lztwm 18.6968',
@@ -167,9 +171,128 @@ def create_sac_sma_input(gage_id,catch_dict, attr_file, subset_dir: str, module_
                       'riva 0.0100',
                       'side 0.0000',
                       'rserv 0.3000']
+        # Loop through the list and check for the desired parameters
+        for i, param in enumerate(param_list):
+            if param.startswith('latitude'):
+                latitude = param.split()[1]  # Extract the value after 'latitude'
+                latitude = float(latitude)
+            elif param.startswith('longtitude'):
+                longitude = param.split()[1]  # Extract the value after 'longtitude'
+                longitude =  float(longitude)
+            elif param.startswith('uztwm'):
+                uztwm_default = param.split()[1]  # Extract the value after 'uztwm'
+                uztwm = getValueForLatLon_point(latitude, longitude, 'uztwm')
+                if uztwm == -1:
+                    uztwm = uztwm_default
+                param_list[i] = f'uztwm {uztwm}'
+            elif param.startswith('uzfwm'):
+                uzfwm_default = param.split()[1]  # Extract the value after 'uzfwm'
+                uzfwm = getValueForLatLon_point(latitude, longitude, 'uzfwm')
+                if uzfwm == -1:
+                    uzfwm = uzfwm_default
+                param_list[i] = f'uzfwm {uzfwm}'
+            elif param.startswith('lztwm'):
+                lztwm_default = param.split()[1]  # Extract the value after 'lztwm'
+                lztwm = getValueForLatLon_point(latitude, longitude, 'lztwm')
+                if lztwm == -1:
+                    lztwm = lztwm_default
+                param_list[i] = f'lztwm {lztwm}'
+            elif param.startswith('lzfpm'):
+                lzfpm_default = param.split()[1]  # Extract the value after 'lzfpm'
+                print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+                print("lzfpm_default: " + lzfpm_default)
+                lzfpm = getValueForLatLon_point(latitude, longitude, 'lzfpm')
+                print("lzfpm: " + str(lzfpm))
+                print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+                if lzfpm == -1:
+                    lzfpm = lzfpm_default
+                param_list[i] = f'lzfpm {lzfpm}'
+                print("lzfpm: " + str(lzfpm))
+                print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+            elif param.startswith('lzfsm'):
+                lzfsm_default = param.split()[1]  # Extract the value after 'lzfsm'
+                lzfsm = getValueForLatLon_point(latitude, longitude, 'lzfsm')
+                if lzfsm == -1:
+                    lzfsm = lzfsm_default
+                param_list[i] = f'lzfsm {lzfsm}'
+            elif param.startswith('adimp'):
+                adimp_default = param.split()[1]  # Extract the value after 'adimp'
+                adimp = getValueForLatLon_point(latitude, longitude, 'adimp')
+                if adimp == -1:
+                    adimp = adimp_default
+                param_list[i] = f'adimp {adimp}'
+            elif param.startswith('uzk'):
+                uzk_default = param.split()[1]  # Extract the value after 'uzk'
+                uzk = getValueForLatLon_point(latitude, longitude, 'uzk')
+                if uzk == -1:
+                    uzk = uzk_default
+                param_list[i] = f'uzk {uzk}'
+            elif param.startswith('lzpk'):
+                lzpk_default = param.split()[1]  # Extract the value after 'lzpk'
+                lzpk = getValueForLatLon_point(latitude, longitude, 'lzpk')
+                if lzpk == -1:
+                    lzpk = lzpk_default
+                param_list[i] = f'lzpk {lzpk}'
+            elif param.startswith('lzsk'):
+                lzsk_default = param.split()[1]  # Extract the value after 'lzsk'
+                lzsk = getValueForLatLon_point(latitude, longitude, 'lzsk')
+                if lzsk == -1:
+                    lzsk = lzsk_default
+                param_list[i] = f'lzsk {lzsk}'
+            elif param.startswith('zperc'):
+                zperc_default = param.split()[1]  # Extract the value after 'zperc'
+                zperc = getValueForLatLon_point(latitude, longitude, 'zperc')
+                if zperc == -1:
+                    zperc = zperc_default
+                param_list[i] = f'zperc {zperc}'
+            elif param.startswith('rexp'):
+                rexp_default = param.split()[1]  # Extract the value after 'rexp'
+                rexp = getValueForLatLon_point(latitude, longitude, 'rexp')
+                if rexp == -1:
+                    rexp = rexp_default
+                param_list[i] = f'rexp {rexp}'
+            elif param.startswith('pctim'):
+                pctim_default = param.split()[1]  # Extract the value after 'pctim'
+                pctim = getValueForLatLon_point(latitude, longitude, 'pctim')
+                if pctim == -1:
+                    pctim = pctim_default
+                param_list[i] = f'pctim {pctim}'
+            elif param.startswith('pfree'):
+                pfree_default = param.split()[1]  # Extract the value after 'pfree'
+                pfree = getValueForLatLon_point(latitude, longitude, 'pfree')
+                if pfree == -1:
+                    pfree = pfree_default
+                param_list[i] = f'pfree {pfree}'
+            elif param.startswith('riva'):
+                riva_default = param.split()[1]  # Extract the value after 'riva'
+                riva = getValueForLatLon_point(latitude, longitude, 'riva')
+                if riva == -1:
+                    riva = riva_default
+                param_list[i] = f'riva {riva}'
+            elif param.startswith('side'):
+                side_default = param.split()[1]  # Extract the value after 'side'
+                side = getValueForLatLon_point(latitude, longitude, 'side')
+                if side == -1:
+                    side = side_default
+                param_list[i] = f'side {side}'
+            elif param.startswith('rserv'):
+                rserv_default = param.split()[1]  # Extract the value after 'rserv'
+                rserv = getValueForLatLon_point(latitude, longitude, 'rserv')
+                if rserv == -1:
+                    rserv = rserv_default
+                param_list[i] = f'rserv {rserv}'
+
+
+
+
+
+
+
+
+
 
         #for catID in catids:
-        input_file = os.path.join(subset_dir, 'sac_sma-init-' + str(catchment_id) + '.namelist.input')
+
         param_file = os.path.join(subset_dir, 'sac_sma_params-' + str(catchment_id) + '.HHWM8.txt')
 
         with open(param_file, "w") as f:
@@ -216,6 +339,7 @@ def create_sac_sma_input(gage_id,catch_dict, attr_file, subset_dir: str, module_
                 '/',
                 ''
                 ]
+        input_file = os.path.join(subset_dir, 'sac_sma-init-' + str(catchment_id) + '.namelist.input')
         with open(input_file, "w") as f:
             f.writelines('\n'.join(input_list))
 
@@ -242,25 +366,30 @@ def create_sac_sma_input(gage_id,catch_dict, attr_file, subset_dir: str, module_
 
     # Temp Hack till we get the initial values based on Mark's email and list of documents
     # Create an empty dictionary
-    initial_value_dict={'uztwm' : '29.7257',
-                      'uzfwm' :  '22.8335',
-                      'lztwm' :  '18.6968',
-                      'lzfpm' :  '419.418',
-                      'lzfsm' :  '215.932',
-                      'adimp' :  ' 0.0000',
-                      'uzk'   :  ' 0.8910',
-                      'lzpk'  :  ' 0.0032',
-                      'lzsk'  :  ' 0.2551',
-                      'zperc' :  ' 281.8200',
-                      'rexp'  :  ' 5.2353',
-                      'pctim' :  ' 0.0000',
-                      'pfree' :  ' 0.3142',
-                      'riva'  :  ' 0.0100',
-                      'side'  :  ' 0.0000',
-                      'rserv' :  ' 0.3000'
-                      } 
+    # initial_value_dict={'uztwm' : '29.7257',
+    #                   'uzfwm' :  '22.8335',
+    #                   'lztwm' :  '18.6968',
+    #                   'lzfpm' :  '419.418',
+    #                   'lzfsm' :  '215.932',
+    #                   'adimp' :  ' 0.0000',
+    #                   'uzk'   :  ' 0.8910',
+    #                   'lzpk'  :  ' 0.0032',
+    #                   'lzsk'  :  ' 0.2551',
+    #                   'zperc' :  ' 281.8200',
+    #                   'rexp'  :  ' 5.2353',
+    #                   'pctim' :  ' 0.0000',
+    #                   'pfree' :  ' 0.3142',
+    #                   'riva'  :  ' 0.0100',
+    #                   'side'  :  ' 0.0000',
+    #                   'rserv' :  ' 0.3000'
+    #                   } 
+    initial_value_dict = {}
+    for item in param_list:
+        key, value = item.split(" ", 1)  # Split on the first space
+        initial_value_dict[key] = float(value) if value.replace('.', '', 1).isdigit() else value  # Convert to float if numeric
 
-
+    # Output the resulting dictionary
+    print(initial_value_dict)
 
     # Get default values for calibratable initial parameters from initial_value_dict.
 
