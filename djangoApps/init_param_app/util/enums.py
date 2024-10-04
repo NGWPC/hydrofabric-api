@@ -4,7 +4,7 @@ from typing import List
 
 ####  These enums are used in validators
 class FileTypeEnum(StrEnum):
-    GEOPACKAGE = 'GEOPCKG'
+    GEOPACKAGE = 'GEOPACKAGE'
     OBSERVATIONAL = 'OBSERVATIONAL'
     PARAMS = 'PARAMS'
 

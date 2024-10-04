@@ -7,7 +7,7 @@ class HFFiles(models.Model):
     gage_id = models.CharField()
     hydrofabric_version = models.CharField()
     filename = models.CharField()
-    uri = models.URLField()
+    uri = models.CharField()
     domain = models.CharField()
     data_type = models.CharField()
     source = models.CharField()
@@ -15,7 +15,7 @@ class HFFiles(models.Model):
     update_time = models.DateTimeField(default=timezone.now)
 
     class Meta:
-        #managed = False
+        managed = False
         db_table = 'restapi_hffiles'
 
     # method to return all fields
