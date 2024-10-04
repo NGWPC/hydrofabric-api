@@ -207,7 +207,7 @@ def create_sac_sma_input(gage_id,catch_dict, attr_file, subset_dir: str, module_
                 if lzfpm == -1:
                     lzfpm = lzfpm_default
                 param_list[i] = f'lzfpm {lzfpm}'
-                print("lzfpm: " + lzfpm)
+                print("lzfpm: " + str(lzfpm))
                 print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
             elif param.startswith('lzfsm'):
                 lzfsm_default = param.split()[1]  # Extract the value after 'lzfsm'
@@ -292,7 +292,7 @@ def create_sac_sma_input(gage_id,catch_dict, attr_file, subset_dir: str, module_
 
 
         #for catID in catids:
-        input_file = os.path.join(subset_dir, 'sac_sma-init-' + str(catchment_id) + '.namelist.input')
+
         param_file = os.path.join(subset_dir, 'sac_sma_params-' + str(catchment_id) + '.HHWM8.txt')
 
         with open(param_file, "w") as f:
@@ -339,6 +339,7 @@ def create_sac_sma_input(gage_id,catch_dict, attr_file, subset_dir: str, module_
                 '/',
                 ''
                 ]
+        input_file = os.path.join(subset_dir, 'sac_sma-init-' + str(catchment_id) + '.namelist.input')
         with open(input_file, "w") as f:
             f.writelines('\n'.join(input_list))
 
@@ -365,25 +366,30 @@ def create_sac_sma_input(gage_id,catch_dict, attr_file, subset_dir: str, module_
 
     # Temp Hack till we get the initial values based on Mark's email and list of documents
     # Create an empty dictionary
-    initial_value_dict={'uztwm' : '29.7257',
-                      'uzfwm' :  '22.8335',
-                      'lztwm' :  '18.6968',
-                      'lzfpm' :  '419.418',
-                      'lzfsm' :  '215.932',
-                      'adimp' :  ' 0.0000',
-                      'uzk'   :  ' 0.8910',
-                      'lzpk'  :  ' 0.0032',
-                      'lzsk'  :  ' 0.2551',
-                      'zperc' :  ' 281.8200',
-                      'rexp'  :  ' 5.2353',
-                      'pctim' :  ' 0.0000',
-                      'pfree' :  ' 0.3142',
-                      'riva'  :  ' 0.0100',
-                      'side'  :  ' 0.0000',
-                      'rserv' :  ' 0.3000'
-                      } 
+    # initial_value_dict={'uztwm' : '29.7257',
+    #                   'uzfwm' :  '22.8335',
+    #                   'lztwm' :  '18.6968',
+    #                   'lzfpm' :  '419.418',
+    #                   'lzfsm' :  '215.932',
+    #                   'adimp' :  ' 0.0000',
+    #                   'uzk'   :  ' 0.8910',
+    #                   'lzpk'  :  ' 0.0032',
+    #                   'lzsk'  :  ' 0.2551',
+    #                   'zperc' :  ' 281.8200',
+    #                   'rexp'  :  ' 5.2353',
+    #                   'pctim' :  ' 0.0000',
+    #                   'pfree' :  ' 0.3142',
+    #                   'riva'  :  ' 0.0100',
+    #                   'side'  :  ' 0.0000',
+    #                   'rserv' :  ' 0.3000'
+    #                   } 
+    initial_value_dict = {}
+    for item in param_list:
+        key, value = item.split(" ", 1)  # Split on the first space
+        initial_value_dict[key] = float(value) if value.replace('.', '', 1).isdigit() else value  # Convert to float if numeric
 
-
+    # Output the resulting dictionary
+    print(initial_value_dict)
 
     # Get default values for calibratable initial parameters from initial_value_dict.
 
