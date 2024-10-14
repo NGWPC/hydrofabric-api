@@ -6,10 +6,12 @@ import geopandas as gpd
 import pandas as pd
 import pyarrow.parquet as pq
 import pyarrow as pa
+from .util.utilities import get_hydrofabric_input_attr_file
+from .util.enums import FileTypeEnum
 
-from .util.utilities import *
+logger = logging.getLogger(__name__)
 
-def noah_owp_modular_ipe(gage_id, subset_dir, module_metadata):
+def noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
     ''' 
     Build initial parameter estimates (IPE) for NOAH-OWP-Modular 
 
@@ -22,55 +24,40 @@ def noah_owp_modular_ipe(gage_id, subset_dir, module_metadata):
     dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
     '''
 
-    # Setup logging
-    logger = logging.getLogger(__name__)
-
-    #Get config file
-    config = get_config()
-    s3url = config['s3url']
-    s3bucket = config['s3bucket']
-    s3prefix = config['s3prefix']
-    hydrofabric_dir = config['hydrofabric_dir']
-    hydrofabric_version = config['hydrofabric_version']
-    hydrofabric_type = config['hydrofabric_type']
-    
-    #setup output dir
-    #first save the top level dir for the gpkg
-    gpkg_dir = subset_dir
-    subset_dir = os.path.join(subset_dir, 'Noah-OWP-Modular')
-    if not os.path.exists(subset_dir):
-        os.mkdir(subset_dir)
-
-
+    module = "Noah-OWP-Modular"
+    filename_list = []
+ 
     # Get list of catchments from gpkg divides layer using geopandas
-    gpkg_file = "Gage_" + gage_id + ".gpkg"
-    gpkg_file = os.path.join(gpkg_dir, gpkg_file)    
     try:
         divides_layer = gpd.read_file(gpkg_file, layer = "divides")
         try:
             catchments = divides_layer["divide_id"].tolist()
         except:
+            # TODO: Replace 'except' with proper catch
             error_str = 'Error reading divides layer in ' + gpkg_file
             error = dict(error = error_str) 
-            print(error_str)
             logger.error(error_str)
             return error
     except:
+        # TODO: Replace 'except' with proper catch
         error_str = 'Error opening ' + gpkg_file
         error = dict(error = error_str) 
-        print(error_str)
         logger.error(error_str)
         return error
 
     #Read model attributes Hive partitioned Parquet dataset using pyarrow, remove rows containing null, convert to pandas dataframe
-    attr_file = os.path.join(hydrofabric_dir, hydrofabric_version, hydrofabric_type, 'conus_model-attributes')
     try:
+        attr_file = get_hydrofabric_input_attr_file()
         attr = pq.read_table(attr_file)
-    except:
+    except FileNotFoundError as fnfe:
+        logger.error(fnfe)
+        error_str = 'Hydrofabric data input directory does not exist'
+        error = dict(error=error_str)
+        return error
+    except Exception as exc:
         error_str = 'Error opening ' + attr_file
-        error = dict(error = error_str) 
-        print(error_str)
-        logger.error(error_str)
+        error = dict(error = error_str)
+        logger.error(error_str, exc)
         return error
     
     attr = attr.drop_null()
@@ -82,7 +69,6 @@ def noah_owp_modular_ipe(gage_id, subset_dir, module_metadata):
     if len(filtered) == 0:
         error_str = 'No matching catchments in attribute file'
         error = dict(error = error_str) 
-        print(error_str)
         logger.error(error_str)
         return error
     
@@ -178,34 +164,23 @@ def noah_owp_modular_ipe(gage_id, subset_dir, module_metadata):
 
     
         cfg_filename = "noah-owp-modular-init-" + catchment_id + ".namelist.input"
+        filename_list.append(cfg_filename)
         cfg_filename_path = os.path.join(subset_dir, cfg_filename)
         with open(cfg_filename_path, 'w') as outfile:
                             outfile.writelines('\n'.join(namelist))
                             outfile.write("\n")
 
-    if s3prefix:
-        subset_s3prefix = s3prefix + "/" + gage_id + '/' + 'Noah-OWP-Modular'
-    else:
-        subset_s3prefix = gage_id  + '/' + 'Noah-OWP-Modular'
-
-    #Get list of .input files in temp directory and copy to s3
-    files = Path(subset_dir).glob('*.input')
-    for file in files:
-        print("writing: " + str(file) + " to s3")
-        file_name = os.path.basename(file)
-        write_minio(subset_dir, file_name, s3url, s3bucket, subset_s3prefix)
-
-    uri = build_uri(s3bucket, subset_s3prefix)
+    # Write files to DB and S3
+    uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
     status_str = "Config files written to:  " + uri
-    print(status_str)
     logger.info(status_str)
  
     #fill in parameter files uri 
     module_metadata["parameter_file"]["uri"] = uri
     
     # Get default values for calibratable initial parameters.
-    for x in range(len(module_metadata["calibrate_parameters"])):
-            initial_values = module_metadata["calibrate_parameters"][x]["initial_value"]
+    for x in range(len(module_metadata[0]["calibrate_parameters"])):
+            initial_values = module_metadata[0]["calibrate_parameters"][x]["initial_value"]
             #If initial values are an array, get proper value for vegtype, otherwise use the single value.
             if len(initial_values) > 1:
                  module_metadata["calibrate_parameters"][x]["initial_value"] = initial_values[vegtype - 1]
