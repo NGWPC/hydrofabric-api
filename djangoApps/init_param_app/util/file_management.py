@@ -45,22 +45,23 @@ class FileManagement:
             self.client.stat_object(self.s3_bucket, object_name)
             return True
         except S3Error as s3_error:
-            print ('here')
             if s3_error.code == 'NoSuchKey':
                 return False
             else:
                 logger.error(
                     f"AWS Credentials have failed; Log into AWS and retrieve new credentials. Exception = {s3_error}")
         except Exception as exception:
-            print (exception)
+            logger.error(f"Unhandled exception caught - {exception}")
 
     def write_minio(self):
-        self.s3_path = self.s3_path + '/' + self.input_filename
-
-        self.client.fput_object(self.s3_bucket, self.s3_path, self.input_path + self.input_filename)
-        self.full_s3_path = "s3://" + self.s3_bucket + "/" + self.s3_path
-        status_string = "Hydrofabric data written to " + self.full_s3_path
-        logger.info(status_string)
+        s3_path_output = self.s3_path + '/' + self.input_filename
+        try:
+            self.client.fput_object(self.s3_bucket, s3_path_output, self.input_path + self.input_filename)
+            self.full_s3_path = "s3://" + self.s3_bucket + "/" + s3_path_output
+            status_string = "Hydrofabric data written to " + s3_path_output
+            logger.info(status_string)
+        except Exception as exception:
+            logger.error(f"Unhandled exception caught - {exception}")
 
     def retrieve_minio(self, object_name, local_dir):
         self.start_minio_client()

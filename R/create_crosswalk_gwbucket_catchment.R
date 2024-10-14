@@ -1,7 +1,7 @@
 # create a crosswalk table to match the NWM groudwater bucket ID (ComID) to the catchments of selected basins
 # in order to properly transfer the NWM ground water parameters
 
-create_crosswalk_gwbucket_catchment = function(data_dir){
+create_crosswalk_gwbucket_catchment <- function(data_dir){
 
 #rm(list=ls())
 

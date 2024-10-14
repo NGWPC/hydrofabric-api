@@ -12,6 +12,7 @@ class HFFiles(models.Model):
     data_type = models.CharField()
     source = models.CharField()
     module_id = models.CharField()
+    ipe_json = models.CharField()
     update_time = models.DateTimeField(default=timezone.now)
 
     class Meta:

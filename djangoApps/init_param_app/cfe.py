@@ -4,9 +4,15 @@ import json
 from pathlib import Path
 import logging
 
+from .util import utilities
+from .util.enums import FileTypeEnum
 from .util.utilities import *
 
-def cfe_ipe(gage_id, subset_dir, module, module_metadata):
+# Setup logging
+logger = logging.getLogger(__name__)
+
+
+def cfe_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
     ''' 
     Build initial parameter estimates (IPE) for CFE-S and CFE-X 
 
@@ -19,26 +25,31 @@ def cfe_ipe(gage_id, subset_dir, module, module_metadata):
     Returns:
     dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
     '''
-    
-    # Setup logging
-    logger = logging.getLogger(__name__)
 
     # Get config file for paths
     config = get_config()
     input_dir = config['input_dir'] 
-    s3url = config['s3url']
-    s3bucket = config['s3bucket']
-    s3prefix = config['s3prefix']
+    sys_root = os.path.dirname(settings.BASE_DIR)
+    app_path = os.path.join(settings.BASE_DIR, 'init_param_app')
+    cfe_x_json = 'CFE-X.json'
+    cfe_s_json = 'CFE-S.json'
+    r_code_file = f"{sys_root}/R/run_create_cfe_init_bmi_config.R"
 
     #Build input arguments for config file R script
+    #create string containing R c (combine) function and gage IDs
     gage_id_string = "'"+gage_id+"'"
 
-    #this will be replaced with a call to the database when connectivity is available in the container
-    if module == 'CFE-X':
-        importjson = open('init_param_app/CFE-X.json')
-    if module == 'CFE-S':
-        importjson = open('init_param_app/CFE-S.json')
-    parameters = json.load(importjson)
+    # TODO: This will be replaced with a call to the database when connectivity is available in the container
+    cfe_json = os.path.join(app_path, cfe_x_json) if module == 'CFE-X' else os.path.join(app_path, cfe_s_json)
+ 
+    try:
+        import_json = open(cfe_json)
+        parameters = json.load(import_json)
+    except Exception as e:
+        logger.error(f"Error reading JSON document {cfe_json} Error is: {e}")
+        error_str = f"CFE error reading JSON document {cfe_json}"
+        error = dict(error = error_str) 
+        return error
 
     # Create lists for passing CFE parameter names and constant values to R code
     cfe_parameters_nwm_name = []
@@ -60,7 +71,8 @@ def cfe_ipe(gage_id, subset_dir, module, module_metadata):
     cfe_parameters_nwm_name = '"c(' + ",".join(cfe_parameters_nwm_name) + ')"' 
     cfe_parameters_cfe_name = '"c(' + ",".join(cfe_parameters_cfe_name) + ')"' 
 
-    run_command = ["/usr/bin/Rscript ../R/run_create_cfe_init_bmi_config.R",
+    #TODO make the Rscript string below a constant
+    run_command = [f"/usr/bin/Rscript {r_code_file}", 
     gage_id_string,
     input_dir,
     subset_dir,
@@ -68,12 +80,13 @@ def cfe_ipe(gage_id, subset_dir, module, module_metadata):
     cfe_parameters_const_value,
     cfe_parameters_nwm_name,
     cfe_parameters_cfe_name,
-    module]
+    module,
+    sys_root,
+    gpkg_file]
 
     run_command_string = " ".join(run_command)
 
     status_str = "Running CFE IPE R code"
-    print(status_str)
     logger.info(status_str)
 
     try:
@@ -81,27 +94,17 @@ def cfe_ipe(gage_id, subset_dir, module, module_metadata):
     except:
         error_str = "CFE IPE R code failure"
         error = dict(error = error_str) 
-        print(error_str)
         logger.error(error_str)
         return error
-        
-    if s3prefix:
-        s3prefix = s3prefix + "/" + gage_id + "/" + module
-    else:
-        s3prefix = gage_id + "/" + module        
-
-    files = Path(os.path.join(subset_dir, module)).glob('*.ini')
-    for file in files:
-        print("writing: " + str(file) + " to s3")
-        file_name = os.path.basename(file)
-        write_minio(subset_dir + "/" + module, file_name, s3url, s3bucket, s3prefix)
-
-    uri = build_uri(s3bucket, s3prefix)
+    # Since the R code writes the files to the subset_dir get list of files to send S3
+    filename_list = utilities.get_subset_dir_file_names(subset_dir)
+    # Write files to DB and S3
+    uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
     status_str = "Config files written to:  " + uri
-    print(status_str)
     logger.info(status_str)
 
-    #write s3 location and ipe values to output json
+    #write s3 location and ipe values from one of the subset_dir files to output json
+    file = os.path.join(subset_dir, filename_list[0])
     with open(file, 'r') as file:
         lines = file.readlines()
 
@@ -114,7 +117,5 @@ def cfe_ipe(gage_id, subset_dir, module, module_metadata):
     for x in range(len(module_metadata["calibrate_parameters"])):
         module_metadata["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[module_metadata["calibrate_parameters"][x]["name"]]
         
-    uri = build_uri(s3bucket, s3prefix)
-    module_metadata["parameter_file"]["uri"] = uri
-    
+    module_metadata[0]["parameter_file"]["uri"] = uri
     return module_metadata

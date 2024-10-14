@@ -74,10 +74,11 @@ def get_geopackage(gage_id, source, domain, keep_file=False):
         
         path_string = "R/run_subsetter.R"
         grandparent_dir = os.path.dirname(settings.BASE_DIR)
-        directory = os.path.join(grandparent_dir, path_string)
-        logger.debug(f"R code file = {directory}")
+        r_code_file = os.path.join(grandparent_dir, path_string)
+        logger.debug(f"R code file = {r_code_file}")
 
-        run_command = ["/usr/bin/Rscript", "../R/run_subsetter.R",
+        #run_command = ["/usr/bin/Rscript", "../R/run_subsetter.R",
+        run_command = ["/usr/bin/Rscript", r_code_file,
                        subsetter_gage_id,
                        loc_temp_dir,
                        gpkg_filename,
@@ -100,8 +101,8 @@ def get_geopackage(gage_id, source, domain, keep_file=False):
 
     # Write geopackage to s3 bucket
     try:
-        uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, data_type, source, loc_temp_dir,
-                                                                   gpkg_filename)
+        # Put the gpkg_filename in list
+        uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, data_type, source, loc_temp_dir, [gpkg_filename])
     # TODO PROPERLY HANDEL LOGGING "RESPONSE" FOR CAUGHT ERRORS
     except psycopg2.DatabaseError as psycopg2_error:
         logging.error(psycopg2_error)

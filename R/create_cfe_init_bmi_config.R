@@ -1,4 +1,4 @@
-create_cfe_init_bmi_config = function(basins, data_dir, output_dir, const_name, const_value, nwm_names, cfe_names, module_name){
+create_cfe_init_bmi_config <- function(gage_id, data_dir, output_dir, const_name, const_value, nwm_names, cfe_names, gpkg_file){
 
 # Derive initial parameters for CFE based on NWM v3 parameter files and 
 # create the BMI config files for each catchment in the selected basins
@@ -30,13 +30,10 @@ if (model_name == "CFE-S")
 
 # hydrofabric file for the basins (all catchments put together)
 sf1 <- data.frame()
-for (gage1 in basins) {
-    str_gage1 <- gage1
-    hydro_file <- paste0(output_dir,"Gage_",str_gage1,".gpkg")
-    sf0 <- read_sf(hydro_file, "divides")
-    sf0$gage <- gage1
-    sf1 <- rbind(sf1,sf0)
-}
+sf0 <- read_sf(gpkg_file, "divides")
+sf0$gage <- gage_id
+sf1 <- rbind(sf1,sf0)
+
 
 # mask file (reference raster for NWM domain crs/extent/res)
 mask_file <- paste0(data_dir, "final_combined_calib_v3.tif")
@@ -152,11 +149,7 @@ lines <- c(lines,paste0("num_timesteps=",n_timesteps))
 pars_in_order <- c("soil_params.depth","soil_params.b","soil_params.mult","soil_params.satdk",
     "soil_params.satpsi","soil_params.slop","soil_params.smcmax","soil_params.wltsmc")
 
-out_dir <- output_dir 
-if (scheme=="Schaake") {
-    out_dir <- paste0(out_dir,"CFE-S")
-} else if (scheme=="Xinanjiang") {
-    out_dir <- paste0(out_dir,"CFE-X")
+if (scheme=="Xinanjiang") {
     pars_in_order <- c(pars_in_order, "a_Xinanjiang_inflection_point_parameter",
                 "b_Xinanjiang_shape_parameter","x_Xinanjiang_shape_parameter")
 }
@@ -169,7 +162,8 @@ for (c1 in dtParsAll$divide_id) {
     for (p1 in pars_in_order) lines1 <- c(lines1,paste0(p1,"=",subset(dtParsAll,divide_id==c1)[[p1]]))
     gage1 <- subset(dtParsAll,divide_id==c1)$gage
 
-    outfile <- paste0(out_dir,"/",c1,"_bmi_config.ini")
+    # outfile <- paste0(output_dir,"/Gage_",gage1,"/",c1,"_bmi_config.ini")
+    outfile <- paste0(output_dir,"/",c1,"_bmi_config.ini")
     if(!dir.exists(dirname(outfile))) dir.create(dirname(outfile),recursive=TRUE)
 
     writeLines(lines1,outfile)

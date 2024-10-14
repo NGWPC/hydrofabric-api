@@ -3,7 +3,7 @@ import cartopy.crs as ccrs
 import math
 import csv
 import os
-from .util.utilities import *
+from init_param_app.util.utilities import *
 
 
 

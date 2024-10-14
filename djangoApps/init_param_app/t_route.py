@@ -3,9 +3,14 @@ import json
 import yaml
 import logging
 
+from .util.enums import FileTypeEnum
 from .util.utilities import *
 
-def t_route_ipe(gage_id, subset_dir, module_metadata):
+# Configure logging
+logger = logging.getLogger(__name__)
+
+
+def t_route_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
     '''
     Build initial parameter estimates (IPE) for T-Route 
 
@@ -17,28 +22,8 @@ def t_route_ipe(gage_id, subset_dir, module_metadata):
     Returns:
     dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
     '''
-
-    # Configure logging
-    logger = logging.getLogger(__name__) 
-
-    #Get config file
-    config = get_config()
-    s3url = config['s3url']
-    s3bucket = config['s3bucket']
-    s3prefix = config['s3prefix']
-    hydrofabric_dir = config['hydrofabric_dir']
-    hydrofabric_version = config['hydrofabric_version']
-    hydrofabric_type = config['hydrofabric_type']
-    
-    #setup output dir
-    #first save the top level dir for the gpkg
-    gpkg_dir = subset_dir
-    subset_dir = os.path.join(subset_dir, 'T-Route')
-    if not os.path.exists(subset_dir):
-        os.mkdir(subset_dir)
-
-    gpkg_file = "Gage_" + gage_id + ".gpkg"
-    gpkg_file = os.path.join(gpkg_dir, gpkg_file)
+    # TODO: Make Constant or StrEnum
+    module = 'T-Route'
 
     start_date = ''
     nts = 5
@@ -160,26 +145,23 @@ def t_route_ipe(gage_id, subset_dir, module_metadata):
                 }
 
     # Save configuration into yaml file
+    # TODO: Make constant or StrEnum
     output_filename = 'troute.yml'
     output_full_path = os.path.join(subset_dir, output_filename)
     with open(output_full_path, 'w') as file:
         yaml.dump(config, file, sort_keys=False, default_flow_style=False, indent=4)
 
-    if s3prefix:
-        subset_s3prefix = s3prefix + "/" + gage_id + '/' + 'T-Route'
-    else:
-        subset_s3prefix = gage_id  + '/' + 'T-Route'
-
-    write_minio(subset_dir, output_filename, s3url, s3bucket, subset_s3prefix)
-
-    uri = build_uri(s3bucket, subset_s3prefix)
+    # GageFileManagement needs input files as a list
+    filename_list = [output_filename]
+    # Write files to DB and S3
+    uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
     status_str = "Config files written to:  " + uri
-    print(status_str)
     logger.info(status_str)
 
     #fill in parameter files uri 
-    module_metadata["parameter_file"]["uri"] = uri
+    module_metadata[0]["parameter_file"]["uri"] = uri
+    logger.info(f"TRoute config successfully created at {output_filename}.")
 
     return module_metadata
 
-    logger.info(f"TRoute config successfully created at {output_filename}.")
+
