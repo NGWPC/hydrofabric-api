@@ -1,5 +1,3 @@
-import logging
-
 #import geopackage
 
 from .geopackage import *
@@ -7,10 +5,9 @@ from .cfe import *
 from .noah_owp_modular import *
 from .t_route import *
 from .sac_sma import *
-from .utilities import *
 from .snow17 import *
 
-def get_ipe(gage_id, module, module_metadata, get_gpkg = True):     
+def get_ipe(gage_id, module, module_metadata):
     '''
     Build initial parameter estimates (IPE) for a module.  
 
@@ -29,13 +26,7 @@ def get_ipe(gage_id, module, module_metadata, get_gpkg = True):
 
     # Read config file for paths
     config = get_config()
-    output_dir = config['output_dir']
-
-    # Get geopackage if needed
-    if get_gpkg:
-        results = get_geopackage(gage_id)
-        if 'error' in results: 
-            return results 
+    output_dir = config['output_temp_dir']
 
     # Build path for IPE temp directory
     subset_dir = output_dir + "/" + gage_id + "/"      
@@ -45,6 +36,7 @@ def get_ipe(gage_id, module, module_metadata, get_gpkg = True):
     logger.info(status_str)
 
     # Call function for specific module
+    # replace with SWITCH or dict of module and function call
     if module == "CFE-S" or module == "CFE-X":
         results = cfe_ipe(gage_id, subset_dir, module, module_metadata)
         return results

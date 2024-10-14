@@ -3,7 +3,7 @@ import json
 import yaml
 import logging
 
-from .utilities import *
+from .util.utilities import *
 
 def t_route_ipe(gage_id, subset_dir, module_metadata):
     '''

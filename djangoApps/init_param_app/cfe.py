@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import logging
 
-from .utilities import *
+from .util.utilities import *
 
 def cfe_ipe(gage_id, subset_dir, module, module_metadata):
     ''' 

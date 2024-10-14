@@ -7,7 +7,7 @@ import pandas as pd
 import pyarrow.parquet as pq
 import pyarrow as pa
 
-from .utilities import *
+from .util.utilities import *
 
 def noah_owp_modular_ipe(gage_id, subset_dir, module_metadata):
     ''' 
