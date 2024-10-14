@@ -18,7 +18,12 @@ from .geopackage import get_geopackage
 from .initial_parameters import get_ipe
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename='hf.log', level=logging.DEBUG)
+logging.basicConfig(filename='hf.log',
+                    filemode='a',
+                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                    datefmt='%H:%M:%S',
+                    level=logging.INFO)
+
 
 
 # Execute the query  to fetch all models and model_ids.
