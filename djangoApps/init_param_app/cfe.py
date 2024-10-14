@@ -114,8 +114,8 @@ def cfe_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, module_metad
         key, value = line.strip().split('=')
         cfg_file_ipes[key.strip()] = value.strip()
 
-    for x in range(len(module_metadata[0]["calibrate_parameters"])):
-        module_metadata[0]["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[module_metadata[0]["calibrate_parameters"][x]["name"]]
+    for x in range(len(module_metadata["calibrate_parameters"])):
+        module_metadata["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[module_metadata["calibrate_parameters"][x]["name"]]
         
     module_metadata[0]["parameter_file"]["uri"] = uri
     return module_metadata

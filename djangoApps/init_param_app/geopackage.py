@@ -31,11 +31,31 @@ def get_geopackage(gage_id, source, domain, keep_file=False):
 
     #get paths, etc from config.yml
     config = get_config()
-    #temp dir for files
-    loc_temp_dir = None
-    try:
-        
-        loc_temp_dir = gage_file_mgmt.get_local_temp_directory(data_type, gage_id)
+    output_dir = config['output_dir'] 
+    hydrofabric_dir = config['hydrofabric_dir']
+    hydrofabric_version = config['hydrofabric_version']
+    hydrofabric_type = config['hydrofabric_type']
+    s3url = config['s3url']
+    s3bucket = config['s3bucket'] 
+    s3prefix = config['s3prefix'] 
+
+    #setup paths and geopackage name for hydrofabric subsetter R function call
+
+    #append "Gages-" to id per hydrofabric naming convention for hl_uri
+    subsetter_gage_id = "Gages-"+gage_id
+    status_str = "Create subsetted geopackage file for: " + subsetter_gage_id
+    print(status_str)
+    logger.info(status_str)
+
+    #strip leading zero of gage ID for gpkg filename
+    #gpkg_filename = "Gage_"+gage_id.lstrip("0") + ".gpkg"
+    gpkg_filename = "Gage_" + gage_id + ".gpkg"
+
+    #create temp directory and s3 prefix for this particular subset
+    if s3prefix:
+        subset_s3prefix = s3prefix + "/" + gage_id
+    else:
+        subset_s3prefix = gage_id
 
         # hydrofabric input data directory
         hydrofabric_dir = config['hydrofabric_dir']

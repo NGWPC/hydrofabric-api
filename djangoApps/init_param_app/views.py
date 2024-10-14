@@ -59,6 +59,7 @@ def modules(request):
                     result = OrderedDict()
                     result["module_name"] = row[column_names.index("name")]
                     result["groups"] = row[column_names.index("groups")]
+                    result["description"] = row[column_names.index("description")]
                     results.append(result)
 
                 # Wrap results in the "modules" key
@@ -170,3 +171,13 @@ class HFFilesDelete(generics.RetrieveDestroyAPIView):
 
 
 
+class HFFilesUpdate(generics.RetrieveUpdateAPIView):
+    # API endpoint that allows a HFFiles record to be updated.
+    queryset = HFFiles.objects.all()
+    serializer_class = HFFilesSerializers
+
+
+class HFFilesDelete(generics.RetrieveDestroyAPIView):
+    # API endpoint that allows a HFFiles record to be deleted.
+    queryset = HFFiles.objects.all()
+    serializer_class = HFFilesSerializers

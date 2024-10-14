@@ -351,7 +351,7 @@ def create_sac_sma_input(gage_id, source, domain, catch_dict, attr_file, subset_
     logger.info(status_str)
 
     #fill in parameter files uri 
-    module_metadata[0]["parameter_file"]["uri"] = uri
+    module_metadata["parameter_file"]["uri"] = uri
 
     # Temp Hack till we get the initial values based on Mark's email and list of documents
     # Create an empty dictionary
@@ -392,7 +392,7 @@ def create_sac_sma_input(gage_id, source, domain, catch_dict, attr_file, subset_
             key_name = param.get("name")  # Assuming each list element is a dictionary
             logger.debug(f"Parameter {idx}: {key_name}")
             #key_name = module_metadata['calibrate_parameters'][idx]['name']
-            module_metadata[0]["calibrate_parameters"][idx]["initial_value"] = initial_value_dict[key_name]        
+            module_metadata["calibrate_parameters"][idx]["initial_value"] = initial_value_dict[key_name]        
         
     return module_metadata
 
