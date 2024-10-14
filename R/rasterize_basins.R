@@ -1,6 +1,6 @@
 # rasterize selected basins given the gpkg (GDAL needs to be installed)
 
-rasterize_basins = function(basins, data_dir, output_dir){
+rasterize_basins <- function(gage_id, data_dir, gpkg_file){
 
 #rm(list=ls())
 
@@ -18,13 +18,12 @@ str1 <- paste0("basins_group_",group)
 
 # hydrofabric file for the basins (all catchments together)
 sf1 <- data.frame()
-for (gage1 in basins) {
-    str_gage1 <- ifelse(substr(gage1,1,1)=="0",substr(gage1,2,nchar(gage1)),gage1)
-    hydro_file <- paste0(output_dir,"Gage_",str_gage1,".gpkg")
-    sf0 <- read_sf(hydro_file, "divides")
-    sf0$gage <- gage1
-    sf1 <- rbind(sf1,sf0)
-}
+
+# Not necessary for loop
+sf0 <- read_sf(gpkg_file, "divides")
+sf0$gage <- gage_id
+sf1 <- rbind(sf1,sf0)
+
 sf1$cat_id <- 1:nrow(sf1)
 
 # transform projection
