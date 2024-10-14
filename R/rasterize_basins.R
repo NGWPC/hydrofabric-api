@@ -2,9 +2,7 @@
 
 rasterize_basins = function(basins, data_dir, output_dir){
 
-#rm(list=ls())
 
-#library(rgdal)
 library(raster)
 library(sf)
 
@@ -13,13 +11,13 @@ prjstr <- "+proj=lcc +lat_1=30 +lat_2=60 +lat_0=40.0000076293945 +lon_0=-97 +x_0
 
 # basin group
 group <- 1
-#basins <- c("01123000","01350080","14141500","14187000")
+
 str1 <- paste0("basins_group_",group)
 
 # hydrofabric file for the basins (all catchments together)
 sf1 <- data.frame()
 for (gage1 in basins) {
-    str_gage1 <- ifelse(substr(gage1,1,1)=="0",substr(gage1,2,nchar(gage1)),gage1)
+    str_gage1 <- gage1
     hydro_file <- paste0(output_dir,"Gage_",str_gage1,".gpkg")
     sf0 <- read_sf(hydro_file, "divides")
     sf0$gage <- gage1

@@ -33,7 +33,6 @@ def get_ipe(gage_id, module, module_metadata):
 
     status_str = "Get IPEs for " + module
     print(status_str)
-    print(module_metadata)
     logger.info(status_str)
 
     # Call function for specific module
@@ -47,7 +46,7 @@ def get_ipe(gage_id, module, module_metadata):
     elif module == "T-Route":
         results = t_route_ipe(gage_id, subset_dir, module_metadata)
         return results
-    elif module.upper() == "SNOW17":
+    elif module == "Snow17":
         results = snow17_ipe(gage_id, subset_dir, module_metadata)
         return results
     elif module == "Sac-SMA":
