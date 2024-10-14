@@ -19,7 +19,7 @@ def cfe_ipe(gage_id, subset_dir, module, module_metadata):
     Returns:
     dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
     '''
-
+    
     # Setup logging
     logger = logging.getLogger(__name__)
 
@@ -31,9 +31,7 @@ def cfe_ipe(gage_id, subset_dir, module, module_metadata):
     s3prefix = config['s3prefix']
 
     #Build input arguments for config file R script
-    #create string containing R c (combine) function and gage IDs
-    gage_id_string = 'c(' + gage_id + ')'
-    gage_id_string = "'"+gage_id_string+"'"
+    gage_id_string = "'"+gage_id+"'"
 
     #this will be replaced with a call to the database when connectivity is available in the container
     if module == 'CFE-X':
@@ -86,20 +84,17 @@ def cfe_ipe(gage_id, subset_dir, module, module_metadata):
         print(error_str)
         logger.error(error_str)
         return error
-
-    # CFE IPE R code uses Gage_6719505 format
-    gage_id_full = "Gage_" + gage_id.lstrip("0")
-    
+        
     if s3prefix:
         s3prefix = s3prefix + "/" + gage_id + "/" + module
     else:
         s3prefix = gage_id + "/" + module        
 
-    files = Path(os.path.join(subset_dir, module, gage_id_full)).glob('*.ini')
+    files = Path(os.path.join(subset_dir, module)).glob('*.ini')
     for file in files:
         print("writing: " + str(file) + " to s3")
         file_name = os.path.basename(file)
-        write_minio(subset_dir + "/" + module + "/" + gage_id_full, file_name, s3url, s3bucket, s3prefix)
+        write_minio(subset_dir + "/" + module, file_name, s3url, s3bucket, s3prefix)
 
     uri = build_uri(s3bucket, s3prefix)
     status_str = "Config files written to:  " + uri
@@ -116,9 +111,10 @@ def cfe_ipe(gage_id, subset_dir, module, module_metadata):
         key, value = line.strip().split('=')
         cfg_file_ipes[key.strip()] = value.strip()
 
-    for x in range(len(module_metadata[0]["calibrate_parameters"])):
-        module_metadata[0]["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[module_metadata[0]["calibrate_parameters"][x]["name"]]
+    for x in range(len(module_metadata["calibrate_parameters"])):
+        module_metadata["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[module_metadata["calibrate_parameters"][x]["name"]]
         
     uri = build_uri(s3bucket, s3prefix)
-    module_metadata[0]["parameter_file"]["uri"] = uri
+    module_metadata["parameter_file"]["uri"] = uri
+    
     return module_metadata

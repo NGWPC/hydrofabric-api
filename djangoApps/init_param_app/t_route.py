@@ -37,7 +37,7 @@ def t_route_ipe(gage_id, subset_dir, module_metadata):
     if not os.path.exists(subset_dir):
         os.mkdir(subset_dir)
 
-    gpkg_file = "Gage_"+gage_id.lstrip("0") + ".gpkg"
+    gpkg_file = "Gage_" + gage_id + ".gpkg"
     gpkg_file = os.path.join(gpkg_dir, gpkg_file)
 
     start_date = ''
@@ -178,7 +178,7 @@ def t_route_ipe(gage_id, subset_dir, module_metadata):
     logger.info(status_str)
 
     #fill in parameter files uri 
-    module_metadata[0]["parameter_file"]["uri"] = uri
+    module_metadata["parameter_file"]["uri"] = uri
 
     return module_metadata
 
