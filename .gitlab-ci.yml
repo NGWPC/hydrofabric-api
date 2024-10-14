@@ -1,0 +1,45 @@
+stages:
+  - build
+  - deploy
+
+image: registry.sh.nextgenwaterprediction.com/infrastructure/docker/docker:latest
+
+variables:
+    DOCKER_BUILD_NAME: hydrofabric_api
+    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE
+    DOCKER_IMAGE_TAG: $CI_COMMIT_REF_NAME
+    ACCESS_KEY: QVNJQVRGWkFFRExOTDNaT0JYUzQ=
+    SECRET_ACCESS_KEY: dDdiSXZla1hWSXV2NjhTUUc3Y2c2UXovaEFWbXZuaThIRlhBY1NGYQ==
+    SESSION_TOKEN: SVFvSmIzSnBaMmx1WDJWakVQWC8vLy8vLy8vLy93RWFDWFZ6TFdWaGMzUXRNU0pHTUVRQ0lDTkR6ZDNqNTZLOW1FeCsvdFNaQUNvbHF6R2s2amlScDlxTUFwMWtzV2owQWlCMWl5VllTTkhkajROTTZKeHdOcXk2dzJaQkJ4VXI3a3phUDVKeFYxckxCaXFZQXdoT0VBQWFEREl4T0RVM016Z3pPVEEyTmlJTWJHMG9GKzVRTXViY2syM3FLdlVDb0JaSXhEYmxQVGJMTE5QR1VObFJLZGR1MTFQN2NsQUllTkxDWFhaQ2Q2anFLa2h6VnlUQ2o1YWljK1pzcG1oYU4wdWxjZ2VXRVlyRVFFWEQ3TURFTkdIRzE0R2l0UWtGYi9FODIybWZUZE1qcWJ0NEtCcUFqYThRdDJCVWErLzdaOUxsemVHeElNK3Y2YXNCNnUrbUJpYlczY0xZaTBZUzVNYmRyU3NtL2sxM3hWNlp5OVRUMk1NemNaWkR6QzQ0OG11TEtoc1hwMnJXZWxvQ09nS0g0TTcxV1pDeXdWWWhtTHFXdWlFK1JYdzcyQlNPOW53UEd2RUxmbUV0MDJ0ZFpCMDBsSmllZDQ5cDgxWllNOElXcXgvc0NSZ2JSTnJXNGNqWXMvYWV0S1VoT0dNL09ld29sdzIxeWYwNWxXaTdSeHd0a3YyVUZ6ZUNZSzBSRFBUcjJJaUtIYVhyWjZrYTNhclF1b0k0MW1ZQys3end5blh3YmhWdG9CblB2dS9uNXE0a1lhQ1RDbWJINUJJWm9XZkwvQVUyQ0pRSk02UFFQM29NVFFaS1FvbDNzZEg3dy95NENQTFNXWExISkRIUkdnbWd1QzdHTS94a1VqeFBGakhzeVNCNzNwejZSNkxBMWhUV05YYlNFKzIwUkVrOFRERElzNWE0QmpxbkFXbU1LYTM4NU5yZ0FtYkNGWmVROW5Cc20zTFBlay9hUklPdUxMVitwNGRWTG8xbWtGUnA3bmd0T0VOZEw1dDJkMWI5SVdFVzdETzVPZmU0SGE0c082YmFEOWNOeUppc0RRc2MvM2tubWNZUkJIWG9BQVIvV290U3JrWExaR1paaURsbGlMTHBmWDB4TEM2UHBQeDZ2aU5welJpcEhicWRmekhjTnJnTmlOZFpyWEV1cFRUVThMQytRbklmdTE2MW9keTBNcXpJN3BtZUc2REk2Nm5KeFUxSU1aOS9EVWZT
+    DB_PASS: Y2hhbmdlX21l
+
+build:
+  stage: build
+  script:
+    - echo "Building ${CI_PROJECT_NAME} docker image.. "
+    - echo "Logging in to Gitlab Container Registry..."
+    - echo $CI_JOB_TOKEN | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    - apk add --no-cache coreutils aws-cli make sudo
+    - export AWS_ACCESS_KEY_ID=$(echo $ACCESS_KEY | base64 -d)
+    - export AWS_SECRET_ACCESS_KEY=$(echo $SECRET_ACCESS_KEY | base64 -d)
+    - export AWS_SESSION_TOKEN=$(echo $SESSION_TOKEN | base64 -d)
+    - export DB_PASSWORD=$(echo $DB_PASS | base64 -d)
+    - make get_deps
+    - rm -f /tmp/hydro_api/hydrofabric_service_v1.tar
+    - rm -f /tmp/hydro_api/hydrofabric_data.tgz
+    - docker build --no-cache -t $DOCKER_BUILD_NAME .
+    - docker tag $DOCKER_BUILD_NAME:latest $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+    - docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+    - docker logout
+
+deploy:
+  stage: deploy
+  script:
+    - echo "Logging in to Gitlab Container Registry to push the image..."
+    - echo $CI_JOB_TOKEN | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    - echo "Pushing to the docker registry"
+    - docker tag $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG $DOCKER_IMAGE_NAME:latest
+    - docker push $DOCKER_IMAGE_NAME:latest
+    - docker logout
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "development"'

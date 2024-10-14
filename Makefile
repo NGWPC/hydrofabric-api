@@ -6,12 +6,12 @@ check-env:
 
 get_deps: check-env
 	@echo "Pulling a tar archive of a Hydrofabric Base image compatible with the Hydrofabric API"
-	aws s3 cp s3://ngwpc-dev/DanielCumpton/hydrofabric_service_v1.tar /tmp/hydro_api/
+	aws s3 cp --no-progress s3://ngwpc-dev/DanielCumpton/hydrofabric_service_v1.tar /tmp/hydro_api/
 	@echo "Running docker load to add the image to your local docker registry"
 	sudo docker load -i /tmp/hydro_api/hydrofabric_service_v1.tar
 
 	@echo "Pulling a hydrofabric data archive from S3"
-	aws s3 cp s3://ngwpc-hydrofabric/hydrofabric_data.tgz /tmp/hydro_api/
+	aws s3 cp --no-progress s3://ngwpc-hydrofabric/hydrofabric_data.tgz /tmp/hydro_api/
 	@echo "Extracting the hydrofabric data to Hydrofabric in your current working directory"
 	tar -xzf /tmp/hydro_api/hydrofabric_data.tgz -C $(shell pwd)/
 
