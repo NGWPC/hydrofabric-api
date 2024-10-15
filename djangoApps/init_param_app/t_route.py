@@ -1,8 +1,3 @@
-import os
-import json
-import yaml
-import logging
-
 from .util.enums import FileTypeEnum
 from .util.utilities import *
 
@@ -156,6 +151,7 @@ def t_route_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
     # Write files to DB and S3
     uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
     status_str = "Config files written to:  " + uri
+    print(status_str)
     logger.info(status_str)
 
     #fill in parameter files uri 

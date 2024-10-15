@@ -4,6 +4,7 @@ from django.db import connection
 import json
 
 #This class is used to fetch data from the database, and the results are converted into OrderedDict instances to maintain order.
+# TODO Add logging an use try-except for failed requests remove dead imports
 class DatabaseManager:
 
     def __init__(self,cursor):
@@ -38,11 +39,11 @@ class DatabaseManager:
          
         query = """
         SELECT 
-        m.name, array_agg(mg.group_name) AS groups, m.description 
+        m.name, array_agg(mg.group_name) AS groups 
         FROM modules m
         JOIN module_group_map mgm ON m.id = mgm.module_id
         JOIN module_groups mg ON mgm.group_id = mg.id
-        GROUP BY m.name, m.description
+        GROUP BY m.name
         ORDER BY m.name ASC;
         """
         
