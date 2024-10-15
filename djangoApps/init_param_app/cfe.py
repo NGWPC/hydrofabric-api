@@ -1,5 +1,7 @@
 import subprocess
 import json
+
+from .models import CfeParams
 from .util import utilities
 from .util.enums import FileTypeEnum
 from .util.utilities import *
@@ -21,7 +23,8 @@ def cfe_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, module_metad
     Returns:
     dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
     '''
-
+    cfe_x_params = ('a_Xinanjiang_inflection_point_parameter', 'b_Xinanjiang_shape_parameter', 'x_Xinanjiang_shape_parameter', 'urban_decimal_fraction')
+    cfe_s = 'CFE-S'
     # Get config file for paths
     config = get_config()
     input_dir = config['input_dir'] 
@@ -36,16 +39,19 @@ def cfe_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, module_metad
     gage_id_string = "'"+gage_id+"'"
 
     # TODO: This will be replaced with a call to the database when connectivity is available in the container
-    cfe_json = os.path.join(app_path, cfe_x_json) if module == 'CFE-X' else os.path.join(app_path, cfe_s_json)
+    #cfe_json = os.path.join(app_path, cfe_x_json) if module == 'CFE-X' else os.path.join(app_path, cfe_s_json)
  
-    try:
-        import_json = open(cfe_json)
-        parameters = json.load(import_json)
-    except Exception as e:
-        logger.error(f"Error reading JSON document {cfe_json} Error is: {e}")
-        error_str = f"CFE error reading JSON document {cfe_json}"
-        error = dict(error = error_str) 
-        return error
+    #try:
+    #    import_json = open(cfe_json)
+    #    parameters = json.load(import_json)
+    #except Exception as e:
+    #    logger.error(f"Error reading JSON document {cfe_json} Error is: {e}")
+    #    error_str = f"CFE error reading JSON document {cfe_json}"
+    #    error = dict(error = error_str)
+    #    return error
+
+    # get the cfe parameter from the DB
+    queryset = CfeParams.objects.values('name', 'nwm_name', 'default_value')
 
     # Create lists for passing CFE parameter names and constant values to R code
     cfe_parameters_nwm_name = []
@@ -53,14 +59,22 @@ def cfe_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, module_metad
     cfe_parameters_const_name = []
     cfe_parameters_const_value = []
 
-    for x in parameters:
-        if not x['default_value'] is None:
-            cfe_parameters_const_name.append("'" + x['name'] + "'") 
-            cfe_parameters_const_value.append("'"  + x['default_value'] + "'")
+    for row in queryset:
+        # We do not need to check for CFE-S or CFE-X on this check because the four
+        # parmeter in cfe_x_params do not have default values
+        if row['default_value'] is not None:
+            cfe_parameters_const_name.append("'" + row['name'] + "'") 
+            cfe_parameters_const_value.append("'"  + row['default_value'] + "'")
             
-        if not x['nwm_name'] is None:
-            cfe_parameters_nwm_name.append("'" + x["nwm_name"] + "'")
-            cfe_parameters_cfe_name.append("'"  + x['name'] + "'")
+        # We need to check for CFE-S or CFE-X on this check because the three of the four
+        # parmeter in cfe_x_params have an nwm name
+        if row['nwm_name'] is not None:
+            if module == cfe_s and row['name'] in cfe_x_params:
+                # skip this row it is a CFE-X parameter
+                continue
+            else:
+                cfe_parameters_nwm_name.append("'" + row["nwm_name"] + "'")
+                cfe_parameters_cfe_name.append("'"  + row['name'] + "'")
 
     cfe_parameters_const_name = '"c(' + ",".join(cfe_parameters_const_name) + ')"' 
     cfe_parameters_const_value = '"c(' + ",".join(cfe_parameters_const_value) + ')"' 
@@ -110,8 +124,8 @@ def cfe_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, module_metad
         key, value = line.strip().split('=')
         cfg_file_ipes[key.strip()] = value.strip()
 
-    for x in range(len(module_metadata[0]["calibrate_parameters"])):
-        module_metadata[0]["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[module_metadata[0]["calibrate_parameters"][x]["name"]]
+    for row in range(len(module_metadata[0]["calibrate_parameters"])):
+        module_metadata[0]["calibrate_parameters"][row]["initial_value"] = cfg_file_ipes[module_metadata[0]["calibrate_parameters"][row]["name"]]
         
     module_metadata[0]["parameter_file"]["uri"] = uri
     return module_metadata
