@@ -1,9 +1,7 @@
-import unittest
 import cartopy.crs as ccrs
 import math
 import csv
-import os
-from init_param_app.util.utilities import *
+from .utilities import *
 
 
 
@@ -65,13 +63,13 @@ def find_closest_key(lat_lon_dict, lon, lat):
 #     #
 #     # Continue this all the way from bottom up till you reach 7th row from the top of this file.
 
-def getValueForLatLon_point(lat, lon, paramName):
-
-    paramName = paramName.upper()
+def getValueForLatLon_point(lat, lon, param_name):
+    # TODO: Remove dead code and fix comments
+    param_name = param_name.upper()
     # setup input dir
     config = get_config()
     input_dir = config['input_dir']
-    filename = input_dir + "sac_sma/asc_data/sac_" + paramName + ".asc"
+    filename = input_dir + "sac_sma/asc_data/sac_" + param_name + ".asc"
     
     # filename = "sac_" + paramName + ".asc"
     if os.path.exists(filename):

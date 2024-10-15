@@ -4,14 +4,11 @@ from rest_framework import status
 from django.db import connection
 from collections import OrderedDict
 from .DatabaseManager import DatabaseManager
-from .models import HFFiles
-from .util.enums import FileTypeEnum
 from .cfe import *
 from .noah_owp_modular import *
 from .t_route import *
 from .sac_sma import *
 from .snow17 import *
-from .models import HFFiles
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -52,7 +49,7 @@ def get_ipe(gage_id, source, domain, modules, gage_file_mgmt):
                 logger.error(results)
                 # TODO Make this the correct response also some of the data
                 #      may have been generated do we return what we have
-                #      and try to keep procssing the others
+                #      and try to keep processing the others
                 return Response(results, status=status.HTTP_404_NOT_FOUND)
         else:
             # Found IPE data file, clean and add to response list
