@@ -243,7 +243,6 @@ class GageFileManagement(FileManagement):
 
     def get_file_from_s3(self, gage_id, domain, source, data_type):
         #Find file in HFFles table
-        uri = None
         file_found, results = self.file_exists(gage_id, domain, source, data_type)
 
         #Create the local temp directory to put the file into

@@ -1,12 +1,10 @@
 import os
 import logging
-from pathlib import Path
 
 import geopandas as gpd
-import pandas as pd
 import pyarrow.parquet as pq
 import pyarrow as pa
-from .util.utilities import get_hydrofabric_input_attr_file
+from .util.utilities import get_hydrofabric_input_attr_file, get_subset_dir_file_names
 from .util.enums import FileTypeEnum
 
 logger = logging.getLogger(__name__)
@@ -38,8 +36,7 @@ def noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_
             error = dict(error = error_str) 
             logger.error(error_str)
             return error
-    except:
-        # TODO: Replace 'except' with proper catch
+    except:# TODO: Replace 'except' with proper catch
         error_str = 'Error opening ' + gpkg_file
         error = dict(error = error_str) 
         logger.error(error_str)
@@ -176,15 +173,15 @@ def noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_
     logger.info(status_str)
  
     #fill in parameter files uri 
-    module_metadata["parameter_file"]["uri"] = uri
+    module_metadata[0]["parameter_file"]["uri"] = uri
     
     # Get default values for calibratable initial parameters.
     for x in range(len(module_metadata[0]["calibrate_parameters"])):
             initial_values = module_metadata[0]["calibrate_parameters"][x]["initial_value"]
             #If initial values are an array, get proper value for vegtype, otherwise use the single value.
             if len(initial_values) > 1:
-                 module_metadata["calibrate_parameters"][x]["initial_value"] = initial_values[vegtype - 1]
+                 module_metadata[0]["calibrate_parameters"][x]["initial_value"] = initial_values[vegtype - 1]
             else:
-                 module_metadata["calibrate_parameters"][x]["initial_value"] = initial_values[0]
+                 module_metadata[0]["calibrate_parameters"][x]["initial_value"] = initial_values[0]
 
     return module_metadata

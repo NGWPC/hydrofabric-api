@@ -1,9 +1,4 @@
 import copy
-import os
-import logging
-import json
-from pathlib import Path
-
 import geopandas as gpd
 import pandas as pd
 import pyarrow.parquet as pq
@@ -11,6 +6,7 @@ import pyarrow as pa
 
 from .util.enums import FileTypeEnum
 from .util.utilities import *
+
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +39,7 @@ def snow17_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, 
     data = gpd.read_file(gpkg_file, layer="divides")
     catch_dict = {}
     for index, row in data.iterrows():
+        #print(row['divide_id'], row['areasqkm'])
         catch_dict[str(catchments[index])] = {"areasqkm": str(areas[index])}
 
     response = create_snow17_input(gage_id, source, domain, catch_dict, attr_file, subset_dir, module_metadata, gage_file_mgmt)
@@ -61,6 +58,7 @@ def create_snow17_input(gage_id, source, domain, catch_dict, attr_file, snow17_o
         # TODO: Replace 'except' with proper catch
         error_str = 'Error opening ' + attr_file
         error = dict(error=error_str)
+        print(error_str)
         logger.error(error_str)
         return error
 
@@ -73,6 +71,7 @@ def create_snow17_input(gage_id, source, domain, catch_dict, attr_file, snow17_o
     if len(filtered) == 0:
         error_str = 'No matching catchments in attribute file'
         error = dict(error=error_str)
+        print(error_str)
         logger.error(error_str)
         return error
 

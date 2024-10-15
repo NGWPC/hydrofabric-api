@@ -12,13 +12,12 @@ Outputs:
     Outputs are written to output_dir:  Hydrofabric Subset files (Gage-xxxxxxxx.gpkg) and BMI config files (e.g., cat-10617_bmi_config.ini)
     in CFE-S subdirectory.   
 '''
-
 import geopandas as gpd
 import pyarrow.parquet as pq
 import pyarrow as pa
 
 from .util.enums import FileTypeEnum
-from init_param_app.util.utilities_transform import *
+from .util.utilities_transform import *
 from .util.utilities import *
 
 
@@ -50,13 +49,15 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
         except:
             # TODO: Replace 'except' with proper catch
             error_str = 'Error reading divides layer in ' + gpkg_file
-            error = dict(error = error_str)
+            error = dict(error = error_str) 
+            print(error_str)
             logger.error(error_str)
             return error
     except:
         # TODO: Replace 'except' with proper catch
         error_str = 'Error opening ' + gpkg_file
         error = dict(error = error_str) 
+        print(error_str)
         logger.error(error_str)
         return error
 
@@ -66,6 +67,7 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
     data = gpd.read_file(gpkg_file, layer="divides")
     catch_dict = {}
     for index, row in data.iterrows():
+        #print(row['divide_id'], row['areasqkm'])
         catch_dict[str(catchments[index])] = {"areasqkm": str(areas[index])}
 
     response = create_sac_sma_input(gage_id, source, domain, catch_dict, attr_file, subset_dir, module_metadata, gage_file_mgmt)
@@ -92,22 +94,24 @@ def create_sac_sma_input(gage_id, source, domain, catch_dict, attr_file, subset_
         # TODO: Replace 'except' with proper catch
         error_str = 'Error opening ' + attr_file
         error = dict(error=error_str)
+        print(error_str)
         logger.error(error_str)
         return error
 
     attr = attr.drop_null()
     attr_df = pa.Table.to_pandas(attr)
 
-    logger.debug(catch_dict)
+    print(catch_dict)
     #exit()
     # filter rows with catchments in gpkg
     #for idx in catchment_list =
     filtered = attr_df[attr_df['divide_id'].isin(catch_dict.keys())]
-    logger.debug(filtered)
+    print(filtered)
 
     if len(filtered) == 0:
         error_str = 'No matching catchments in attribute file'
         error = dict(error=error_str)
+        print(error_str)
         logger.error(error_str)
         return error
 
@@ -192,16 +196,16 @@ def create_sac_sma_input(gage_id, source, domain, catch_dict, attr_file, subset_
                 param_list[i] = f'lztwm {lztwm}'
             elif param.startswith('lzfpm'):
                 lzfpm_default = param.split()[1]  # Extract the value after 'lzfpm'
-                logger.debug("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-                logger.debug("lzfpm_default: " + lzfpm_default)
+                print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+                print("lzfpm_default: " + lzfpm_default)
                 lzfpm = getValueForLatLon_point(latitude, longitude, 'lzfpm')
-                logger.debug("lzfpm: " + str(lzfpm))
-                logger.debug("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+                print("lzfpm: " + str(lzfpm))
+                print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
                 if lzfpm == -1:
                     lzfpm = lzfpm_default
                 param_list[i] = f'lzfpm {lzfpm}'
-                logger.debug("lzfpm: " + str(lzfpm))
-                logger.debug("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+                print("lzfpm: " + str(lzfpm))
+                print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
             elif param.startswith('lzfsm'):
                 lzfsm_default = param.split()[1]  # Extract the value after 'lzfsm'
                 lzfsm = getValueForLatLon_point(latitude, longitude, 'lzfsm')
@@ -340,7 +344,7 @@ def create_sac_sma_input(gage_id, source, domain, catch_dict, attr_file, subset_
     #files = Path(subset_dir).glob('*.input')
     
     #for file in files:
-    #    logger.debug("writing: " + str(file) + " to s3")
+    #    print("writing: " + str(file) + " to s3")
     #    file_name = os.path.basename(file)
     #    write_minio(subset_dir, file_name, s3url, s3bucket, subset_s3prefix)
 
@@ -348,10 +352,11 @@ def create_sac_sma_input(gage_id, source, domain, catch_dict, attr_file, subset_
     uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list,
                                               module=module)
     status_str = "Config files written to:  " + uri
+    print(status_str)
     logger.info(status_str)
 
     #fill in parameter files uri 
-    module_metadata["parameter_file"]["uri"] = uri
+    module_metadata[0]["parameter_file"]["uri"] = uri
 
     # Temp Hack till we get the initial values based on Mark's email and list of documents
     # Create an empty dictionary
@@ -378,21 +383,21 @@ def create_sac_sma_input(gage_id, source, domain, catch_dict, attr_file, subset_
         initial_value_dict[key] = float(value) if value.replace('.', '', 1).isdigit() else value  # Convert to float if numeric
 
     # Output the resulting dictionary
-    logger.debug(initial_value_dict)
+    print(initial_value_dict)
 
     # Get default values for calibratable initial parameters from initial_value_dict.
 
     # Check if "calibrate_parameters" exists in combined_data
-    logger.debug(type(module_metadata[0]["calibrate_parameters"]))
+    print(type(module_metadata[0]["calibrate_parameters"]))
     if "calibrate_parameters" in module_metadata[0]:
-        logger.debug("Yes calibrate_parameters is in module_metadata[0]")
+        print("Yes calibrate_parameters is in module_metadata[0]")
         for idx in range(len(module_metadata[0]["calibrate_parameters"])):
             param = module_metadata[0]["calibrate_parameters"][idx]  # Access the list element by index
             # Now access dictionary keys inside the parameter
             key_name = param.get("name")  # Assuming each list element is a dictionary
-            logger.debug(f"Parameter {idx}: {key_name}")
+            print(f"Parameter {idx}: {key_name}")
             #key_name = module_metadata['calibrate_parameters'][idx]['name']
-            module_metadata["calibrate_parameters"][idx]["initial_value"] = initial_value_dict[key_name]        
+            module_metadata[0]["calibrate_parameters"][idx]["initial_value"] = initial_value_dict[key_name]        
         
     return module_metadata
 
