@@ -155,7 +155,7 @@ def t_route_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
     logger.info(status_str)
 
     #fill in parameter files uri 
-    module_metadata[0]["parameter_file"]["uri"] = uri
+    module_metadata["parameter_file"]["uri"] = uri
     logger.info(f"TRoute config successfully created at {output_filename}.")
 
     return module_metadata
