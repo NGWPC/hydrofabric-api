@@ -58,6 +58,8 @@ def get_ipe(gage_id, source, domain, modules, gage_file_mgmt):
 
         module_output_list.append(module_results)
 
+    module_output_list = {"modules": module_output_list}
+
     gage_file_mgmt.delete_local_temp_directory(subset_dir)
     gage_file_mgmt.delete_local_temp_directory(gpkg_dir)    
     return Response(module_output_list, status=status.HTTP_200_OK)
@@ -141,7 +143,7 @@ def get_module_metadata(module_name):
 
     combined_data["output_variables"] = out_variables_data_response
 
-    return [combined_data]
+    return combined_data
 
 def module_calibrate_data(model_type):
     try:
