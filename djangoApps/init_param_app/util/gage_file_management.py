@@ -6,6 +6,7 @@ from datetime import datetime
 from os.path import join
 import shutil
 from django.conf import settings
+from django.utils import timezone
 import logging
 
 from .enums import FileTypeEnum
@@ -195,7 +196,7 @@ class GageFileManagement(FileManagement):
         self.module = module
 
         # Get the current date and time
-        now = datetime.now()
+        now = timezone.now().replace(microsecond=0)
         # Format the date and time as a string
         self.formatted_datetime = now.strftime("%Y_%b_%d_%H_%M_%S")
 
