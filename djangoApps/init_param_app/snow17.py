@@ -111,9 +111,7 @@ def create_snow17_input(gage_id, source, domain, catch_dict, attr_file, snow17_o
                       'adc10 0.970',
                       'adc11 1.000']
 
-        # NOTE: use record 0 from module_metadata as a template, then append a deep copy to response at end of
-        #       this method and return
-        module_metadata_rec = set_ipe_json_values(param_list, module_metadata[0])
+    
         input_file = os.path.join(snow17_output_dir, 'snow17-init-' + str(catchment_id) + '.namelist.input')
         param_file = os.path.join(snow17_output_dir, 'snow17_params-' + str(catchment_id) + '.HHWM8.txt')
 
@@ -156,15 +154,13 @@ def create_snow17_input(gage_id, source, domain, catch_dict, attr_file, snow17_o
         # put all file names to write to S3 in a list
         filename_list.extend((input_file.rsplit('/')[-1], param_file.rsplit('/')[-1]))
 
-        deep_copy_ipe_dict = copy.deepcopy(module_metadata_rec)
-        response.append(deep_copy_ipe_dict)
-        logger.info("snow17:create_snow17_input:appended deep copy dict to response " + str(deep_copy_ipe_dict))
 
     # Write files to DB and S3
     uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, snow17_output_dir, filename_list,
                                               module=module)
-    response[0]['parameter_file']['uri'] = uri
-    return response
+    module_metadata_rec = set_ipe_json_values(param_list, module_metadata)
+    module_metadata_rec['parameter_file']['uri'] = uri
+    return module_metadata_rec
 
 
 def set_ipe_json_values(param_list, module_metadata_rec) -> dict:
