@@ -73,7 +73,7 @@ build:
     - echo $CI_JOB_TOKEN | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
     - echo "Building test Rocky Linux container... "
     - echo docker build -f Dockerfile-gitlab -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG .
-    - docker build -t "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG" .
+    - docker build -f Dockerfile-gitlab -t "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG" .
     - docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
     - docker logout
 
