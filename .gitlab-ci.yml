@@ -27,6 +27,8 @@ lint:
     - flake8 . --max-line-length=120
   allow_failure: true
 
+# There isn't a quick hack to fix everything that needs to be setup here.
+# TODO: Hydro needs a unit testing strategy
 unit_test:
   stage: unit_test
   image: registry.sh.nextgenwaterprediction.com/infrastructure/rockylinux/rockylinux:9.3
