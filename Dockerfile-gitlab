@@ -12,7 +12,6 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 \
 
 # Copy application files
 COPY ./djangoApps /app/djangoApps
-COPY ./Hydrofabric /app/Hydrofabric
 COPY ./R /app/R
 COPY ./unit_test /app/unit_test
 COPY requirements.txt /app
