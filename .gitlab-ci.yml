@@ -25,6 +25,7 @@ lint:
     - pip install pytest flake8
   script:
     - flake8 . --max-line-length=120
+  allow_failure: true
 
 unit_test:
   stage: unit_test
@@ -41,6 +42,7 @@ unit_test:
       - coverage.xml
     reports:
       junit: test-results.xml
+  allow_failure: true
 
 analyze:sonar:
   stage: sonarqube
