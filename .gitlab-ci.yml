@@ -21,7 +21,8 @@ lint:
   image: registry.sh.nextgenwaterprediction.com/infrastructure/rockylinux/rockylinux:9.3
   before_script:
     - dnf install -y python pip
-    - pip install .[testing] --index-url ${CI_SERVER_PROTOCOL}://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple
+    #- pip install .[testing] --index-url ${CI_SERVER_PROTOCOL}://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple
+    - pip install -y pytest flake8
   script:
     - flake8 . --max-line-length=120
 
