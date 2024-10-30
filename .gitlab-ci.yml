@@ -1,45 +1,98 @@
+include:
+  - template: Jobs/Container-Scanning.gitlab-ci.yml
+
 stages:
+  - lint
+  - unit_test
+  - sonarqube
   - build
+  - test
   - deploy
 
-image: registry.sh.nextgenwaterprediction.com/infrastructure/docker/docker:latest
+image: registry.sh.nextgenwaterprediction.com/infrastructure/docker/docker:26.0.2
 
 variables:
-    DOCKER_BUILD_NAME: hydrofabric_api
     DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE
     DOCKER_IMAGE_TAG: $CI_COMMIT_REF_NAME
-    ACCESS_KEY: QVNJQVRGWkFFRExORjcyNE83RDU=
-    SECRET_ACCESS_KEY: Vy9oR1FETGp5dDdrcHR6WGY3Q2RSa3M1TCsvOXgzelZWbTQ3eXFYcg==
-    SESSION_TOKEN: SVFvSmIzSnBaMmx1WDJWakVMWC8vLy8vLy8vLy93RWFDWFZ6TFdWaGMzUXRNU0pJTUVZQ0lRREhiNS9HSEswaytxQ2doWTV1aXdXY0VMemJOanJtZkhsRCtmQys4djFTaWdJaEFLNUkwc0xSVUdiNXNwRDFuaHJnclk3Z3N0eFA2OHRWa09Od0pwRi9mSjNDS3BnRENCMFFBQm9NTWpFNE5UY3pPRE01TURZMklneTBHNjJBSiswYXpuaUVhTTRxOVFJZ3FQejY2KzdiUEljMzl3NVJtTHpPVWxUVmRMV1V5VnFxdTBOMVMydkNTYjRQaXAxUDRxU1RPMGdiK2NwM0VkRW8vTTNoZ3dLOUpWUUJVTS96aVEwRXJQcXhyWm5XK3ZPTGhtdzIrekorMldLOEhoOFR1NkJwU0xCNlgvRUwrVFE0ZGxxUktsM0t1ODE2QmU4QXV3Sm9oNktDN0lCQ2pqMTRqK2dXeElFcVpVMW1EYlY1WVFiblNDL2t4OXhEdGJhZmFhMEpyZjBBd1FhM2dzaGg1NTFwdHBIclBDelE1Y2V1aExaWnRPZHdtRitvanF0S004Mmo1YUdkS3lXZ2d6SUtZdmtyOWdBVFNtMWtTYWh2R1ltWitTekNoaWRGdnBKcHNYZWIwUnc1YVNyazNzL2ZSTE9na3ZpSjNkWVhqb2RKNTZ2c3NLR3hIUUpxNnVSL3N6M0RkSXZVc2NwTXYyVTJ5MEdxYzZualRPL3RyNG1vLzJTQjdjRkcxemk4R2dRdE9TUW02aWdyamovQk9SM1pWU3Z2NjFqOTdiSkJnM0ZMSm5GYUpRVnFZbVZMR0dRZmthaTlrOUdjMlNLQ2J1MCtFUVJ6VE85Qm1yd2hHbVQxdlZkSFZabktCd0E2NloyOTFNbm4rb1ZrWGVVRDhzdHZNTDI1d0xnR09xVUJuNVM5Z0dJQk05d0NRbTdHdHhyZVphYUNHZUh3TE80YWp3VzJVVENRZVlXMk4zdC8wTExadEg5M2E5QURJd1l2c2pjTGZmbktFSEFRajZQVFNSWTNKN3lzWjFOcEovQ3h6NlowWlFNR0pMMW95K0d1T0hDaVVTdmxrcDZZSVJ0VTQwN1BvUFlvRU8ySEdoZUlLUEgvaTV0dngrUUwzZ2RrdlNHVk1kZ1RTbmk3L1lGM2JmMlFIMml4Nng5eTRHMzJlY0EvOEZCNUI3VG9jNTVpRVJHZmFEd0djaVVR
-    DB_PASS: Y2hhbmdlX21l
+    TARGET_VERSION: "0.0.1" # Does Hydro API have any concept of versioning?
+
+lint:
+  stage: lint
+  image: registry.sh.nextgenwaterprediction.com/infrastructure/rockylinux/rockylinux:9.3
+  before_script:
+    - dnf install -y python pip
+    - pip install .[testing] --index-url ${CI_SERVER_PROTOCOL}://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple
+  script:
+    - flake8 . --max-line-length=120
+
+unit_test:
+  stage: unit_test
+  image: registry.sh.nextgenwaterprediction.com/infrastructure/rockylinux/rockylinux:9.3
+  before_script:
+    - dnf install -y python pip
+  script:
+    - pip install . --index-url ${CI_SERVER_PROTOCOL}://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple
+    - pip install .[testing] --index-url ${CI_SERVER_PROTOCOL}://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple
+    - coverage run -m pytest --junitxml=test-results.xml
+    - coverage xml
+  artifacts:
+    paths:
+      - coverage.xml
+    reports:
+      junit: test-results.xml
+
+analyze:sonar:
+  stage: sonarqube
+  image:
+    name: registry.sh.nextgenwaterprediction.com/infrastructure/sonar-scanner-cli/sonar-scanner-cli:5.0.1
+    entrypoint: [""]
+  variables:
+    # Defines the location of the analysis task cache
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+    # Shallow cloning needs to be disabled.
+    # See https://docs.sonarqube.org/latest/analysis/gitlab-cicd/.
+    GIT_DEPTH: 0
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  script:
+    - sonar-scanner -X -Dsonar.verbose=true
 
 build:
   stage: build
   script:
-    - echo "Building ${CI_PROJECT_NAME} docker image.. "
     - echo "Logging in to Gitlab Container Registry..."
     - echo $CI_JOB_TOKEN | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - apk add --no-cache coreutils aws-cli make sudo
-    - export AWS_ACCESS_KEY_ID=$(echo $ACCESS_KEY | base64 -d)
-    - export AWS_SECRET_ACCESS_KEY=$(echo $SECRET_ACCESS_KEY | base64 -d)
-    - export AWS_SESSION_TOKEN=$(echo $SESSION_TOKEN | base64 -d)
-    - export DB_PASSWORD=$(echo $DB_PASS | base64 -d)
-    - make get_deps
-    - rm -f /tmp/hydro_api/hydrofabric_service_v1.tar
-    - rm -f /tmp/hydro_api/hydrofabric_data.tgz
-    - docker build --no-cache -t $DOCKER_BUILD_NAME .
-    - docker tag $DOCKER_BUILD_NAME:latest $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+    - echo "Building test Rocky Linux container... "
+    - echo docker build -f Dockerfile-gitlab -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG .
+    - docker build -t "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG" .
     - docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
     - docker logout
 
-deploy:
+container_scanning:
+  stage: test
+  needs:
+    - build
+  variables:
+    SECURE_LOG_LEVEL: info
+    CS_SEVERITY_THRESHOLD: UNKNOWN
+    CS_IMAGE: $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+
+
+deploy_image:
   stage: deploy
   script:
-    - echo "Logging in to Gitlab Container Registry to push the image..."
+    - echo "Logging in to Gitlab Container Registry, to push the image."
     - echo $CI_JOB_TOKEN | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - echo "Pushing to the docker registry"
     - docker tag $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG $DOCKER_IMAGE_NAME:latest
     - docker push $DOCKER_IMAGE_NAME:latest
+    - docker tag $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG $DOCKER_IMAGE_NAME:$TARGET_VERSION
+    - docker push $DOCKER_IMAGE_NAME:$TARGET_VERSION
     - docker logout
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "development"'
+  only:
+    - main
+
+
+
+
