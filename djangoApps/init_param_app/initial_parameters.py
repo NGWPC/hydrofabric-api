@@ -9,6 +9,7 @@ from .noah_owp_modular import *
 from .t_route import *
 from .sac_sma import *
 from .snow17 import *
+from .sft import *
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -33,11 +34,18 @@ def get_ipe(gage_id, source, domain, modules, gage_file_mgmt):
     gpkg_file = os.path.join(gpkg_dir, gpkg_file)
     module_results = None
 
+    dependent_module_list = ["SoilFreezeThaw"]
+
     module_output_list = []
     for module in modules:
         found, ipe_json = gage_file_mgmt.ipe_files_exists(gage_id, domain, source, module)
         if not found:
-            module_results = calculate_module_params(gage_id, source, domain, module, subset_dir, gpkg_file, gage_file_mgmt)
+            if module in dependent_module_list:
+                module_results = calculate_dependent_module_params(gage_id, source, domain, module, modules,
+                                                                   subset_dir, gpkg_file, gage_file_mgmt)
+            else:
+                module_results = calculate_module_params(gage_id, source, domain, module, subset_dir, gpkg_file, gage_file_mgmt)
+
             if 'error' not in module_results:
                 # add ipe_json to Database
                 hffiles_row = gage_file_mgmt.get_db_object()
@@ -63,6 +71,29 @@ def get_ipe(gage_id, source, domain, modules, gage_file_mgmt):
     gage_file_mgmt.delete_local_temp_directory(subset_dir)
     gage_file_mgmt.delete_local_temp_directory(gpkg_dir)    
     return Response(module_output_list, status=status.HTTP_200_OK)
+
+
+def calculate_dependent_module_params(gage_id, source, domain, module, modules, subset_dir, gpkg_file, gage_file_mgmt):
+    subset_dir = os.path.join(subset_dir, module)
+    if not os.path.exists(subset_dir):
+        os.mkdir(subset_dir)
+    #Add the trailing /
+    subset_dir += "/"
+    module_metadata = get_module_metadata(module)
+    logger.debug(module_metadata)
+    logger.info(f"Get IPEs for {module} module")
+
+    if module == "SoilFreezeThaw":
+        results = sft_ipe(module, gage_id, source, domain, subset_dir,
+                          gpkg_file, modules, module_metadata, gage_file_mgmt)
+    else:
+        error_str = "Module name not valid:" + module
+        error = dict(error=error_str)
+        logger.error(error_str)
+        return error
+
+    return results
+
 
 def calculate_module_params(gage_id, source, domain, module, subset_dir, gpkg_file, gage_file_mgmt):
     subset_dir = os.path.join(subset_dir, module)
@@ -145,11 +176,15 @@ def get_module_metadata(module_name):
 
     return combined_data
 
+
 def module_calibrate_data(model_type):
     try:
         with connection.cursor() as cursor:
             db = DatabaseManager(cursor)
-            column_names, rows = db.selectModuleCalibrateData(model_type)
+            if model_type == "SoilFreezeThaw":
+                column_names, rows = db.selectDependentModuleCalibrateData(model_type)
+            else:
+                column_names, rows = db.selectModuleCalibrateData(model_type)
 
             if column_names and rows:
 
