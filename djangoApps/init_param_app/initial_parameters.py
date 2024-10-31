@@ -9,6 +9,7 @@ from .noah_owp_modular import *
 from .t_route import *
 from .sac_sma import *
 from .snow17 import *
+from .topmodel import *
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -87,6 +88,8 @@ def calculate_module_params(gage_id, source, domain, module, subset_dir, gpkg_fi
         results = snow17_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "Sac-SMA":
         results = sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
+    elif module == "TopModel":
+        results = topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     else:
         error_str = "Module name not valid:" + module
         error = dict(error=error_str)

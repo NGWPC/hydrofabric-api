@@ -468,6 +468,8 @@ class DatabaseManager:
             table_name = "snow17_params"
         elif model_type == "Sac-SMA":
             table_name = "sac_sma_params"
+        elif model_type == "TopModel":
+            table_name = "topmodel_params"
         else:
             return None, None
 
