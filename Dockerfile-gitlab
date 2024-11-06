@@ -15,6 +15,7 @@ COPY ./djangoApps /app/djangoApps
 COPY ./R /app/R
 COPY ./unit_test /app/unit_test
 COPY requirements.txt /app
+COPY config.yml /app/config.yml
 
 # Install Python dependencies
 RUN pip install -r /app/requirements.txt
