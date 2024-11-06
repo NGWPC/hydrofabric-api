@@ -9,17 +9,19 @@ from .utilities import get_config
 logger = logging.getLogger(__name__)
 
 class FileManagement:
-    # these access keys are for testing only.  This will be updated to use the AWS Secrets Manager
-
     def __init__(self):
-        self.access_key = os.environ["AWS_ACCESS_KEY_ID"]
-        self.secret_key = os.environ["AWS_SECRET_ACCESS_KEY"]
-        self.session_token = os.environ["AWS_SESSION_TOKEN"]
         config = get_config()
         self.s3_url = config['s3url']
         self.s3_bucket = config["s3bucket"]
         self.s3_uri = config['s3uri']
         self.hydro_version = config['hydrofabric_output_version']
+        # Get region from config or environment, with a fallback default of us-east-1
+        self.region = (
+            config.get('region') or 
+            os.environ.get('AWS_REGION') or 
+            os.environ.get('AWS_DEFAULT_REGION') or 
+            'us-east-1'
+        )
         self.s3_path = None
         self.full_s3_path = None
         self.input_filename = None
@@ -28,7 +30,26 @@ class FileManagement:
 
     def start_minio_client(self):
         if self.client is None:
-            self.client = Minio(self.s3_url, self.access_key, self.secret_key, self.session_token, region="us-east-1")
+            # Check if environment variables are available
+            access_key = os.environ.get("AWS_ACCESS_KEY_ID")
+            secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+            session_token = os.environ.get("AWS_SESSION_TOKEN")
+
+            if access_key and secret_key:
+                logger.debug("Using AWS credentials from environment variables")
+                self.client = Minio(
+                    self.s3_url,
+                    access_key=access_key,
+                    secret_key=secret_key,
+                    session_token=session_token,  # This will be None if not provided, which is fine
+                    region=self.region
+                )
+            else:
+                logger.debug("No AWS credentials found in environment, using instance role")
+                self.client = Minio(
+                    self.s3_url,
+                    region=self.region
+                )
 
     def check_s3_bucket(self):
         self.start_minio_client()
@@ -41,17 +62,17 @@ class FileManagement:
     def s3_file_exists(self, object_name):
         try:
             object_name = object_name.removeprefix(self.s3_uri)
-
             self.client.stat_object(self.s3_bucket, object_name)
             return True
         except S3Error as s3_error:
             if s3_error.code == 'NoSuchKey':
                 return False
             else:
-                logger.error(
-                    f"AWS Credentials have failed; Log into AWS and retrieve new credentials. Exception = {s3_error}")
+                logger.error(f"Error checking if file exists: {s3_error}")
+                return False
         except Exception as exception:
             logger.error(f"Unhandled exception caught - {exception}")
+            return False
 
     def write_minio(self):
         s3_path_output = self.s3_path + '/' + self.input_filename
@@ -73,4 +94,3 @@ class FileManagement:
             logger.debug(f"File '{object_name}' successfully downloaded to '{local_dir}'.")
         except Exception as e:
             logger.error(f"Error downloading file: {e}")
-
