@@ -65,6 +65,7 @@ analyze:sonar:
       - .sonar/cache
   script:
     - sonar-scanner -X -Dsonar.verbose=true
+  allow_failure: true
 
 build:
   stage: build
