@@ -17,15 +17,13 @@ logger = logging.getLogger(__name__)
 #def sft_ipe(gage_id, subset_dir, module_metadata_list, module_metadata, gpkg_file):
 def sft_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, modules, module_metadata, gage_file_mgmt):
     '''
-        Build initial parameter estimates (IPE) for snow freeze thaw (SFT)
-
+        Description: Build initial parameter estimates (IPE) for snow freeze thaw (SFT)
         Parameters:
-        gage_id (str):  The gage ID, e.g., 06710385
-        subset_dir (str):  Path to gage id directory where the module directory will be made.
-        module_metadata_list (dict):  list dictionary containing URI, initial parameters, output variables
-
+            gage_id (str):  The gage ID, e.g., 06710385
+            subset_dir (str):  Path to gage id directory where the module directory will be made.
+            module_metadata_list (dict):  list dictionary containing URI, initial parameters, output variables
         Returns:
-        dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
+            dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
     '''
 
     # Setup logging
@@ -122,6 +120,7 @@ def create_sft_input(gage_id, source, domain, catch_dict, attr_file, output_dir,
         icefscheme = 'Xinanjiang'
 
     response = []
+    s3_file_list = []
 
     # for key in catch_dict.keys(): LOOP CATCH_IDs HERE (from filtered dataframe)!!
     for index, row in filtered.iterrows():
@@ -186,35 +185,22 @@ def create_sft_input(gage_id, source, domain, catch_dict, attr_file, output_dir,
         with open(sft_bmi_file, "w") as f:
             f.writelines('\n'.join(param_list))
 
-        # put all files to write to S3 in a list
-        s3_file_list = [os.path.basename(sft_bmi_file)]
+        # put all files to write to S3 in a list to write to S3 outside of loop
+        s3_file_list.append(os.path.basename(sft_bmi_file))
 
-        # Write files to DB and S3
-        module_name = module_metadata["module_name"]
-        uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source,
-                                              output_dir, s3_file_list, module=module_name)
+    # Now write files to db AND S3 via GageFileManagement class
+    module_name = module_metadata["module_name"]
+    uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source,
+                                          output_dir, s3_file_list, module=module_name)
 
-        # for idx in range(len(s3_file_list)):
-        #     # Write geopackage to s3 bucket
-        #     if s3prefix:
-        #         subset_s3prefix = s3prefix + "/" + gage_id + "/SFT"
-        #     else:
-        #         subset_s3prefix = gage_id + "/SFT"
-        #
-        #     # subset_dir_full = os.path.join(output_dir, s3_file_list[idx])
-        #
-        #     write_minio(output_dir, s3_file_list[idx], s3url, s3bucket, subset_s3prefix)
-        #     # uri = build_uri(s3bucket, s3prefix, s3_file_list[idx])  #do not use filename, only dir
-        #     uri = build_uri(s3bucket, subset_s3prefix)
-        #     status_str = "Written to S3 bucket: " + str(uri)
-        #     print(status_str)
+    # log the S3 path to the files
+    module_metadata_rec['parameter_file']['uri'] = uri
+    logger.info("Written to S3 bucket: " + str(uri))
 
-        module_metadata_rec['parameter_file']['uri'] = uri
-        logger.info("Written to S3 bucket: " + str(uri))
-
-        deep_copy_ipe_dict = copy.deepcopy(module_metadata_rec)
-        response.append(deep_copy_ipe_dict)
-        logger.info("sft:create_sft_input:appended deep copy dict to response " + str(deep_copy_ipe_dict))
+    # deep copy to return in response
+    deep_copy_ipe_dict = copy.deepcopy(module_metadata_rec)
+    response.append(deep_copy_ipe_dict)
+    logger.info("sft:create_sft_input:appended deep copy dict to response " + str(deep_copy_ipe_dict))
 
     return response
 
