@@ -126,9 +126,6 @@ def create_sft_input(gage_id, source, domain, catch_dict, attr_file, output_dir,
     # for key in catch_dict.keys(): LOOP CATCH_IDs HERE (from filtered dataframe)!!
     for index, row in filtered.iterrows():
 
-    # THis Loop From BMI code...
-    # Create bmi config files
-    #for catID in catids:
         catID = row['divide_id']
 
         # Read cfe BMI files to obtain annual mean surface temperature as proxy for initial soil temperature
@@ -189,13 +186,6 @@ def create_sft_input(gage_id, source, domain, catch_dict, attr_file, output_dir,
         with open(sft_bmi_file, "w") as f:
             f.writelines('\n'.join(param_list))
 
-        # get config info
-        config = get_config()
-        output_dir = config['output_temp_dir']
-        s3url = config['s3url']
-        s3bucket = config['s3bucket']
-        s3prefix = config['s3prefix']
-
         # put all files to write to S3 in a list
         s3_file_list = [os.path.basename(sft_bmi_file)]
 
@@ -226,7 +216,7 @@ def create_sft_input(gage_id, source, domain, catch_dict, attr_file, output_dir,
         response.append(deep_copy_ipe_dict)
         logger.info("sft:create_sft_input:appended deep copy dict to response " + str(deep_copy_ipe_dict))
 
-        return response
+    return response
 
 
 def set_ipe_json_values(param_list, module_metadata_rec, sep=' ')-> dict:
