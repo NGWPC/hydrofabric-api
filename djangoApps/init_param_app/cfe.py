@@ -108,6 +108,9 @@ def cfe_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, module_metad
         return error
     # Since the R code writes the files to the subset_dir get list of files to send S3
     filename_list = utilities.get_subset_dir_file_names(subset_dir)
+
+    # TODO check if filename_list is empty, and throw error? other??
+
     # Write files to DB and S3
     uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
     status_str = "Config files written to:  " + uri
