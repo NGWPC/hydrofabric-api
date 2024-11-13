@@ -39,6 +39,24 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
 
     module = 'Sac-SMA'
 
+    #Set default values for parameters per InitialParameterValueSources.xlsx
+    uztwm = 75.0
+    uzfwm = 30.0
+    lztwm = 150.0
+    lzfpm = 300.0
+    lzfsm = 150.0
+    adimp = 0.0
+    uzk = 0.3
+    lzpk = 0.01
+    lzsk = 0.1 
+    zperc = 100.0
+    rexp = 2.0
+    pctim = 0.0
+    pfree = 0.1
+    riva = 0.0
+    side = 0.0
+    rserv = 0.3
+  
     try:
         divides_layer = gpd.read_file(gpkg_file, layer = "divides")
         try:
@@ -58,81 +76,31 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
         print(error_str)
         logger.error(error_str)
         return error
-
-    # get attrib file
-    attr_file = get_hydrofabric_input_attr_file()
-
-    try:
-        attr = pq.read_table(attr_file)
-    except:
-        # TODO: Replace 'except' with proper catch
-        error_str = 'Error opening ' + attr_file
-        error = dict(error=error_str)
-        print(error_str)
-        logger.error(error_str)
-        return error
-
-    attr = attr.drop_null()
-    attr_df = pa.Table.to_pandas(attr)
-
-    #Get rows from attribute file for divide ids in the geopackage.
-    filtered_attr = attr_df[attr_df['divide_id'].isin(catchments)]
  
     #Read parameters from CSV file into dataframe and filter on divide ids in geopackage. 
     parameters_df = pd.read_csv(f'{input_dir}/sac_sma_params.csv')
     filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
 
-    #Join parameters from attribute file, csv, and area into single dataframe.
-    df_all = filtered_attr.join(filtered_parameters.set_index('divide_id'), on='divide_id')
-    df_all = df_all.join(area.set_index('divide_id'), on='divide_id')
-
+    #Join parameters from csv and area into single dataframe.
+    df_all = filtered_parameters.join(area.set_index('divide_id'), on='divide_id')
+    
     #Loop through divide IDs, get values and set NA values (represented as NaNs in Pandas) to default values.
     #Create parameter config file.
     for index, row in df_all.iterrows():
 
         hru_id = row['divide_id']
         hru_area = row['areasqkm']
-
-        uztwm = row['UZTWM']
-        if math.isnan(uztwm):  uztwm = 29.7257
-        
-        uzfwm = row['UZFWM']
-        if math.isnan(uzfwm) : uzfwm = 22.8335
-        
-        lztwm = row['LZTWM']
-        if math.isnan(lztwm):  lztwm = 18.6968
-        
-        lzfpm = row['LZFPM']
-        if math.isnan(lzfpm): lzfpm = 419.418
-        
-        lzfsm = row['LZFSM']
-        if math.isnan(lzfsm): lzfsm = 215.932
-        
-        adimp = '0.0'
-        
-        uzk = row['UZK']
-        if math.isnan(uzk): uzk = 0.8910  
-        
-        lzpk = row['LZPK']
-        if math.isnan(lzpk): lzpk = 0.0032
-        
-        lzsk = row['LZSK']
-        if math.isnan(lzsk): lzsk = 0.2551  
-        
-        zperc = row['ZPERC']
-        if math.isnan(zperc): zperc = 281.82
-        
-        rexp = row['REXP']
-        if math.isnan(rexp): rexp = 5.2353 
-        
-        pctim = row['impervious_mean']
-        
-        pfree = row['PFREE']
-        if math.isnan(pfree): pfree = 0.3142
-        
-        riva = '0.0100'
-        side = '0.0000'
-        rserv = '0.3000'
+        if not math.isnan(row['UZTWM']):  uztwm = row['UZTWM']
+        if not math.isnan(row['UZFWM']) : uzfwm = row['UZFWM']
+        if not math.isnan(row['LZTWM']):  lztwm = row['LZTWM']
+        if not math.isnan(row['LZFPM']): lzfpm = row['LZFPM']
+        if not math.isnan(row['LZFSM']): lzfsm = row['LZFSM']
+        if not math.isnan(row['UZK']): uzk = row['UZK']  
+        if not math.isnan(row['LZPK']): lzpk = row['LZPK']
+        if not math.isnan(row['LZSK']): lzsk = row['LZSK'] 
+        if not math.isnan(row['ZPERC']): zperc = row['ZPERC']
+        if not math.isnan(row['REXP']): rexp = row['REXP']
+        if not math.isnan(row['PFREE']): pfree = row['PFREE']
 
         param_list = ['hru_id ' + hru_id,
                       'hru_area ' + str(hru_area),
@@ -141,7 +109,7 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
                       'lztwm ' + str(lztwm),
                       'lzfpm ' + str(lzfpm),
                       'lzfsm ' + str(lzfsm),
-                       'adimp ' + adimp,
+                       'adimp ' + str(adimp),
                        'uzk ' + str(uzk),
                        'lzpk ' + str(lzpk),
                        'lzsk ' + str(lzsk),
@@ -149,9 +117,9 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
                        'rexp ' + str(rexp),
                        'pctim ' + str(pctim),
                        'pfree ' + str(pfree),
-                       'riva ' + riva,
-                       'side ' + side,
-                       'rserv '+ rserv
+                       'riva ' + str(riva),
+                       'side ' + str(side),
+                       'rserv '+ str(rserv)
                        ]
         
         cfg_filename = f'sac_sma_params-{hru_id}.txt'
@@ -190,7 +158,7 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
                     '/',
                     ''
                     ]
-        ctl_filename = f'sac_sma-init-{hru_id}.namelist.input'
+        ctl_filename = f'sac-init-{hru_id}.namelist.input'
         filename_list.append(ctl_filename)
         cfg_filename_path = os.path.join(subset_dir, ctl_filename)
         with open(cfg_filename_path, 'w') as outfile:
@@ -204,7 +172,7 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
     logger.info(status_str)
 
     #write s3 location and ipe values from one of the parameter config files to output json
-    file = os.path.join(subset_dir, filename_list[0])
+    file = os.path.join(subset_dir, cfg_filename)
     with open(file, 'r') as file:
         lines = file.readlines()
 
