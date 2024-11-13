@@ -1,17 +1,3 @@
-'''
-Subsets the hydrofabric by gage ID and creates BMI config files with initial parameters.
-
-Inputs:
-    gage_id:  a gage_id, e.g., "01123000"
-           Look at using the Python rpy2 package for R function calls as the Rscript method is not the best. 
-
-    output_dir: Absolute path to directory where input and output data will be stored.  The directory structure will
-    change as the Hydrofabric and NGEN design is refined.  
-
-Outputs:
-    Outputs are written to output_dir:  Hydrofabric Subset files (Gage-xxxxxxxx.gpkg) and BMI config files (e.g., cat-10617_bmi_config.ini)
-    in CFE-S subdirectory.   
-'''
 import geopandas as gpd
 import pyarrow.parquet as pq
 import pyarrow as pa
@@ -28,16 +14,30 @@ logger = logging.getLogger(__name__)
 
 
 def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
-    # setup output dir
+    '''
+    Build initial parameter estimates (IPE) for Sac-SMA
+
+    Parameters:
+    gage_id (str):  The gage ID, e.g., 06710385
+    source (str):  Gage source, e.g., USGS
+    domain (str):  Gage domain, e.g., CONUS
+    subset_dir (str):  Path to gage id directory where the module directory will be made.
+    gpkg_file (str):  Path and filename of geopackage file 
+    module_metadata (dict):  dictionary containing URI, initial parameters, output variables
+    gage_file_mgmt (object):  gage file management object
+    
+    Returns:
+    dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
+    '''
+
+    # setup input data dir
     config = get_config()
     input_dir = config['input_dir']
-
+    
+    #Create empty list for collecting config files
     filename_list = []
 
     module = 'Sac-SMA'
-
-    # get attrib file
-    attr_file = get_hydrofabric_input_attr_file()
 
     try:
         divides_layer = gpd.read_file(gpkg_file, layer = "divides")
@@ -59,6 +59,9 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
         logger.error(error_str)
         return error
 
+    # get attrib file
+    attr_file = get_hydrofabric_input_attr_file()
+
     try:
         attr = pq.read_table(attr_file)
     except:
@@ -72,16 +75,19 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
     attr = attr.drop_null()
     attr_df = pa.Table.to_pandas(attr)
 
+    #Get rows from attribute file for divide ids in the geopackage.
     filtered_attr = attr_df[attr_df['divide_id'].isin(catchments)]
-
+ 
+    #Read parameters from CSV file into dataframe and filter on divide ids in geopackage. 
     parameters_df = pd.read_csv(f'{input_dir}/sac_sma_params.csv')
-
     filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
 
+    #Join parameters from attribute file, csv, and area into single dataframe.
     df_all = filtered_attr.join(filtered_parameters.set_index('divide_id'), on='divide_id')
-
     df_all = df_all.join(area.set_index('divide_id'), on='divide_id')
 
+    #Loop through divide IDs, get values and set NA values (represented as NaNs in Pandas) to default values.
+    #Create parameter config file.
     for index, row in df_all.iterrows():
 
         hru_id = row['divide_id']
@@ -127,7 +133,7 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
         riva = '0.0100'
         side = '0.0000'
         rserv = '0.3000'
-        
+
         param_list = ['hru_id ' + hru_id,
                       'hru_area ' + str(hru_area),
                       'uztwm ' + str(uztwm),
@@ -154,7 +160,8 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
         with open(cfg_filename_path, 'w') as outfile:
                             outfile.writelines('\n'.join(param_list))
                             outfile.write("\n")
-    
+
+        # Create Sac-SMA control file for each catchment
         input_list = ['&SAC_CONTROL',
                     '! === run control file for sac17bmi v. 1.x ===',
                     '',
@@ -190,13 +197,13 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
                             outfile.writelines('\n'.join(input_list))
                             outfile.write("\n")
 
-    #filename_list = utilities.get_subset_dir_file_names(subset_dir)
+    
     # Write files to DB and S3
     uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
     status_str = "Config files written to:  " + uri
     logger.info(status_str)
 
-    #write s3 location and ipe values from one of the subset_dir files to output json
+    #write s3 location and ipe values from one of the parameter config files to output json
     file = os.path.join(subset_dir, filename_list[0])
     with open(file, 'r') as file:
         lines = file.readlines()
