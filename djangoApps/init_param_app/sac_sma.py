@@ -16,6 +16,7 @@ import geopandas as gpd
 import pyarrow.parquet as pq
 import pyarrow as pa
 import pandas as pd
+import math
 
 from .util.enums import FileTypeEnum
 from .util.utilities import *
@@ -29,32 +30,20 @@ logger = logging.getLogger(__name__)
 def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
     # setup output dir
     config = get_config()
-    #output_dir = config['output_temp_dir']
-    #hydrofabric_dir = config['hydrofabric_dir']
-    #hydrofabric_version = config['hydrofabric_version']
-    #hydrofabric_type = config['hydrofabric_type']
     input_dir = config['input_dir']
 
     filename_list = []
-    filename_list_ctl = []
 
     module = 'Sac-SMA'
 
     # get attrib file
     attr_file = get_hydrofabric_input_attr_file()
 
-    # setup output dir
-    # first save the top level dir for the gpkg
-    #gpkg_dir = subset_dir
-  
-    #gpkg_file = "Gage_" + gage_id.lstrip("0") + ".gpkg"
-    #gpkg_file = os.path.join(gpkg_dir, gpkg_file)
     try:
         divides_layer = gpd.read_file(gpkg_file, layer = "divides")
         try:
             catchments = divides_layer["divide_id"].tolist()
             area = divides_layer[['divide_id','areasqkm']]
-            print(area)
         except:
             # TODO: Replace 'except' with proper catch
             error_str = 'Error reading divides layer in ' + gpkg_file
@@ -85,7 +74,7 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
 
     filtered_attr = attr_df[attr_df['divide_id'].isin(catchments)]
 
-    parameters_df = pd.read_csv(f'{input_dir}/sac_sma_params.csv', dtype=str)
+    parameters_df = pd.read_csv(f'{input_dir}/sac_sma_params.csv')
 
     filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
 
@@ -95,45 +84,71 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
 
     for index, row in df_all.iterrows():
 
-        hru_id = str(row['divide_id'])
-        hru_area = str(row['areasqkm'])
+        hru_id = row['divide_id']
+        hru_area = row['areasqkm']
+
         uztwm = row['UZTWM']
+        if math.isnan(uztwm):  uztwm = 29.7257
+        
         uzfwm = row['UZFWM']
+        if math.isnan(uzfwm) : uzfwm = 22.8335
+        
         lztwm = row['LZTWM']
+        if math.isnan(lztwm):  lztwm = 18.6968
+        
         lzfpm = row['LZFPM']
+        if math.isnan(lzfpm): lzfpm = 419.418
+        
         lzfsm = row['LZFSM']
+        if math.isnan(lzfsm): lzfsm = 215.932
+        
         adimp = '0.0'
+        
         uzk = row['UZK']
+        if math.isnan(uzk): uzk = 0.8910  
+        
         lzpk = row['LZPK']
-        lzsk = row['LZSK']  
+        if math.isnan(lzpk): lzpk = 0.0032
+        
+        lzsk = row['LZSK']
+        if math.isnan(lzsk): lzsk = 0.2551  
+        
         zperc = row['ZPERC']
-        rexp = row['REXP'] 
-        pctim = str(row['impervious_mean'])
+        if math.isnan(zperc): zperc = 281.82
+        
+        rexp = row['REXP']
+        if math.isnan(rexp): rexp = 5.2353 
+        
+        pctim = row['impervious_mean']
+        
         pfree = row['PFREE']
+        if math.isnan(pfree): pfree = 0.3142
+        
         riva = '0.0100'
         side = '0.0000'
         rserv = '0.3000'
+        
         param_list = ['hru_id ' + hru_id,
-                      'hru_area ' + hru_area,
-                      'uztwm ' + uztwm,
-                      'uzfwm ' + uzfwm,
-                      'lztwm ' + lztwm,
-                      'lzfpm ' + lzfpm,
-                      'lzfsm ' + lzfsm,
+                      'hru_area ' + str(hru_area),
+                      'uztwm ' + str(uztwm),
+                      'uzfwm ' + str(uzfwm),
+                      'lztwm ' + str(lztwm),
+                      'lzfpm ' + str(lzfpm),
+                      'lzfsm ' + str(lzfsm),
                        'adimp ' + adimp,
-                       'uzk ' + uzk,
-                       'lzpk ' + lzpk,
-                       'lzsk ' + lzsk,
-                       'zperc ' + zperc,
-                       'rexp ' + rexp,
-                       'pctim ' + pctim,
-                       'pfree ' + pfree,
+                       'uzk ' + str(uzk),
+                       'lzpk ' + str(lzpk),
+                       'lzsk ' + str(lzsk),
+                       'zperc ' + str(zperc),
+                       'rexp ' + str(rexp),
+                       'pctim ' + str(pctim),
+                       'pfree ' + str(pfree),
                        'riva ' + riva,
                        'side ' + side,
                        'rserv '+ rserv
                        ]
         
-        cfg_filename = f'sac_sma_params-{hru_id}.HHWM8.txt'
+        cfg_filename = f'sac_sma_params-{hru_id}.txt'
         filename_list.append(cfg_filename)
         cfg_filename_path = os.path.join(subset_dir, cfg_filename)
         with open(cfg_filename_path, 'w') as outfile:
@@ -145,9 +160,9 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
                     '',
                     '! -- basin config and path information',
                     'main_id             = "' + str(hru_id) + '"     ! basin label or gage id',
-                    'n_hrus              = 1            ! number of sub-areas in model',
-                    'forcing_root        = "extern/sac-sma/sac-sma/test_cases/ex1/input/forcing/forcing.sacbmi."',
-                    'output_root         = "data/output/output.sacbmi."',
+                    'n_hrus              = 1                   ! number of sub-areas in model',
+                    'forcing_root        = ""',
+                    'output_root         = ""',
                     'sac_param_file      = "' + cfg_filename.rsplit('/')[-1] + '"',
                     'output_hrus         = 0            ! output HRU results? (1=yes; 0=no)',
                     '',
@@ -157,7 +172,9 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
                     'model_timestep      = 3600        ! in seconds (86400 seconds = 1 day)',
                     '',
                     '! -- state start/write flags and files',
-                    'warm_start_run',
+                    'warm_start_run        = 0  ! is this run started from a start file? (no=0 yes=1)',
+                    'write_states          = 0  ! write the restart/state files for "warm_start" runs (no=0 yes=1)',
+                    '',
                     '! -- filenames only needed if warm_start_run = 1',
                     'sac_state_in_root   = "data/state/sac_states."  ! input state filename root',
                     '',
@@ -167,7 +184,7 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
                     ''
                     ]
         ctl_filename = f'sac_sma-init-{hru_id}.namelist.input'
-        filename_list_ctl.append(ctl_filename)
+        filename_list.append(ctl_filename)
         cfg_filename_path = os.path.join(subset_dir, ctl_filename)
         with open(cfg_filename_path, 'w') as outfile:
                             outfile.writelines('\n'.join(input_list))
@@ -176,10 +193,6 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
     #filename_list = utilities.get_subset_dir_file_names(subset_dir)
     # Write files to DB and S3
     uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
-    status_str = "Config files written to:  " + uri
-    logger.info(status_str)
-
-    uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list_ctl, module=module)
     status_str = "Config files written to:  " + uri
     logger.info(status_str)
 
