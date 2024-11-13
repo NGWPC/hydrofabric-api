@@ -122,7 +122,7 @@ def sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
                        'rserv '+ str(rserv)
                        ]
         
-        cfg_filename = f'sac_sma_params-{hru_id}.txt'
+        cfg_filename = f'sac_params_{hru_id}.txt'
         filename_list.append(cfg_filename)
         cfg_filename_path = os.path.join(subset_dir, cfg_filename)
         with open(cfg_filename_path, 'w') as outfile:
