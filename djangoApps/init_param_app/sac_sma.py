@@ -328,7 +328,7 @@ def create_sac_sma_input(gage_id, source, domain, catch_dict, attr_file, subset_
                 '/',
                 ''
                 ]
-        input_file = os.path.join(subset_dir, 'sac_sma-init-' + str(catchment_id) + '.namelist.input')
+        input_file = os.path.join(subset_dir, f'sac-init-{catchment_id}.namelist.input')
         with open(input_file, "w") as f:
             f.writelines('\n'.join(input_list))
 

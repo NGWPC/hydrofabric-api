@@ -24,7 +24,7 @@ def noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_
 
     module = "Noah-OWP-Modular"
     filename_list = []
- 
+
     # Get list of catchments from gpkg divides layer using geopandas
     try:
         divides_layer = gpd.read_file(gpkg_file, layer = "divides")
@@ -33,12 +33,12 @@ def noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_
         except:
             # TODO: Replace 'except' with proper catch
             error_str = 'Error reading divides layer in ' + gpkg_file
-            error = dict(error = error_str) 
+            error = dict(error = error_str)
             logger.error(error_str)
             return error
     except:# TODO: Replace 'except' with proper catch
         error_str = 'Error opening ' + gpkg_file
-        error = dict(error = error_str) 
+        error = dict(error = error_str)
         logger.error(error_str)
         return error
 
@@ -56,24 +56,24 @@ def noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_
         error = dict(error = error_str)
         logger.error(error_str, exc)
         return error
-    
+
     attr = attr.drop_null()
     attr_df = pa.Table.to_pandas(attr)
-    
+
     #filter rows with catchments in gpkg
     filtered = attr_df[attr_df['divide_id'].isin(catchments)]
 
     if len(filtered) == 0:
         error_str = 'No matching catchments in attribute file'
-        error = dict(error = error_str) 
+        error = dict(error = error_str)
         logger.error(error_str)
         return error
-    
+
     #Loop through catchments, get soil type, populate config file template, write config file to temp 
     for index, row in filtered.iterrows():
-   
+
         catchment_id = row['divide_id']
-        
+
         startdate = '202408260000'
         enddate = '202408260000'
         noah_input_dir = 'test'
@@ -81,7 +81,7 @@ def noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_
         # Define namelist template
 
         tslp = row['slope_mean']
-        azimuth = row['aspect_c_mean'] 
+        azimuth = row['aspect_c_mean']
         lat = row['Y']
         lon = row['X']
         isltype = row['ISLTYP']
@@ -90,7 +90,7 @@ def noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_
             sfctype = '2'
         else:
             sfctype = '1'
-            
+
         namelist = ['&timing',
                 "  " + "dt".ljust(19) +  "= 3600.0" + "                       ! timestep [seconds]",
                 "  " + "startdate".ljust(19) + "= " + "'" + startdate + "'" + "               ! UTC time start of simulation (YYYYMMDDhhmm)",
@@ -159,8 +159,8 @@ def noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_
                 "/",
                 ]
 
-    
-        cfg_filename = "noah-owp-modular-init-" + catchment_id + ".namelist.input"
+
+        cfg_filename = f"{catchment_id}_calab.input"
         filename_list.append(cfg_filename)
         cfg_filename_path = os.path.join(subset_dir, cfg_filename)
         with open(cfg_filename_path, 'w') as outfile:
@@ -168,13 +168,14 @@ def noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_
                             outfile.write("\n")
 
     # Write files to DB and S3
-    uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
+    uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list,
+                                          module=module)
     status_str = "Config files written to:  " + uri
     logger.info(status_str)
- 
+
     #fill in parameter files uri 
     module_metadata["parameter_file"]["uri"] = uri
-    
+
     # Get default values for calibratable initial parameters.
     for x in range(len(module_metadata["calibrate_parameters"])):
             initial_values = module_metadata["calibrate_parameters"][x]["initial_value"]

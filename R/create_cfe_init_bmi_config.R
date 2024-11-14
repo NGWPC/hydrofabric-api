@@ -140,7 +140,7 @@ dtParsAll[[const_name[7]]] <- const_value[7]
 # More accurate estimates can be produced using the approached adopted in the following script in the ngen repo:
 # extern/cfe/cfe/params/src/generate_giuh_per_basin_params.py
 dtParsAll[[const_name[9]]] <- const_value[9]
-
+print(dtParsAll)
 # write the BMI configs file for CFE-S/CFE-X
 message("write BMI config with initial parameters ...")
 lines <- c("forcing_file=BMI","verbosity=0")
@@ -163,7 +163,7 @@ for (c1 in dtParsAll$divide_id) {
     gage1 <- subset(dtParsAll,divide_id==c1)$gage
 
     # outfile <- paste0(output_dir,"/Gage_",gage1,"/",c1,"_bmi_config.ini")
-    outfile <- paste0(output_dir,"/",c1,"_bmi_config.ini")
+    outfile <- paste0(output_dir,"/",c1,"_bmi_config.txt")
     if(!dir.exists(dirname(outfile))) dir.create(dirname(outfile),recursive=TRUE)
 
     writeLines(lines1,outfile)
