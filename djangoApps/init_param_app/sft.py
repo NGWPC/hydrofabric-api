@@ -181,7 +181,7 @@ def create_sft_input(gage_id, source, domain, catch_dict, attr_file, output_dir,
 
         module_metadata_rec = set_ipe_json_values(param_list, module_metadata, sep="=")
 
-        sft_bmi_file = os.path.join(output_dir, catID + '_bmi_config_sft.txt')
+        sft_bmi_file = os.path.join(output_dir, f'{catID}_bmi_config_sft.txt')
         with open(sft_bmi_file, "w") as f:
             f.writelines('\n'.join(param_list))
 
