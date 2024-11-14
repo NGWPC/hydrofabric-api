@@ -112,8 +112,8 @@ def create_snow17_input(gage_id, source, domain, catch_dict, attr_file, snow17_o
                       'adc11 1.000']
 
     
-        input_file = os.path.join(snow17_output_dir, 'snow17-init-' + str(catchment_id) + '.namelist.input')
-        param_file = os.path.join(snow17_output_dir, 'snow17_params-' + str(catchment_id) + '.HHWM8.txt')
+        input_file = os.path.join(snow17_output_dir, f'snow17-init-{catchment_id}.namelist.input')
+        param_file = os.path.join(snow17_output_dir, f'snow17_params-{catchment_id}.txt')
 
         with open(param_file, "w") as f:
             f.writelines('\n'.join(param_list))
