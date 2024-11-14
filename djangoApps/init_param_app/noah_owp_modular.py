@@ -160,7 +160,7 @@ def noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_
                 ]
 
 
-        cfg_filename = f"{catchment_id}_calab.input"
+        cfg_filename = f"{catchment_id}_calib.input"
         filename_list.append(cfg_filename)
         cfg_filename_path = os.path.join(subset_dir, cfg_filename)
         with open(cfg_filename_path, 'w') as outfile:
