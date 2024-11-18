@@ -77,14 +77,7 @@ def topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata
         logger.error(error_str)
         return error
 
-    width_function_df = pd.read_csv(f'{input_dir}/width_function.csv')
-
-    filtered_width = width_function_df[width_function_df['divide_id'].isin(catchments)]
-
-    df_all = filtered.join(filtered_width.set_index('divide_id'), on='divide_id')
-
-
-    for index, row in df_all.iterrows():
+    for index, row in filtered.iterrows():
 
         #build subcatchment data
         num_sub_catchments = 1
@@ -95,19 +88,19 @@ def topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata
         twi = json.loads(row['twi_dist_4'])
         num_topodex_values = len(twi)
         num_channels = 1
-        width = row['width']
-
+        cum_dist_area_with_dist = 1
+        dist_from_outlet = 0
+    
         subcat_line1 = f"{num_sub_catchments} {imap} {yes_print_output} \n"
         subcat_line2 = f"Extracted study basin:  {divide_id} \n"
         subcat_line3 = f"{num_topodex_values} {area} \n"
-        
-        #twi_rows = [x.values() for x in twi]
-        #print(twi_rows)
-    
+        subcat_line5 = f"{num_channels}\n"
+        subcat_line6 = f"{cum_dist_area_with_dist} {dist_from_outlet}\n"
+
         df = pd.DataFrame(twi)
 
         cfg_filename_subcat = divide_id + ".dat"
-        filename_list_subcat.append(cfg_filename_subcat)
+        filename_list.append(cfg_filename_subcat)
         cfg_filename_path = os.path.join(subset_dir, cfg_filename_subcat)
     
         with open(cfg_filename_path, 'w') as outfile:
@@ -116,43 +109,21 @@ def topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata
                             outfile.write(subcat_line3)
         df.to_csv(cfg_filename_path, mode='a', sep=' ', columns=['frequency', 'v'], index=False, header=False)
         with open(cfg_filename_path, 'a') as outfile:
-            outfile.write(str(num_channels)+'\n')
-            outfile.write(width)
+            outfile.write(subcat_line5)
+            outfile.write(subcat_line6)
 
-        ''' 
-        for x in twi:
-            for key, value in x.items():
-                v, freq = value
-                print("{:<10} {:<10} {:<10}".format(freq, v))
-
-        '''
-
-        '''
-        szm = "0.032"
-        t0 = "5.0"
-        td = "50."
-        chv = "3600.0"
-        rv = "3600.0"
-        srmax = "0.05"
-        Q0 = "0.0000328"
-        sr0 = "0.002"
-        infex = "0"
-        xk0 = "1.0"
-        hf = "0.02"
-        dth = "0.1"
-        '''
         params = OrderedDict()
-        params['szm'] = "0.032"
-        params['t0'] = "5.0"
-        params['td'] = "50."
-        params['chv'] = "3600.0"
-        params['rv'] = "3600.0"
-        params['srmax'] = "0.05"
-        params['Q0'] = "0.0000328"
-        params['sr0'] = "0.002"
+        params['szm'] = "0.0125"
+        params['t0'] = "0.000075"
+        params['td'] = "20"
+        params['chv'] = "1000"
+        params['rv'] = "1000"
+        params['srmax'] = "0.04"
+        params['Q0'] = "0"
+        params['sr0'] = "0"
         params['infex'] = "0"
-        params['xk0'] = "1.0"
-        params['hf'] = "0.02"
+        params['xk0'] = "2"
+        params['hf'] = "0.1"
         params['dth'] = "0.1"
 
         line1 = divide_id + '\n'
@@ -167,8 +138,8 @@ def topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata
                             outfile.write(line2)
 
     # Write files to DB and S3
+    print(FileTypeEnum.PARAMS)
     uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
-    uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list_subcat, module=module)
     status_str = "Config files written to:  " + uri
     logger.info(status_str)
  
