@@ -10,6 +10,7 @@ from .t_route import *
 from .sac_sma import *
 from .snow17 import *
 from .sft import *
+from .smp import *
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ def get_ipe(gage_id, source, domain, modules, gage_file_mgmt):
     gpkg_file = os.path.join(gpkg_dir, gpkg_file)
     module_results = None
 
-    dependent_module_list = ["SFT"]
+    dependent_module_list = ["SFT","SMP"]
 
     module_output_list = []
     for module in modules:
@@ -86,6 +87,10 @@ def calculate_dependent_module_params(gage_id, source, domain, module, modules, 
     if module == "SFT":
         results = sft_ipe(module, gage_id, source, domain, subset_dir,
                           gpkg_file, modules, module_metadata, gage_file_mgmt)
+    elif module == "SMP":
+        results = smp_ipe(module, gage_id, source, domain, subset_dir,
+                          gpkg_file, modules, module_metadata, gage_file_mgmt)
+
     else:
         error_str = "Module name not valid:" + module
         error = dict(error=error_str)
