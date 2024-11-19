@@ -26,23 +26,8 @@ def smp_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, modules, mod
             dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
     '''
 
-    # Setup logging
-    #logger = logging.getLogger(__name__)
-
     # get attrib file
     attr_file = get_hydrofabric_input_attr_file()
-
-    # setup output dir
-    # first save the top level dir for the gpkg
-    #gpkg_dir = subset_dir
-
-    # Get list of catchments from gpkg divides layer using geopandas
-    ##file = 'Gage_6700000.gpkg'
-    #gpkg_file = "Gage_" + gage_id.lstrip("0") + ".gpkg"
-    #gpkg_file = os.path.join(gpkg_dir, gpkg_file)
-    ##divides_layer = gpd.read_file(gpkg_file, layer="divides")
-    ##catchments = divides_layer["divide_id"].tolist()
-    ##areas = divides_layer["areasqkm"].tolist()
 
     try:
         divides_layer = gpd.read_file(gpkg_file, layer="divides")
@@ -62,9 +47,8 @@ def smp_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, modules, mod
         logger.error(error_str)
         return error
 
-    # data = gpd.read_file(gpkg_file, layer="divides") #This info is a dupe of divides_layer above
     catch_dict = {}
-    #for index, row in data.iterrows():
+
     for index, row in divides_layer.iterrows():
         #print(row['divide_id'], row['areasqkm'])
         catch_dict[str(catchments[index])] = {"areasqkm": str(areas[index])}
@@ -78,8 +62,7 @@ def smp_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, modules, mod
 
 
 def create_smp_input(gage_id, source, domain, catch_dict, attr_file, output_dir, modules, module_metadata, gage_file_mgmt):
-    #os.makedirs(smp_dir, exist_ok=True)
-    #os.makedirs(smp_dir, exist_ok=True)
+
     #this dir should exist here already, but just in case...
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
@@ -106,14 +89,7 @@ def create_smp_input(gage_id, source, domain, catch_dict, attr_file, output_dir,
         logger.error(error_str)
         return error
 
-    # Read attribute file to obtain quartz
-    #dfa = pd.read_parquet(attr_file)
-    #dfa.set_index('divide_id', inplace=True)
-
     # Ice fraction scheme
-    #icefscheme = 'Schaake'
-    #if ('cfe.xaj' in modules):
-    #    icefscheme = 'Xinanjiang'
     if 'CFE-S' in modules:
         icefscheme = 'Schaake'
     else:
@@ -128,16 +104,6 @@ def create_smp_input(gage_id, source, domain, catch_dict, attr_file, output_dir,
         catID = row['divide_id']
 
         # Read cfe BMI files to obtain annual mean surface temperature as proxy for initial soil temperature
-        # OBE - This is now just being set as reasonable estimate (from Edwin)
-        ##cfe_bmi_file = os.path.join(cfe_dir, fnmatch.filter(os.listdir(cfe_dir), '*' + catID + '*.txt')[0])
-        #cfe_bmi_file = f"{output_dir}/{catID}_bmi_config.ini"    ##'/home/james.matera/DATA/Hydrofabric/data/temp/cat-1562743_bmi_config_smp.txt'
-        #df = pd.read_table(cfe_bmi_file, delimiter='=', names=["Params", "Values"], index_col=0)
-
-        # Obtain annual mean surface temperature as proxy for initial soil temperature
-        ##csv_file = f"lump_forcing_csv_dir-{catID}.csv"
-        ##fdf = pd.read_table(os.path.join(lump_forcing_csv_dir, catID + '.csv'), delimiter=',') # orig code from YL
-        ##fdf = pd.read_table(csv_file)
-        ##mtemp = round(fdf['T2D'].mean(), 2)
         # This value is just a reasonable estimate per new direction (Edwin)
         mtemp = (45 - 32) * 5/9 + 273.15  ##this is avg soil temp of 45 degrees F converted to Kelvin
 
@@ -172,7 +138,7 @@ def create_smp_input(gage_id, source, domain, catch_dict, attr_file, output_dir,
 
         if 'CFE-S' in modules or 'CFE-X' in modules:
             param_list += ['soil_storage_model=conceptual',
-                           'soil_storage_depth=2.0']
+                           'soil_storage_model_depth=2.0']
         elif 'TopModel' in modules:
             param_list += ['soil_storage_model=TopModel',
                            'water_table_based_method=flux-based']
