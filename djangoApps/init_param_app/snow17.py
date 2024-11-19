@@ -1,97 +1,111 @@
-import copy
 import geopandas as gpd
-import pandas as pd
 import pyarrow.parquet as pq
 import pyarrow as pa
+import pandas as pd
+import math
 
 from .util.enums import FileTypeEnum
 from .util.utilities import *
+from .util import utilities
 
 
+#setup logging
 logger = logging.getLogger(__name__)
 
 
 def snow17_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
     '''
-        Build initial parameter estimates (IPE) for Snow17
+    Build initial parameter estimates (IPE) for Sac-SMA
 
-        Parameters:
-        gage_id (str):  The gage ID, e.g., 06710385
-        subset_dir (str):  Path to gage id directory where the module directory will be made.
-        module_metadata (dict):  list dictionary containing URI, initial parameters, output variables
-
-        Returns:
-        dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
+    Parameters:
+    gage_id (str):  The gage ID, e.g., 06710385
+    source (str):  Gage source, e.g., USGS
+    domain (str):  Gage domain, e.g., CONUS
+    subset_dir (str):  Path to gage id directory where the module directory will be made.
+    gpkg_file (str):  Path and filename of geopackage file 
+    module_metadata (dict):  dictionary containing URI, initial parameters, output variables
+    gage_file_mgmt (object):  gage file management object
+    
+    Returns:
+    dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
     '''
 
-    # get attrib file
-    attr_file = get_hydrofabric_input_attr_file()
+    # setup input data dir
+    config = get_config()
+    input_dir = config['input_dir']
+    
+    #Create empty list for collecting config files
+    filename_list = []
 
-    # setup output dir
-    # first save the top level dir for the gpkg
-    #gpkg_dir = subset_dir
+    module = 'Snow17'
 
-    # Get list of catchments from gpkg divides layer using geopandas
-    divides_layer = gpd.read_file(gpkg_file, layer="divides")
-    catchments = divides_layer["divide_id"].tolist()
-    areas = divides_layer["areasqkm"].tolist()
-
-    data = gpd.read_file(gpkg_file, layer="divides")
-    catch_dict = {}
-    for index, row in data.iterrows():
-        #print(row['divide_id'], row['areasqkm'])
-        catch_dict[str(catchments[index])] = {"areasqkm": str(areas[index])}
-
-    response = create_snow17_input(gage_id, source, domain, catch_dict, attr_file, subset_dir, module_metadata, gage_file_mgmt)
-    logger.info("snow_17::snow17_ipe:returning response as " + str(response))
-    return response
-
-
-def create_snow17_input(gage_id, source, domain, catch_dict, attr_file, snow17_output_dir: str, module_metadata, gage_file_mgmt):
-    #if not os.path.exists(snow17_output_dir):
-    #    os.makedirs(snow17_output_dir, exist_ok=True)
-    # TODO: Make Constant or StrEnum
-    module = 'SNOW17'
     try:
-        attr = pq.read_table(attr_file)
+        divides_layer = gpd.read_file(gpkg_file, layer = "divides")
+        try:
+            catchments = divides_layer["divide_id"].tolist()
+            area = divides_layer[['divide_id','areasqkm']]
+        except:
+            # TODO: Replace 'except' with proper catch
+            error_str = 'Error reading divides layer in ' + gpkg_file
+            error = dict(error = error_str) 
+            print(error_str)
+            logger.error(error_str)
+            return error
+
+        try:
+            # get path to Hydrofabric VPUID parquet files and read table
+            attr_abs_filename = get_hydrofabric_input_attr_file()
+            attr_tbl = pq.read_table(attr_abs_filename)
+
+            # drop any nulls and filter on divide_ids to reduce size
+            attr_tbl = attr_tbl.drop_null()
+            attr_df = pa.Table.to_pandas(attr_tbl)
+            att_df_filtered = attr_df[attr_df['divide_id'].isin(catchments)]
+        except:
+            error_str = f"Error reading loading attr_df from {attr_abs_filename}"
+            error = dict(error=error_str)
+            print(error_str)
+            logger.error(error_str)
+            return error
+
     except:
         # TODO: Replace 'except' with proper catch
-        error_str = 'Error opening ' + attr_file
-        error = dict(error=error_str)
+        error_str = 'Error opening ' + gpkg_file
+        error = dict(error = error_str) 
         print(error_str)
         logger.error(error_str)
         return error
+ 
+    #Read parameters from ascii created CSV file into a dataframe and filter on divide ids in geopackage.
+    parameters_df = pd.read_csv(f'{input_dir}/snow17_params.csv')
+    filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
 
-    attr = attr.drop_null()
-    attr_df = pa.Table.to_pandas(attr)
+    #Join parameters from csv, area, and attribute file into single dataframe using divide_id as index
+    df_all = filtered_parameters.join(area.set_index('divide_id'), on='divide_id').join(att_df_filtered.set_index('divide_id'), on='divide_id')
 
-    # filter rows with catchments in gpkg
-    filtered = attr_df[attr_df['divide_id'].isin(catch_dict.keys())]
+    # set default values for vars (eventually this will be retrieved from db)
+    mfmax = 0.930472
+    mfmin = 0.137
+    uadj = 0.003103
 
-    if len(filtered) == 0:
-        error_str = 'No matching catchments in attribute file'
-        error = dict(error=error_str)
-        print(error_str)
-        logger.error(error_str)
-        return error
+    #Loop through divide IDs, get values, and set NA values (represented as NaNs in Pandas) to default values in param_list
+    #Create parameter config file.
+    for index, row in df_all.iterrows():
 
-    # Read hydrofabric attribute file (THESE ARE NOT USED BY SNOW17)
-    #dfa = pd.read_parquet(attr_file)
-    #dfa.set_index("divide_id", inplace=True)
+        hru_id = row['divide_id']  # need this for filenames as well as parameters
+        #hru_area = row['areasqkm']
+        if not math.isnan(row['MFMIN']):  mfmin = row['MFMIN']
+        if not math.isnan(row['MFMAX']): mfmax = row['MFMAX']
+        if not math.isnan(row['UADJ']):  uadj = row['UADJ']
 
-    response = []
-    filename_list =[]
-    #for key in catch_dict.keys(): LOOP CATCH_IDs HERE (from filtered dataframe)!!
-    for index, row in filtered.iterrows():
-        catchment_id = row['divide_id']
-        param_list = ['hru_id ' + str(catchment_id),
-                      'hru_area ' + str(catch_dict[str(catchment_id)]['areasqkm']),
+        param_list = ['hru_id ' + str(row['divide_id']),
+                      'hru_area ' + str(row['areasqkm']),
                       'latitude ' + str(row['Y']),
-                      'elev ' + str(row['elevation_mean']),  #elevation_mean[1]
+                      'elev ' + str(row['elevation_mean']),  # elevation_mean[1]
                       'scf 2.15177',
-                      'mfmax 0.930472',
-                      'mfmin 0.137',
-                      'uadj 0.003103',
+                      'mfmax ' + str(mfmax),
+                      'mfmin ' + str(mfmin),
+                      'uadj ' + str(uadj),
                       'si 1515.00',
                       'pxtemp 0.713424',
                       'nmf 0.150',
@@ -111,22 +125,24 @@ def create_snow17_input(gage_id, source, domain, catch_dict, attr_file, snow17_o
                       'adc10 0.970',
                       'adc11 1.000']
 
-    
-        input_file = os.path.join(snow17_output_dir, f'snow17-init-{catchment_id}.namelist.input')
-        param_file = os.path.join(snow17_output_dir, f'snow17_params-{catchment_id}.txt')
 
-        with open(param_file, "w") as f:
-            f.writelines('\n'.join(param_list))
+        cfg_filename = f'snow17_params-{hru_id}.txt'
+        filename_list.append(cfg_filename)
+        cfg_filename_path = os.path.join(subset_dir, cfg_filename)
+        with open(cfg_filename_path, 'w') as outfile:
+            outfile.writelines('\n'.join(param_list))
+            outfile.write("\n")
 
+        # Create Snow17 control file for each catchment
         input_list = ['&SNOW17_CONTROL',
                       '! === run control file for snow17bmi v. 1.x ===',
                       '',
                       '! -- basin config and path information',
-                      'main_id             = "' + str(catchment_id) + '"     ! basin label or gage id',
+                      'main_id             = "' + str(hru_id) + '"     ! basin label or gage id',
                       'n_hrus              = 1            ! number of sub-areas in model',
                       'forcing_root        = "extern/snow17/test_cases/ex1/input/forcing/forcing.snow17bmi."',
                       'output_root         = "data/output/output.snow17bmi."',
-                      'snow17_param_file   = "' + param_file.rsplit('/')[-1] + '"',
+                      'snow17_param_file   = "' + cfg_filename.rsplit('/')[-1] + '"',
                       'output_hrus         = 1            ! output HRU results? (1=yes; 0=no)',
                       '',
                       '! -- run period information',
@@ -146,33 +162,33 @@ def create_snow17_input(gage_id, source, domain, catch_dict, attr_file, snow17_o
                       '/',
                       ''
                       ]
-        with open(input_file, "w") as f:
-            f.writelines('\n'.join(input_list))
 
-        # get config info
+        ctl_filename = f'{hru_id}.namelist.input'
+        filename_list.append(ctl_filename)
+        cfg_filename_path = os.path.join(subset_dir, ctl_filename)
+        with open(cfg_filename_path, 'w') as outfile:
+            outfile.writelines('\n'.join(input_list))
+            outfile.write("\n")
 
-        # put all file names to write to S3 in a list
-        filename_list.extend((input_file.rsplit('/')[-1], param_file.rsplit('/')[-1]))
-
-
+    
     # Write files to DB and S3
-    uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, snow17_output_dir, filename_list,
-                                              module=module)
-    module_metadata_rec = set_ipe_json_values(param_list, module_metadata)
-    module_metadata_rec['parameter_file']['uri'] = uri
-    return module_metadata_rec
+    uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
+    status_str = "Config files written to:  " + uri
+    logger.info(status_str)
 
+    #write s3 location and ipe values from one of the parameter config files to output json
+    file = os.path.join(subset_dir, cfg_filename)
+    with open(file, 'r') as file:
+        lines = file.readlines()
 
-def set_ipe_json_values(param_list, module_metadata_rec) -> dict:
-    # convert param list to dict to make it searchable by key
-    param_list_dict = {}
-    for idx in range(len(param_list)):
-        key_value_split = str.split(param_list[idx], ' ')
-        param_list_dict[key_value_split[0]] = key_value_split[1]
+    cfg_file_ipes = {}
 
-    for idx in range(len(module_metadata_rec['calibrate_parameters'])):
-        key_name = module_metadata_rec['calibrate_parameters'][idx]['name']
-        module_metadata_rec['calibrate_parameters'][idx]['initial_value'] = param_list_dict[key_name]
+    for line in lines:
+        key, value = line.strip().split(' ')
+        cfg_file_ipes[key.strip()] = value.strip()
 
-    logger.info("snow17::set_ipe_json_values: set the ipe initial values " + str(module_metadata_rec))
-    return module_metadata_rec
+    for x in range(len(module_metadata["calibrate_parameters"])):
+        module_metadata["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[module_metadata["calibrate_parameters"][x]["name"]]
+        
+    module_metadata["parameter_file"]["uri"] = uri
+    return module_metadata
