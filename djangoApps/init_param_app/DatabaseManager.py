@@ -2,6 +2,7 @@ import psycopg2
 from collections import OrderedDict
 from django.db import connection
 import json
+import copy
 
 #This class is used to fetch data from the database, and the results are converted into OrderedDict instances to maintain order.
 # TODO Add logging an use try-except for failed requests remove dead imports
@@ -455,6 +456,47 @@ class DatabaseManager:
     #     except Exception as e:
     #         print(f"Error executing selectModuleCalibrateData query: {e}")
     #         return None, None
+
+    def selectDependentModuleCalibrateData(self, model_type):
+        # below query returns -> 1 | cfe_params, 8 | sft_params, for model_type='SFT'
+        query = (f"SELECT distinct pt.id, pt.param_table_name FROM param_tables pt "
+                 f"join module_params_map mpm on mpm.param_table_id = pt.id  "
+                 f"where mpm.module_id in (select id from modules mods where mods.name = '{model_type}')")
+        print(query)
+        try:
+            self.cursor.execute(query, (model_type,))
+            rows = self.cursor.fetchall()
+            column_names = [desc[0] for desc in self.cursor.description]
+
+            # Debug output
+            print("Column names:", column_names)
+            print("Rows returned:", len(rows))
+            subquery_rowset = []
+            for row in rows:
+                sub_query = (
+                    f"SELECT p.name, p.description, p.min, p.max, p.data_type, p.units, p.calibratable, p.default_value from {row[1]} p "
+                    f"join module_params_map mpm on mpm.param_field_id = p.id "
+                    f"where p.calibratable = true and mpm.param_table_id = {row[0]} "
+                    f"and mpm.module_id in (select id from modules mods where mods.name = '{model_type}')")
+
+                print(f"sub_query = {sub_query}")
+                self.cursor.execute(sub_query, (row, model_type,))
+                subquery_rows = self.cursor.fetchall()
+                print(subquery_rows)
+                for record in subquery_rows:
+                    deep_copy_rec = copy.deepcopy(record)
+                    subquery_rowset.append(deep_copy_rec)
+
+            subQuery_rowwset_column_names = [desc[0] for desc in self.cursor.description]
+            print(subquery_rowset)
+
+            return subQuery_rowwset_column_names, subquery_rowset
+        except Exception as e:
+            status_str = f"Error executing selectDependentModuleCalibrateData query: {e} \n {query}"
+            print(status_str)
+            self.logger.error(status_str)
+            return None, None
+
 
     def selectModuleCalibrateData(self, model_type):
         table_name = ""

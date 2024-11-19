@@ -6,6 +6,7 @@ url = 'http://127.0.0.1:8000/hydrofabric/2.1/modules/parameters/'
 #payload = '{"gage_id": "01027200", "domain":"CONUS", "source":"USGS", "modules": ["SNOW17"]}'
 #payload = '{"gage_id": "01027200", "domain":"CONUS", "source":"USGS", "modules": ["T-Route"]}'
 #payload = '{"gage_id": "01027200", "domain":"CONUS", "source":"USGS", "modules": ["Noah-OWP-Modular"]}'
+#payload = '{"gage_id": "01027200", "domain":"CONUS", "source":"USGS", "modules": ["SFT, CFE-S"]}'
 #payload = '{"gage_id": "01011000", "domain":"CONUS", "source":"USGS", "modules": ["CFE-S"]}'
 payload = '{"gage_id": "01011000", "domain":"CONUS", "source":"USGS", "modules": ["CFE-S"]}'
 """
