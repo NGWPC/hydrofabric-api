@@ -3,7 +3,6 @@ import logging
 import json
 
 import geopandas as gpd
-import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
 import pyarrow as pa
@@ -15,12 +14,16 @@ logger = logging.getLogger(__name__)
 
 def topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
     ''' 
-    Build initial parameter estimates (IPE) for NOAH-OWP-Modular 
+    Build initial parameter estimates (IPE) for TopModel
 
     Parameters:
     gage_id (str):  The gage ID, e.g., 06710385
+    source (str):  Gage source, e.g., USGS
+    domain (str):  Gage domain, e.g., CONUS
     subset_dir (str):  Path to gage id directory where the module directory will be made.
+    gpkg_file (str):  Path and filename of geopackage file 
     module_metadata (dict):  dictionary containing URI, initial parameters, output variables
+    gage_file_mgmt (object):  gage file management object
     
     Returns:
     dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
@@ -28,9 +31,6 @@ def topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata
 
     module = "TopModel"
     filename_list = []
-    filename_list_subcat = []
-    config = get_config()
-    input_dir = config['input_dir'] 
  
     # Get list of catchments from gpkg divides layer using geopandas
     try:
@@ -80,6 +80,8 @@ def topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata
     for index, row in filtered.iterrows():
 
         #build subcatchment data
+        #TWI values are from Hydrofabric divide attributes, num_channels, cum_dist_area_with_dist,
+        #dist_from_outlet set per InitialParametersValueSources.xlsx
         num_sub_catchments = 1
         imap = 1
         yes_print_output = 1
@@ -99,7 +101,7 @@ def topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata
 
         df = pd.DataFrame(twi)
 
-        cfg_filename_subcat = divide_id + ".dat"
+        cfg_filename_subcat = f'{divide_id}_subcat.dat'
         filename_list.append(cfg_filename_subcat)
         cfg_filename_path = os.path.join(subset_dir, cfg_filename_subcat)
     
@@ -112,6 +114,8 @@ def topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata
             outfile.write(subcat_line5)
             outfile.write(subcat_line6)
 
+        #Parameter values are set per InitialParametersValueSources.xlsx
+        #Q0 and sr0 set to 0 recommended in email with Deltares
         params = OrderedDict()
         params['szm'] = "0.0125"
         params['t0'] = "0.000075"
@@ -127,16 +131,36 @@ def topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata
         params['dth'] = "0.1"
 
         line1 = divide_id + '\n'
-        #line2 = "  ".join([szm, t0, td, chv, rv, srmax, Q0, sr0, infex, xk0, hf, dth])
         line2 = " ".join(f'{v}' for k,v in params.items())
 
-        cfg_filename = divide_id + "_param.dat"
+        cfg_filename = f'{divide_id}_params.dat'
         filename_list.append(cfg_filename)
         cfg_filename_path = os.path.join(subset_dir, cfg_filename)
         with open(cfg_filename_path, 'w') as outfile:
                             outfile.write(line1)
                             outfile.write(line2)
 
+        # Create primary configuration file
+        stand_alone = '0\n'  #  Set to false for BMI
+        title = f'{divide_id}\n'
+        input_fptr = 'input.dat\n'
+        subcat_fptr = f'data/{cfg_filename_subcat}\n'
+        params_fptr = f'data/{cfg_filename}\n'
+        output_fptr = f'{divide_id}_topmod.out\n'
+        out_hyd_fptr = f'{divide_id}_hyd.out\n'
+
+        cfg_filename_run = f'{divide_id}_topmodel.run'
+        filename_list.append(cfg_filename_run)
+        cfg_filename_path = os.path.join(subset_dir, cfg_filename_run)
+        with open(cfg_filename_path, 'w') as outfile:
+                            outfile.write(stand_alone)
+                            outfile.write(title)
+                            outfile.write(input_fptr)
+                            outfile.write(subcat_fptr)
+                            outfile.write(params_fptr)
+                            outfile.write(output_fptr)
+                            outfile.write(out_hyd_fptr)
+         
     # Write files to DB and S3
     print(FileTypeEnum.PARAMS)
     uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
@@ -145,7 +169,6 @@ def topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata
  
     #fill in parameter files uri 
     module_metadata["parameter_file"]["uri"] = uri
-    
     
     # Get default values for calibratable initial parameters.
     for x in range(len(module_metadata["calibrate_parameters"])):
