@@ -27,9 +27,8 @@ def lasam_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, g
     
     # Calibratable parameters
     soil_param_file = "../../resources/vG_default_params_HYDRUS.dat"        # Van Genuchton soil parameters 
-    ponded_depth_max = "0[cm]"                                              # Maximum amount of water unavailable for surface drainage
-    field_capacity_psi = "340.0[cm]"                                        # Capillary head corresponding to volumetric water content
-                                                                            # at which gravity drainage becomes slower
+    ponded_depth_max = "1.1[cm]"                                            # Maximum amount of water unavailable for surface drainage
+    field_capacity_psi = "340.9[cm]"                                        # Capillary head corresponding to volumetric water content at which gravity drainage becomes slower
 
     # Skeleton for the config file. Needs layer soil types to be specified per-catchment
     lasam_lst = ['verbosity=none',
@@ -42,13 +41,12 @@ def lasam_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, g
                  'ponded_depth_max=' + ponded_depth_max,
                  'use_closed_form_G=false',
                  'layer_soil_type=',
-                 'max_soil_types=25',
+                 'max_soil_types=15',
                  'wilting_point_psi=15495.0[cm]',
-                 'giuh_ordinates=0.55,0.25,0.2',
-                 'sft_coupled=true',
-                 'soil_z=10,30,100.0,200.0[cm]',
+                 'field_capacity_psi=' + field_capacity_psi,
+                 'giuh_ordinates=0.06,0.51,0.28,0.12,0.03',
                  'calib_params=true',
-                 'field_capacity_psi=' + field_capacity_psi
+                 'adaptive_timestep=true'
                 ]
     
     # Make directory and add soil params file there. Also add it to the filelist.
