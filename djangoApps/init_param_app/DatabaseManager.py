@@ -512,6 +512,8 @@ class DatabaseManager:
             table_name = "sac_sma_params"
         elif model_type == "TopModel":
             table_name = "topmodel_params"
+        elif model_type == "LASAM":
+            table_name = "lasam_params"
         else:
             return None, None
 
