@@ -186,7 +186,7 @@ def module_calibrate_data(model_type):
     try:
         with connection.cursor() as cursor:
             db = DatabaseManager(cursor)
-            if model_type == "SFT":
+            if model_type == "SFT" or model_type == "SMP":
                 column_names, rows = db.selectDependentModuleCalibrateData(model_type)
             else:
                 column_names, rows = db.selectModuleCalibrateData(model_type)
