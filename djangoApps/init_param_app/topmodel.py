@@ -37,7 +37,6 @@ def topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata
         divides_layer = gpd.read_file(gpkg_file, layer = "divides")
         try:
             catchments = divides_layer["divide_id"].tolist()
-            divides_geojson = divides_layer.to_json(to_wgs84 = True)
         except:
             # TODO: Replace 'except' with proper catch
             error_str = 'Error reading divides layer in ' + gpkg_file
