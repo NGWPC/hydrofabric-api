@@ -7,18 +7,13 @@ services:
       dockerfile: .devcontainer/Dockerfile
     environment:
       DB_ENGINE: django.db.backends.postgresql
-      #DB_USER: postgres
-      #DB_NAME: hydrofabric_db
-      #DB_HOST: localhost
-      #DB_PASSWORD: postgres
+      DB_USER: postgres
+      DB_NAME: hydrofabric_db
+      DB_HOST: localhost
+      DB_PASSWORD: postgres
       LD_LIBRARY_PATH: /usr/local/lib64
  
-      DB_USER: joe.work
-      DB_PASSWORD: N0w!sth3
-      DB_HOST: 10.6.0.173
-      DB_PORT: 5432
-      DB_NAME: hydrofabric_db
-    volumes:
+     volumes:
       - ..:/workspace:cached
       - ../Hydrofabric:/Hydrofabric
     command: sleep infinity
