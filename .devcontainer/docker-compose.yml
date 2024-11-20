@@ -7,31 +7,25 @@ services:
       dockerfile: .devcontainer/Dockerfile
     environment:
       DB_ENGINE: django.db.backends.postgresql
-      DB_USER: postgres
-      DB_NAME: hydrofabric_db
-      DB_HOST: localhost
-      DB_PASSWORD: postgres
+      #DB_USER: postgres
+      #DB_NAME: hydrofabric_db
+      #DB_HOST: localhost
+      #DB_PASSWORD: postgres
       LD_LIBRARY_PATH: /usr/local/lib64
+ 
+      DB_USER: joe.work
+      DB_PASSWORD: N0w!sth3
+      DB_HOST: 10.6.0.173
+      DB_PORT: 5432
+      DB_NAME: hydrofabric_db
     volumes:
       - ..:/workspace:cached
       - ../Hydrofabric:/Hydrofabric
     command: sleep infinity
 #    depends_on:
 #      - db
-
+ 
     # Runs app on the same network as the database container,
     # allows "forwardPorts" in devcontainer.json function
-    network_mode: service:db
-  
-  db:
-    image: postgis/postgis
-    restart: unless-stopped
-    environment:
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_DB: postgres
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-
-volumes:
-  postgres-data:
+    #network_mode: service:db
+    network_mode: host

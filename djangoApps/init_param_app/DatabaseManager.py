@@ -3,6 +3,9 @@ from collections import OrderedDict
 from django.db import connection
 import json
 import copy
+import logging
+
+logger = logging.getLogger(__name__)
 
 #This class is used to fetch data from the database, and the results are converted into OrderedDict instances to maintain order.
 # TODO Add logging an use try-except for failed requests remove dead imports
@@ -20,7 +23,7 @@ class DatabaseManager:
             self.cursor.execute(query, params)
             return self.cursor.fetchall()
         except Exception as e:
-            print(f"Error executing SELECT query: {e}")
+            logger.error(f"Error executing SELECT query: {e}")
             return None
         
     #  Fetches all modules and ids.
@@ -30,7 +33,7 @@ class DatabaseManager:
             self.cursor.execute(query)
             return self.cursor.fetchall()
         except Exception as e:
-            print(f"Error executing SELECT query: {e}")
+            logger.error(f"Error executing SELECT query: {e}")
             return None
 
 
@@ -55,116 +58,9 @@ class DatabaseManager:
             column_names = [desc[0] for desc in self.cursor.description]
             return column_names, rows
         except Exception as e:
-            print(f"Error executing selectAllModulesDeatil query: {e}")
+            logger.error(f"Error executing selectAllModulesDeatil query: {e}")
             return None, None
 
-
-
-# #  The selectModuleMetaData method fetches all model MetaData details.
-#     def selectModuleMetaData(self,module):
-#         module_name = module.upper()
-#         query =  """ WITH ParamData AS 
-#         (
-#             SELECT 
-#                 m.id,
-#                 m.module_name,
-#                 pt.param_table_name,
-#                 mpm.param_field_id_fk
-#             FROM 
-#                 modules m
-#             JOIN 
-#                 param_tables pt ON m.param_id_fk = pt.id
-#             JOIN 
-#                 model_params_map mpm ON m.id = mpm.id_fk AND pt.id = mpm.param_table_id_fk
-#             WHERE 
-#                 m.module_name = %s
-#         ),
-#         CalibratableParams AS 
-#         (
-#             -- Query for cfe_params table
-#             SELECT 
-#                 pd.module_name,
-#                 p.name AS param_name,
-#                 p.description AS param_description,
-#                 p.min AS param_min,
-#                 p.max AS param_max,
-#                 p.data_type AS param_data_type,
-#                 p.units AS param_units
-#             FROM 
-#                 ParamData pd
-#             JOIN 
-#                 cfe_params p ON pd.param_table_name = 'cfe_params' AND p.id = pd.param_field_id_fk
-#             WHERE 
-#                 p.calibratable = true
-
-#             UNION ALL
-
-#             -- Query for t_route_params table
-#             SELECT 
-#                 pd.module_name,
-#                 p.name AS param_name,
-#                 p.description AS param_description,
-#                 p.min AS param_min,
-#                 p.max AS param_max,
-#                 p.data_type AS param_data_type,
-#                 p.units AS param_units
-#             FROM 
-#                 ParamData pd
-#             JOIN 
-#                 t_route_params p ON pd.param_table_name = 't_route_params' AND p.id = pd.param_field_id_fk
-#             WHERE 
-#                 p.calibratable = true
-
-#             UNION ALL
-
-#             -- Query for noah_owp_modular_params table
-#             SELECT 
-#                 pd.module_name,
-#                 p.name AS param_name,
-#                 p.description AS param_description,
-#                 p.min AS param_min,
-#                 p.max AS param_max,
-#                 p.data_type AS param_data_type,
-#                 p.units AS param_units
-#             FROM 
-#                 ParamData pd
-#             JOIN 
-#                 noah_owp_modular_params p ON pd.param_table_name = 'noah_owp_modular_params' AND p.id = pd.param_field_id_fk
-#             WHERE 
-#                 p.calibratable = true
-#         )
-#         SELECT 
-#             m.module_name,
-#             cp.param_name,
-#             cp.param_description,
-#             cp.param_min,
-#             cp.param_max,
-#             cp.param_data_type,
-#             cp.param_units,
-#             ov.name AS output_var_name,
-#             ov.description AS output_var_description
-#         FROM 
-#             modules m
-#         LEFT JOIN 
-#             CalibratableParams cp ON m.module_name = cp.module_name
-#         LEFT JOIN 
-#             output_variables ov ON m.id = ov.module_id_fk
-#         WHERE 
-#             m.module_name = %s
-#         ORDER BY 
-#             m.module_name, cp.param_name, ov.name;
-#         """
-        
-#         try:
-#             self.cursor.execute(query,(module_name,))
-#             rows = self.cursor.fetchall()
-#             column_names = [desc[0] for desc in self.cursor.description]
-#             print("Column names:", column_names)
-#             print("Rows:", rows)
-#             return column_names, rows
-#         except Exception as e:
-#             print(f"Error executing selectAllModulesMetaData query: {e}")
-#             return None, None
 
 #  The selectModuleMetaData method fetches all model MetaData details.
     def selectModuleMetaData(self, model_type):
@@ -261,18 +157,16 @@ class DatabaseManager:
             column_names = [desc[0] for desc in self.cursor.description]
             
             # Debug output
-            print("Column names:", column_names)
-            print("Rows returned:", len(rows))
+            logger.debug("Column names:", column_names)
+            logger.debug("Rows returned:", len(rows))
             for row in rows:
-                print(row)
+                logger.debug(row)
 
             return column_names, rows
         except Exception as e:
-            print(f"Error executing selectModuleMetaData query: {e}")
+            logger.error(f"Error executing selectModuleMetaData query: {e}")
             return None, None
 
-
-        
         
     #  The selectInitialParameters method fetches initial parameters for a given model.
     def selectInitialParameters(self, Moduel):
@@ -295,13 +189,13 @@ class DatabaseManager:
             self.cursor.execute(query1, (model_name,))
             ModelID = self.cursor.fetchone()[0]
         except Exception as e:
-            print(f"Error executing selectModelID query: {e}")
+            logger.error(f"Error executing selectModelID query: {e}")
             return None, None
         try:
             self.cursor.execute(query2, (model_name,))
             ParamID = self.cursor.fetchone()[0]
         except Exception as e:
-            print(f"Error executing selectParamID query: {e}")
+            logger.error(f"Error executing selectParamID query: {e}")
             return None, None
         
 
@@ -309,7 +203,7 @@ class DatabaseManager:
             self.cursor.execute(query3, (ParamID,))
             ParamTblName = self.cursor.fetchone()[0]
         except Exception as e:
-            print(f"Error executing selectParamName query4: {e}")
+            logger.error(f"Error executing selectParamName query4: {e}")
             return None, None
         
         
@@ -333,7 +227,7 @@ class DatabaseManager:
             column_names = [desc[0] for desc in self.cursor.description]
             return column_names, rows
         except Exception as e:
-            print(f"Error executing selectInitialParamete4rs query: {e}")
+            logger.error(f"Error executing selectInitialParamete4rs query: {e}")
             return None, None
 
     def getModelParametersTotalCount(self, model_type):
@@ -354,7 +248,7 @@ class DatabaseManager:
             self.cursor.execute(query1, (model_name,))
             ParamID = self.cursor.fetchone()[0]
         except Exception as e:
-            print(f"Error executing selectParamID query: {e}")
+            logger.error(f"Error executing selectParamID query: {e}")
             return None, None
         
 
@@ -362,14 +256,14 @@ class DatabaseManager:
             self.cursor.execute(query2, (ParamID,))
             ParamTableName = self.cursor.fetchone()[0]
         except Exception as e:
-            print(f"Error executing selectParamName query: {e}")
+            logger.error(f"Error executing selectParamName query: {e}")
             return None, None
         
         try:
             self.cursor.execute(query3, (model_name,))
             ModelID = self.cursor.fetchone()[0]
         except Exception as e:
-            print(f"Error executing selectModelID query: {e}")
+            logger.error(f"Error executing selectModelID query: {e}")
             return None, None
         
         query4_1 = """SELECT COUNT(*) FROM public."""+ParamTableName
@@ -389,7 +283,7 @@ class DatabaseManager:
             result = self.cursor.fetchone()
             return result[0] if result else None
         except Exception as e:
-            print(f"Error executing selectInitialParameters query: {e}")
+            logger.error(f"Error executing selectInitialParameters query: {e}")
             return None
 
       
@@ -400,77 +294,34 @@ class DatabaseManager:
         try:
             self.cursor.execute(query, params)
             self.connection.commit()
-            print(f"{self.cursor.rowcount} row(s) updated")
+            logger.debug(f"{self.cursor.rowcount} row(s) updated")
         except Exception as e:
-            print(f"Error executing UPDATE query: {e}")
+            logger.error(f"Error executing UPDATE query: {e}")
             self.connection.rollback()
 
     #  The delete method executes a DELETE query.change_me
             self.cursor.execute(query, params)
             self.connection.commit()
-            print(f"{self.cursor.rowcount} row(s) deleted")
+            logger.debug(f"{self.cursor.rowcount} row(s) deleted")
         except Exception as e:
-            print(f"Error executing DELETE query: {e}")
+            logger.error(f"Error executing DELETE query: {e}")
             self.connection.rollback()
 
-
-
-    # def selectModuleCalibrateData(self, model_type):
-    #     table_name = ""
-    #     if model_type == "CFE-S" or model_type == "CFE-X":
-    #         table_name = "cfe_params"
-    #     elif model_type == "T-ROUTE":
-    #         table_name = "t_route_params"
-    #     elif model_type == "NOAH-OWP-MODULAR":
-    #         table_name = "noah_owp_modular_params"
-    #     else:
-    #         return None, None
-
-    #     query = f"""
-    #     SELECT 
-    #         name, 
-    #         description, 
-    #         min, 
-    #         max, 
-    #         data_type, 
-    #         units, 
-    #         calibratable 
-    #     FROM 
-    #         {table_name} 
-    #     WHERE 
-    #         calibratable = true
-    #     """
-
-    #     try:
-    #         self.cursor.execute(query)
-    #         rows = self.cursor.fetchall()
-    #         column_names = [desc[0] for desc in self.cursor.description]
-            
-    #         # Debug output
-    #         print("Column names:", column_names)
-    #         print("Rows returned:", len(rows))
-    #         for row in rows:
-    #             print(row)
-
-    #         return column_names, rows
-    #     except Exception as e:
-    #         print(f"Error executing selectModuleCalibrateData query: {e}")
-    #         return None, None
 
     def selectDependentModuleCalibrateData(self, model_type):
         # below query returns -> 1 | cfe_params, 8 | sft_params, for model_type='SFT'
         query = (f"SELECT distinct pt.id, pt.param_table_name FROM param_tables pt "
                  f"join module_params_map mpm on mpm.param_table_id = pt.id  "
                  f"where mpm.module_id in (select id from modules mods where mods.name = '{model_type}')")
-        print(query)
+        logger.debug(query)
         try:
             self.cursor.execute(query, (model_type,))
             rows = self.cursor.fetchall()
             column_names = [desc[0] for desc in self.cursor.description]
 
             # Debug output
-            print("Column names:", column_names)
-            print("Rows returned:", len(rows))
+            logger.debug("Column names:", column_names)
+            logger.debug("Rows returned:", len(rows))
             subquery_rowset = []
             for row in rows:
                 sub_query = (
@@ -479,22 +330,21 @@ class DatabaseManager:
                     f"where p.calibratable = true and mpm.param_table_id = {row[0]} "
                     f"and mpm.module_id in (select id from modules mods where mods.name = '{model_type}')")
 
-                print(f"sub_query = {sub_query}")
+                logger.debug(f"sub_query = {sub_query}")
                 self.cursor.execute(sub_query, (row, model_type,))
                 subquery_rows = self.cursor.fetchall()
-                print(subquery_rows)
+                logger.debug(subquery_rows)
                 for record in subquery_rows:
                     deep_copy_rec = copy.deepcopy(record)
                     subquery_rowset.append(deep_copy_rec)
 
             subQuery_rowwset_column_names = [desc[0] for desc in self.cursor.description]
-            print(subquery_rowset)
+            logger.debug(subquery_rowset)
 
             return subQuery_rowwset_column_names, subquery_rowset
         except Exception as e:
             status_str = f"Error executing selectDependentModuleCalibrateData query: {e} \n {query}"
-            print(status_str)
-            self.logger.error(status_str)
+            logger.error(status_str)
             return None, None
 
 
@@ -514,6 +364,8 @@ class DatabaseManager:
             table_name = "topmodel_params"
         elif model_type == "LASAM":
             table_name = "lasam_params"
+        elif model_type == "UEB":
+            table_name = "ueb_params"
         else:
             return None, None
 
@@ -546,14 +398,14 @@ class DatabaseManager:
             column_names = [desc[0] for desc in self.cursor.description]
             
             # Debug output
-            print("Column names:", column_names)
-            print("Rows returned:", len(rows))
+            logger.debug("Column names:", column_names)
+            logger.debug("Rows returned:", len(rows))
             for row in rows:
-                print(row)
+                logger.debug(row)
 
             return column_names, rows
         except Exception as e:
-            print(f"Error executing selectModuleCalibrateData query: {e}")
+            logger.error(f"Error executing selectModuleCalibrateData query: {e}")
             return None, None
 
 
@@ -577,7 +429,7 @@ class DatabaseManager:
             column_names = [desc[0] for desc in self.cursor.description]
             return column_names, rows
         except Exception as e:
-            print(f"Error executing selectModuleOutVariablesData query: {e}")
+            logger.error(f"Error executing selectModuleOutVariablesData query: {e}")
             return None, None
 
 
@@ -591,18 +443,18 @@ if __name__ == "__main__":
     # SELECT example
     # result = db.select('Initial-Parameters', 'Model = %s', ('CFE-S',))
     modules = db.selectAllModules()
-    print(modules)
+    logger.debug(modules)
     #column_names,rows = db.selectInitialParameters('CFE-S')
     
     # # Replacing single quotes to doublw quotes for valuesmoduleMetaData
     # column_names = json.dumps(column_names)
-    # print("Column names:", columinitial_parametersn_names)
+    # logger.debug("Column names:", columinitial_parametersn_names)
     # rows = json.dumps(rows)
-    # print("rows:", rows)    initial_parameters
+    # logger.debug("rows:", rows)    initial_parameters
     # result_dict = [OrderedDict(zip(column_names, row)) for row in rows]
     # result_dict = json.dumps(result_dict)
-    # Print the dictionary
-    # print(result_dict)
+    # logger.debug the dictionary
+    # logger.debug(result_dict)
 
     # # UPDATE example
     # db.update('Initial-Parameters', 'Model = %s', 'Name = %s', ('CFE-S', 'soil_params.mult'))
