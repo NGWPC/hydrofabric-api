@@ -84,9 +84,9 @@ def snow17_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, 
     df_all = filtered_parameters.join(area.set_index('divide_id'), on='divide_id').join(att_df_filtered.set_index('divide_id'), on='divide_id')
 
     # set default values for vars (eventually this will be retrieved from db)
-    mfmax = 0.930472
-    mfmin = 0.137
-    uadj = 0.003103
+    mfmax = 1.0
+    mfmin = 0.2
+    uadj = 0.05
 
     #Loop through divide IDs, get values, and set NA values (represented as NaNs in Pandas) to default values in param_list
     #Create parameter config file.
@@ -102,27 +102,27 @@ def snow17_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, 
                       'hru_area ' + str(row['areasqkm']),
                       'latitude ' + str(row['Y']),
                       'elev ' + str(row['elevation_mean']),  # elevation_mean[1]
-                      'scf 2.15177',
+                      'scf 1.100',
                       'mfmax ' + str(mfmax),
                       'mfmin ' + str(mfmin),
                       'uadj ' + str(uadj),
-                      'si 1515.00',
-                      'pxtemp 0.713424',
+                      'si 500.00',
+                      'pxtemp 1.000',
                       'nmf 0.150',
-                      'tipm 0.200',
+                      'tipm 0.100',
                       'mbase 0.000',
                       'plwhc 0.030',
-                      'daygm 0.300',
+                      'daygm 0.000',
                       'adc1 0.050',
-                      'adc2 0.090',
-                      'adc3 0.160',
-                      'adc4 0.310',
-                      'adc5 0.540',
-                      'adc6 0.740',
-                      'adc7 0.840',
-                      'adc8 0.890',
-                      'adc9 0.930',
-                      'adc10 0.970',
+                      'adc2 0.100',
+                      'adc3 0.200',
+                      'adc4 0.300',
+                      'adc5 0.400',
+                      'adc6 0.500',
+                      'adc7 0.600',
+                      'adc8 0.700',
+                      'adc9 0.800',
+                      'adc10 0.900',
                       'adc11 1.000']
 
 
