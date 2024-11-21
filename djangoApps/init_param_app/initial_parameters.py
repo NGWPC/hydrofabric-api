@@ -12,6 +12,8 @@ from .snow17 import *
 from .topmodel import *
 from .sft import *
 from .smp import *
+from .ueb import UEB
+from .lasam_ipe import *
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -126,6 +128,9 @@ def calculate_module_params(gage_id, source, domain, module, subset_dir, gpkg_fi
         results = sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "TopModel":
         results = topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
+    elif module == 'UEB':
+        ueb = UEB()
+        results = ueb.initial_parameters(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "LASAM":
         results = lasam_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     else:

@@ -48,3 +48,10 @@ def get_subset_dir_file_names(subset_dir):
     """
     filename_list = [f for f in os.listdir(subset_dir) if isfile(join(subset_dir, f))]
     return filename_list
+
+def get_hydrus_data():
+    soil_param_name = "resources/vG_default_params_HYDRUS.dat"
+    grandparent_dir = os.path.dirname(settings.BASE_DIR)
+    soil_param_file = os.path.join(grandparent_dir, soil_param_name)
+    return soil_param_file
+    
