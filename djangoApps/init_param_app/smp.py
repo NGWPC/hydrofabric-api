@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 #def smp_ipe(gage_id, subset_dir, module_metadata_list, module_metadata, gpkg_file):
 def smp_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, modules, module_metadata, gage_file_mgmt):
     '''
-        Description: Build initial parameter estimates (IPE) for snow freeze thaw (smp)
+        Description: Build initial parameter estimates (IPE) for soil moisture profile (smp)
         Parameters:
             gage_id (str):  The gage ID, e.g., 06710385
             subset_dir (str):  Path to gage id directory where the module directory will be made.
