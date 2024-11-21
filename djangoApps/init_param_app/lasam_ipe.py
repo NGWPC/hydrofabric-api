@@ -4,7 +4,7 @@ import logging
 import geopandas as gpd
 import pyarrow.parquet as pq
 import pyarrow as pa
-from .util.utilities import get_hydrofabric_input_attr_file, get_subset_dir_file_names
+from .util.utilities import get_hydrofabric_input_attr_file, get_subset_dir_file_names, get_hydrus_data
 from .util.enums import FileTypeEnum
 
 logger = logging.getLogger(__name__)
@@ -26,13 +26,14 @@ def lasam_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, g
     filename_list = []
     
     # Calibratable parameters
-    soil_param_file = "../../resources/vG_default_params_HYDRUS.dat"        # Van Genuchton soil parameters 
+    # TODO - Use the system to get the "base" directory for uri below
+    soil_param_file =  get_hydrus_data()       # Van Genuchton soil parameters 
     ponded_depth_max = "1.1[cm]"                                            # Maximum amount of water unavailable for surface drainage
     field_capacity_psi = "340.9[cm]"                                        # Capillary head corresponding to volumetric water content at which gravity drainage becomes slower
 
     # Skeleton for the config file. Needs layer soil types to be specified per-catchment
     lasam_lst = ['verbosity=none',
-                 'soil_params_file=' + soil_param_file,
+                 'soil_params_file=' + soil_param_file.split("/")[-1],
                  'layer_thickness=200.0[cm]',
                  'initial_psi=2000.0[cm]',
                  'timestep=300[sec]',
@@ -50,9 +51,8 @@ def lasam_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, g
                 ]
     
     # Make directory and add soil params file there. Also add it to the filelist.
-    os.makedirs(subset_dir, exist_ok=True)
     os.system('cp {0} {1}/{2}'.format(soil_param_file, subset_dir, soil_param_file.split("/")[-1]))
-    filename_list.append(os.path.join(subset_dir, soil_param_file.split("/")[-1]))
+    filename_list.append(soil_param_file.split("/")[-1])
 
     # Get all the catchments
     filtered = get_catchments(gpkg_file)
@@ -65,10 +65,10 @@ def lasam_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, g
         lasam_lst_catID[9] = lasam_lst_catID[9] + soil_type
         
         lasam_bmi_file = os.path.join(subset_dir, catchment_id + '_bmi_config_lasam.txt')
-        filename_list.append(lasam_bmi_file)
         with open(lasam_bmi_file, "w") as f:
             f.writelines('\n'.join(lasam_lst_catID))
-    
+        filename_list.append(lasam_bmi_file.split('/')[-1])
+
     # Write files to DB and S3
     uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
     status_str = "Config files written to:  " + uri

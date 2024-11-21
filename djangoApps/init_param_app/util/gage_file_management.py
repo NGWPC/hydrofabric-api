@@ -244,13 +244,15 @@ class GageFileManagement(FileManagement):
 
     def get_file_from_s3(self, gage_id, domain, source, data_type):
         #Find file in HFFles table
-        file_found, results = self.file_exists(gage_id, domain, source, data_type)
+        try:
+            file_found, results = self.file_exists(gage_id, domain, source, data_type)
 
-        #Create the local temp directory to put the file into
-        loc_temp_dir = self.get_local_temp_directory(data_type, gage_id)
-        #Get and store the S3 file to local storage
-        self.retrieve_minio(results['uri'], loc_temp_dir)
-
+            #Create the local temp directory to put the file into
+            loc_temp_dir = self.get_local_temp_directory(data_type, gage_id)
+            #Get and store the S3 file to local storage
+            self.retrieve_minio(results['uri'], loc_temp_dir)
+        except Exception as exception:
+            logger.error(f"Unhandled exception caught - {exception}")
 
     def get_observational_filename(self, gage_id):
         return gage_id + "_hourly_discharge.csv"
