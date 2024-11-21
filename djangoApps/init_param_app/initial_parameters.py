@@ -11,6 +11,7 @@ from .sac_sma import *
 from .snow17 import *
 from .topmodel import *
 from .sft import *
+from .smp import *
 from .ueb import UEB
 from .lasam_ipe import *
 
@@ -37,7 +38,7 @@ def get_ipe(gage_id, source, domain, modules, gage_file_mgmt):
     gpkg_file = os.path.join(gpkg_dir, gpkg_file)
     module_results = None
 
-    dependent_module_list = ["SFT"]
+    dependent_module_list = ["SFT","SMP"]
 
     module_output_list = []
     for module in modules:
@@ -89,6 +90,10 @@ def calculate_dependent_module_params(gage_id, source, domain, module, modules, 
     if module == "SFT":
         results = sft_ipe(module, gage_id, source, domain, subset_dir,
                           gpkg_file, modules, module_metadata, gage_file_mgmt)
+    elif module == "SMP":
+        results = smp_ipe(module, gage_id, source, domain, subset_dir,
+                          gpkg_file, modules, module_metadata, gage_file_mgmt)
+
     else:
         error_str = "Module name not valid:" + module
         error = dict(error=error_str)
@@ -191,7 +196,7 @@ def module_calibrate_data(model_type):
     try:
         with connection.cursor() as cursor:
             db = DatabaseManager(cursor)
-            if model_type == "SFT":
+            if model_type == "SFT" or model_type == "SMP":
                 column_names, rows = db.selectDependentModuleCalibrateData(model_type)
             else:
                 column_names, rows = db.selectModuleCalibrateData(model_type)
