@@ -84,8 +84,8 @@ def snow17_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, 
     df_all = filtered_parameters.join(area.set_index('divide_id'), on='divide_id').join(att_df_filtered.set_index('divide_id'), on='divide_id')
 
     # set default values for vars (eventually this will be retrieved from db)
-    mfmax = 1.0
-    mfmin = 0.2
+    mfmax = 1.00
+    mfmin = 0.20
     uadj = 0.05
 
     #Loop through divide IDs, get values, and set NA values (represented as NaNs in Pandas) to default values in param_list
