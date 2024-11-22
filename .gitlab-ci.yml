@@ -31,7 +31,7 @@ lint:
 # TODO: Hydro needs a unit testing strategy and probably needs to run these tests in a Hydro Image
 unit_test:
   stage: unit_test
-  image: registry.sh.nextgenwaterprediction.com/infrastructure/rockylinux/rockylinux:9.3
+  image: registry.sh.nextgenwaterprediction.com/ngwpc/hydrofabric/hydrofabric:development
   before_script:
     - dnf install -y python pip
   script:
