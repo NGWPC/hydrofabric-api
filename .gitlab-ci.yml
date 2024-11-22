@@ -28,7 +28,7 @@ lint:
   allow_failure: true
 
 # There isn't a quick hack to fix everything that needs to be setup here.
-# TODO: Hydro needs a unit testing strategy
+# TODO: Hydro needs a unit testing strategy and probably needs to run these tests in a Hydro Image
 unit_test:
   stage: unit_test
   image: registry.sh.nextgenwaterprediction.com/infrastructure/rockylinux/rockylinux:9.3
@@ -39,7 +39,7 @@ unit_test:
     #- pip install .[testing] --index-url ${CI_SERVER_PROTOCOL}://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple
     - pip install -r requirements.txt
     - pip install pytest coverage
-    - coverage run -m pytest --junitxml=test-results.xml
+    - coverage run -m pytest tests/unit --junitxml=test-results.xml
     - coverage xml
   artifacts:
     paths:
