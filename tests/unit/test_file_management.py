@@ -2,25 +2,26 @@ import pytest
 import os
 from unittest.mock import patch, MagicMock
 from datetime import datetime, timezone, timedelta
-import json
 import requests
-from minio import S3Error
 from djangoApps.init_param_app.util.file_management import FileManagement
+
 
 @pytest.fixture
 def mock_config():
     return {
-        's3url': 's3.us-east-1.amazonaws.com',  
+        's3url': 's3.us-east-1.amazonaws.com',
         's3bucket': 'test-bucket',
         's3uri': 's3://test-bucket',
         'hydrofabric_output_version': '1.0',
         'region': 'us-east-1'
     }
 
+
 @pytest.fixture
 def file_management(mock_config):
     with patch('djangoApps.init_param_app.util.file_management.get_config', return_value=mock_config):
         return FileManagement()
+
 
 @pytest.fixture
 def mock_env_credentials():
@@ -32,6 +33,7 @@ def mock_env_credentials():
     with patch.dict(os.environ, env_vars):
         yield env_vars
 
+
 @pytest.fixture
 def mock_imds_credentials():
     expiry = datetime.now(timezone.utc) + timedelta(hours=1)
@@ -41,6 +43,7 @@ def mock_imds_credentials():
         'Token': 'imds-session-token',
         'Expiration': expiry.strftime('%Y-%m-%dT%H:%M:%SZ')
     }
+
 
 class TestFileManagement:
     def test_init(self, file_management, mock_config):
@@ -59,7 +62,7 @@ class TestFileManagement:
         mock_put.return_value = mock_response
 
         token = file_management._get_imds_token()
-        
+
         assert token == 'test-token'
         mock_put.assert_called_once_with(
             "http://169.254.169.254/latest/api/token",
@@ -71,9 +74,9 @@ class TestFileManagement:
     def test_get_imds_token_failure(self, mock_put, file_management):
         """Test failed IMDSv2 token retrieval"""
         mock_put.side_effect = requests.RequestException()
-        
+
         token = file_management._get_imds_token()
-        
+
         assert token is None
         mock_put.assert_called_once()
 
@@ -155,7 +158,7 @@ class TestFileManagement:
         # Create a mock Minio instance
         mock_client = MagicMock()
         mock_minio.return_value = mock_client
-        
+
         file_management.start_minio_client()
 
         mock_minio.assert_called_once_with(
@@ -168,12 +171,13 @@ class TestFileManagement:
 
     @patch('djangoApps.init_param_app.util.file_management.Minio')  # Updated patch path
     @patch('djangoApps.init_param_app.util.file_management.FileManagement._get_instance_credentials')
-    def test_start_minio_client_with_imds_creds(self, mock_get_instance_creds, mock_minio, file_management, mock_imds_credentials):
+    def test_start_minio_client_with_imds_creds(self, mock_get_instance_creds, mock_minio,
+                                                file_management, mock_imds_credentials):
         """Test Minio client initialization with IMDS credentials"""
         # Create a mock Minio instance
         mock_client = MagicMock()
         mock_minio.return_value = mock_client
-        
+
         instance_creds = {
             'access_key': mock_imds_credentials['AccessKeyId'],
             'secret_key': mock_imds_credentials['SecretAccessKey'],
@@ -200,7 +204,7 @@ class TestFileManagement:
         mock_client = MagicMock()
         mock_client.bucket_exists.return_value = True
         mock_minio.return_value = mock_client
-        
+
         file_management.client = mock_client
         result = file_management.check_s3_bucket()
 

@@ -11,6 +11,7 @@ from .utilities import get_config
 
 logger = logging.getLogger(__name__)
 
+
 class FileManagement:
     def __init__(self):
         config = get_config()
@@ -61,7 +62,7 @@ class FileManagement:
             )
             if not role_response.ok:
                 return None
-            
+
             role_name = role_response.text
 
             # Get credentials
@@ -113,7 +114,7 @@ class FileManagement:
     def start_minio_client(self):
         if self.client is None or (self._credentials and self._should_refresh_credentials()):
             credentials = self._get_credentials()
-            
+
             if credentials:
                 logger.debug("Creating Minio client with credentials")
                 self.client = Minio(
