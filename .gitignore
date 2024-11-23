@@ -20,3 +20,10 @@ __pycache__/
 *.sqlite
 *.env
 *.venv
+
+# Ignore Test Output and Coverage reports
+.coverage
+coverage.xml
+test-results.xml
+pytest_cache/
+*.pytest_cache

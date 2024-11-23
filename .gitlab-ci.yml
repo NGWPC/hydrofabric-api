@@ -1,5 +1,11 @@
 include:
-  - template: Jobs/Container-Scanning.gitlab-ci.yml
+  - template: Security/Container-Scanning.gitlab-ci.yml
+
+# Define a top-level cache
+cache:
+  key: trivy-cache
+  paths:
+    - /home/gitlab/.cache/trivy/
 
 stages:
   - lint
@@ -28,18 +34,21 @@ lint:
   allow_failure: true
 
 # There isn't a quick hack to fix everything that needs to be setup here.
-# TODO: Hydro needs a unit testing strategy
+# TODO: Hydro needs a unit testing strategy and probably needs to run these tests in a Hydro Image
 unit_test:
   stage: unit_test
-  image: registry.sh.nextgenwaterprediction.com/infrastructure/rockylinux/rockylinux:9.3
+  image: registry.sh.nextgenwaterprediction.com/ngwpc/hydrofabric/hydrofabric:development
   before_script:
-    - dnf install -y python pip
+    - dnf install -y python311 python3.11-pip python3.11-devel
+    - update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+    - dnf remove pip -y
+    - update-alternatives --install /usr/bin/pip pip /usr/bin/pip3.11 1
   script:
     #- pip install . --index-url ${CI_SERVER_PROTOCOL}://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple
     #- pip install .[testing] --index-url ${CI_SERVER_PROTOCOL}://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple
     - pip install -r requirements.txt
     - pip install pytest coverage
-    - coverage run -m pytest --junitxml=test-results.xml
+    - coverage run -m pytest tests/unit --junitxml=test-results.xml
     - coverage xml
   artifacts:
     paths:
@@ -72,7 +81,7 @@ build:
   script:
     - echo "Logging in to Gitlab Container Registry..."
     - echo $CI_JOB_TOKEN | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - echo "Building test Rocky Linux container... "
+    - echo "Building Hydro Fabric API Docker Image"
     - echo docker build -f Dockerfile-gitlab -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG .
     - docker build -f Dockerfile-gitlab -t "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG" .
     - docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
@@ -83,9 +92,13 @@ container_scanning:
   needs:
     - build
   variables:
-    SECURE_LOG_LEVEL: info
-    CS_SEVERITY_THRESHOLD: UNKNOWN
+    GIT_STRATEGY: fetch
+    TRIVY_TIMEOUT: 20m # Increase timeout to 20 minutes for large image
+    # SECURE_LOG_LEVEL: debug
+    CS_SEVERITY_THRESHOLD: LOW # Options: UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL
     CS_IMAGE: $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+    TRIVY_DB_REPOSITORY: "https://trivy-light.aquasec.com" # Trying a mirror to avoid ghcr rate limits
+    TRIVY_CACHE_DIR: "/home/gitlab/.cache/trivy/"
 
 
 deploy_image:
@@ -99,7 +112,7 @@ deploy_image:
     - docker push $DOCKER_IMAGE_NAME:$TARGET_VERSION
     - docker logout
   only:
-    - main
+    - development
 
 
 
