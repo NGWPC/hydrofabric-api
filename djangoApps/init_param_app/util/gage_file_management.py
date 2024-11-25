@@ -100,7 +100,7 @@ class GageFileManagement(FileManagement):
         #result = {}
         return modules
 
-    def file_exists(self, gage_id, domain, source, data_type):
+    def file_exists(self, gage_id, domain, source, data_type, version):
         """
         Determines if a data file exists in S3 and in HFFILES table
         :param gage_id: The gage the data was requested for
@@ -111,7 +111,7 @@ class GageFileManagement(FileManagement):
         """
         file_found = False
         results = None
-        my_data = HFFiles.objects.filter(gage_id=gage_id, source=source, domain=domain, data_type=data_type).values()
+        my_data = HFFiles.objects.filter(gage_id=gage_id, source=source, domain=domain, data_type=data_type, hydrofabric_version=version).values()
 
         if not my_data:
             log_string = f"Database missing entry for gage_id - {gage_id}, data type - {data_type}, source -  {source}, domain - {domain}."

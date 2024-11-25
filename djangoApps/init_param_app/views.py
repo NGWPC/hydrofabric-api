@@ -81,7 +81,7 @@ def return_geopackage(request):
     loc_status = http_200
 
     # Determine if this has already been computed, Check DB HFFiles table and S3 for pre-existing data
-    file_found, results = gage_file_mgmt.file_exists(gage_id, domain, source, FileTypeEnum.GEOPACKAGE)
+    file_found, results = gage_file_mgmt.file_exists(gage_id, domain, source, FileTypeEnum.GEOPACKAGE, '2.2')
     if not file_found:
         results = get_geopackage(gage_id, source, domain)
         if 'error' in results:

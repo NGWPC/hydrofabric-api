@@ -13,9 +13,18 @@ hydrofabric_version = args[5]
 hydrofabric_type = args[6]
 
 outpathfile = paste(outpath, outfile, sep="/")
+domain = 'conus'
+hf_gpkg = 'conus_nextgen.gpkg'
+
+hf_gpkg_path = paste(hydrofabric_data,hydrofabric_version,hydrofabric_type,domain,hf_gpkg, sep='/')
 
 tryCatch( {
-get_subset(hl_uri = gauge_id, source = hydrofabric_data, hf_version = hydrofabric_version, type = hydrofabric_type, outfile = outpathfile, overwrite = TRUE)
+if(hydrofabric_version == '2.1.1'){     
+    get_subset(hl_uri = gauge_id, source = hydrofabric_data, hf_version = hydrofabric_version,
+    type = hydrofabric_type, outfile = outpathfile, overwrite = TRUE)
+} else if(hydrofabric_version == '2.2'){
+    get_subset(hl_uri = gauge_id, gpkg=,outfile = outpathfile, overwrite = TRUE )
+}
 },
 error = function(cond) {
     message(paste('error', conditionMessage(cond), sep=':'))

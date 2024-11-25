@@ -39,6 +39,7 @@ def get_geopackage(gage_id, source, domain, keep_file=False):
         hydrofabric_type = config['hydrofabric_type']
         # Tell the subsetter what to retrieve
         subsetter_gage_id = f"Gages-{gage_id}"
+        if(hydrofabric_version == 'v2.2'): subsetter_gage_id = f"gages-{gage_id}"
         
         gpkg_filename = gage_file_mgmt.get_geopackage_filename(gage_id)
         status_str = "Calling HF Subsetter R code"
