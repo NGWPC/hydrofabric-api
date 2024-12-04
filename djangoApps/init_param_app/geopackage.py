@@ -10,7 +10,7 @@ from .util.utilities import *
 logger = logging.getLogger(__name__)
 
 
-def get_geopackage(gage_id, source, domain, keep_file=False):
+def get_geopackage(gage_id, version, source, domain, keep_file=False):
     """
     Creates a geopackage containing a subset of the hydrofabric
 
@@ -34,12 +34,17 @@ def get_geopackage(gage_id, source, domain, keep_file=False):
         # hydrofabric input data directory
         hydrofabric_dir = config['hydrofabric_dir']
         # hydrofabric input data version
-        hydrofabric_version = config['hydrofabric_version']
+        hydrofabric_version = version
         # hydrofabric input data version type
         hydrofabric_type = config['hydrofabric_type']
         # Tell the subsetter what to retrieve
+        #Hydrofabric version 2.1 uses Gages, while 2.2 uses gages in the gage id hl_uri.
         subsetter_gage_id = f"Gages-{gage_id}"
-        if(hydrofabric_version == 'v2.2'): subsetter_gage_id = f"gages-{gage_id}"
+        if(hydrofabric_version == '2.2'): subsetter_gage_id = f"gages-{gage_id}"
+        
+        #Hydrofabric version 2.1 is 2.1.1 for the data path
+        hydrofabric_version_subsetter = hydrofabric_version
+        if(hydrofabric_version == '2.1'): hydrofabric_version_subsetter = '2.1.1'
         
         gpkg_filename = gage_file_mgmt.get_geopackage_filename(gage_id)
         status_str = "Calling HF Subsetter R code"
@@ -58,12 +63,13 @@ def get_geopackage(gage_id, source, domain, keep_file=False):
                        loc_temp_dir,
                        gpkg_filename,
                        hydrofabric_dir,
-                       hydrofabric_version.lstrip('v'),
+                       hydrofabric_version_subsetter,
                        hydrofabric_type]
         
         result = run(run_command, capture_output=True)
-        if 'error' in str(result.stderr):
-            error_str = 'Hydrofabric subsetting failed; check gage id.'
+        stderr = str(result.stderr.decode('utf-8'))
+        if len(stderr) > 0:
+            error_str = f'Hydrofabric subsetting failed:  {stderr}'
             error = {'error': error_str}
             logger.error(error_str)
             return error
@@ -77,7 +83,7 @@ def get_geopackage(gage_id, source, domain, keep_file=False):
     # Write geopackage to s3 bucket
     try:
         # Put the gpkg_filename in list
-        uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, data_type, source, loc_temp_dir, [gpkg_filename])
+        uri = gage_file_mgmt.write_file_to_s3(gage_id, hydrofabric_version, domain, data_type, source, loc_temp_dir, [gpkg_filename])
     # TODO PROPERLY HANDEL LOGGING "RESPONSE" FOR CAUGHT ERRORS
     except psycopg2.DatabaseError as psycopg2_error:
         logging.error(psycopg2_error)

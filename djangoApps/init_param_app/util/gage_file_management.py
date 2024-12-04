@@ -28,6 +28,7 @@ class GageFileManagement(FileManagement):
         """
         super().__init__()
         self.gage_id = None
+        self.hydro_version = None
         self.domain = None
         self.data_type = None
         self.source = None
@@ -100,13 +101,14 @@ class GageFileManagement(FileManagement):
         #result = {}
         return modules
 
-    def file_exists(self, gage_id, domain, source, data_type, version):
+    def file_exists(self, gage_id, version, domain, source, data_type):
         """
         Determines if a data file exists in S3 and in HFFILES table
         :param gage_id: The gage the data was requested for
         :param domain: Domain of the gage (CONUS, Alaska, Hawaii, Puerto Rico, American Virgin Islands)
         :param source: Source or Agency owning the gage (Ex USGS, USARC, Env Canada ... etc)
         :param data_type: The type of data retrieved (Ex. GEOPACKAGE, Observational, Forcing ... etc)
+        :param version:  Hydrofabric version
         :return: If file is found and the S3 URI
         """
         file_found = False
@@ -114,7 +116,7 @@ class GageFileManagement(FileManagement):
         my_data = HFFiles.objects.filter(gage_id=gage_id, source=source, domain=domain, data_type=data_type, hydrofabric_version=version).values()
 
         if not my_data:
-            log_string = f"Database missing entry for gage_id - {gage_id}, data type - {data_type}, source -  {source}, domain - {domain}."
+            log_string = f"Database missing entry for gage_id - {gage_id}, data type - {data_type}, version - {version}, source -  {source}, domain - {domain}."
             logger.debug(log_string)
         else:
             # Check S3 for file from DB call.
@@ -174,7 +176,7 @@ class GageFileManagement(FileManagement):
                 results = ipe_json
         return file_found, results
 
-    def write_file_to_s3(self, gage_id, domain, data_type, source, input_directory, input_filenames, module=None):
+    def write_file_to_s3(self, gage_id, version, domain, data_type, source, input_directory, input_filenames, module=None):
         """
 
         :param module:
@@ -189,6 +191,7 @@ class GageFileManagement(FileManagement):
 
         """
         self.gage_id = gage_id
+        self.hydro_version = version
         self.domain = domain
         self.data_type = data_type
         self.source = source

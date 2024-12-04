@@ -119,7 +119,7 @@ def calculate_module_params(gage_id, source, domain, module, subset_dir, gpkg_fi
     if module == "CFE-S" or module == "CFE-X":
         results = cfe_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "Noah-OWP-Modular":
-        results = noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
+        results = noah_owp_modular_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "T-Route":
         results = t_route_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "Snow17":

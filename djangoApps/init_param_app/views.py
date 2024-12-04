@@ -74,6 +74,7 @@ def return_geopackage(request):
     http_200 = status.HTTP_200_OK
     http_422 = status.HTTP_422_UNPROCESSABLE_ENTITY
     gage_id = request.query_params.get('gage_id')
+    version = request.query_params.get('version')
     source = request.query_params.get('source')
     domain = request.query_params.get('domain')
     gage_file_mgmt = GageFileManagement()
@@ -81,13 +82,13 @@ def return_geopackage(request):
     loc_status = http_200
 
     # Determine if this has already been computed, Check DB HFFiles table and S3 for pre-existing data
-    file_found, results = gage_file_mgmt.file_exists(gage_id, domain, source, FileTypeEnum.GEOPACKAGE, '2.2')
+    file_found, results = gage_file_mgmt.file_exists(gage_id, version, domain, source, FileTypeEnum.GEOPACKAGE)
     if not file_found:
-        results = get_geopackage(gage_id, source, domain)
+        results = get_geopackage(gage_id, version, source, domain)
         if 'error' in results:
             loc_status = http_422
     else:
-        logger.debug(f"Prexisting Geopackage found for gage_id - {gage_id}, domain - {domain}, source - {source}")
+        logger.debug(f"Prexisting Geopackage found for gage_id - {gage_id}, version - {version}, domain - {domain}, source - {source}")
 
     return Response(results, status=loc_status)
 
