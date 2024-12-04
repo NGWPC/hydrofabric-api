@@ -258,7 +258,7 @@ class GageFileManagement(FileManagement):
         return gage_id + "_hourly_discharge.csv"
 
     def get_geopackage_filename(self, gage_id):
-        return 'gage_' + gage_id + ".gpkg"
+        return 'gauge_' + gage_id + ".gpkg"
     
     def get_db_object(self):
         return self.db_object
