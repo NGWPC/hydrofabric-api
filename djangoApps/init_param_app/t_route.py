@@ -5,7 +5,7 @@ from .util.utilities import *
 logger = logging.getLogger(__name__)
 
 
-def t_route_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
+def t_route_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
     '''
     Build initial parameter estimates (IPE) for T-Route 
 
@@ -149,7 +149,7 @@ def t_route_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata,
     # GageFileManagement needs input files as a list
     filename_list = [output_filename]
     # Write files to DB and S3
-    uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
+    uri = gage_file_mgmt.write_file_to_s3(gage_id, version, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
     status_str = "Config files written to:  " + uri
     print(status_str)
     logger.info(status_str)

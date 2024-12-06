@@ -8,6 +8,7 @@ import pyarrow as pa
 from ambiance import Atmosphere
 from .util.utilities import get_config, get_hydrofabric_input_attr_file, get_subset_dir_file_names
 from .util.enums import FileTypeEnum
+from .hf_attributes import *
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +133,7 @@ class UEB:
                                       "0\n"
                                       "{longitude}")
 
-    def initial_parameters(self, gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
+    def initial_parameters(self, gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
         """
         Builds initial parameter estimates (IPE) for UEB (Utah Energy Balance) Module
         :param gage_id: The gage ID, e.g., 06710385
@@ -167,8 +168,6 @@ class UEB:
 
         #Read model attributes Hive partitioned Parquet dataset using pyarrow, remove rows containing null, convert to pandas dataframe
         try:
-            attr_file = get_hydrofabric_input_attr_file()
-            attr = pq.read_table(attr_file)
             #Read parameters from CSV file into dataframe and filter on divide ids in geopackage. 
             parameters_df = pd.read_csv(f'{self.input_dir}/deltat.csv')
             filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
@@ -179,20 +178,25 @@ class UEB:
             error = dict(error=error_str)
             return error
         except Exception as exc:
-            error_str = 'Error opening ' + attr_file
+            error_str = 'Error opening deltat.csv'
             error = dict(error = error_str)
             logger.error(error_str, exc)
             return error
 
-        attr = attr.drop_null()
-        attr_df = pa.Table.to_pandas(attr)
+        divide_attr = get_hydrofabric_attributes(gpkg_file, version)
 
-        #filter rows with catchments in gpkg
-        filtered = attr_df[attr_df['divide_id'].isin(catchments)]
+        attr21 = {'slope':'slope_mean', 'aspect':'aspect_c_mean', 'elevation':'elevation_mean', 'lat':'Y','lon':'X'}
+        attr22 = {'slope':'mean.slope', 'aspect':'circ_mean.aspect', 'elevation':'mean.elevation', 'lat':'centroid_y','lon':'centroid_y'}
+
+        if version == '2.1':
+            attr = attr21
+        elif version == '2.2':
+            attr=attr22
+
         #Join parameters from csv and area into single dataframe.
-        df_all = filtered_parameters.join(filtered.set_index('divide_id'), on='divide_id')
+        df_all = filtered_parameters.join(divide_attr.set_index('divide_id'), on='divide_id')
         
-        if len(filtered) == 0:
+        if len(divide_attr) == 0:
             error_str = 'No matching catchments in attribute file'
             error = dict(error = error_str)
             logger.error(error_str)
@@ -205,11 +209,11 @@ class UEB:
 
             temp_ranges = self.get_monthly_temp_ranges(row)
             
-            slpe = round(row['slope_mean'], 4)
-            aspct = round(row['aspect_c_mean'], 4)
-            lat = round(row['Y'], 4)
-            lon = round(row['X'], 4)
-            elevation = round(row['elevation_mean'], 4)
+            slpe = round(row[attr['slope']], 4)
+            aspct = round(row[attr['aspect']], 4)
+            lat = round(row[attr['lat']], 4)
+            lon = round(row[attr['lon']], 4)
+            elevation = round(row[attr['elevation']], 4)
             standard_atm_pressure = round(Atmosphere(elevation).pressure[0], 4)
             
             filename = self.sitevar_filename_template.format(catchment = catchment_id)
@@ -237,7 +241,7 @@ class UEB:
             filename_list.append(filename)
             
         # Write files to DB and S3
-        uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list,
+        uri = gage_file_mgmt.write_file_to_s3(gage_id, version, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list,
                                             module=self.module)
         status_str = "Config files written to:  " + uri
         logger.info(status_str)

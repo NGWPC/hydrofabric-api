@@ -6,10 +6,11 @@ import pyarrow.parquet as pq
 import pyarrow as pa
 from .util.utilities import get_hydrofabric_input_attr_file, get_subset_dir_file_names, get_hydrus_data
 from .util.enums import FileTypeEnum
+from .hf_attributes import *
 
 logger = logging.getLogger(__name__)
 
-def lasam_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
+def lasam_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
     ''' 
     Build initial parameter estimates (IPE) for the LASAM module
 
@@ -54,13 +55,20 @@ def lasam_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, g
     os.system('cp {0} {1}/{2}'.format(soil_param_file, subset_dir, soil_param_file.split("/")[-1]))
     filename_list.append(soil_param_file.split("/")[-1])
 
-    # Get all the catchments
-    filtered = get_catchments(gpkg_file)
+    # Get divide attributes
+    divide_attr = get_hydrofabric_attributes(gpkg_file, version)
+    attr21 = {'soil_type':'ISLTYP'}
+    attr22 = {'soil_type':'mode.ISLTYP'}
+
+    if version == '2.1':
+        attr = attr21
+    elif version == '2.2':
+        attr=attr22
     
     # Loop through catchments, get soil type
-    for index, row in filtered.iterrows():
+    for index, row in divide_attr.iterrows():
         catchment_id = str(row['divide_id'])
-        soil_type = str(row['ISLTYP'])
+        soil_type = str(row[attr['soil_type']])
         lasam_lst_catID = lasam_lst.copy()
         lasam_lst_catID[9] = lasam_lst_catID[9] + soil_type
         
@@ -70,7 +78,7 @@ def lasam_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, g
         filename_list.append(lasam_bmi_file.split('/')[-1])
 
     # Write files to DB and S3
-    uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
+    uri = gage_file_mgmt.write_file_to_s3(gage_id, version, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
     status_str = "Config files written to:  " + uri
     logger.info(status_str)
 
@@ -78,50 +86,3 @@ def lasam_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, g
     module_metadata["parameter_file"]["uri"] = uri
 
     return module_metadata
-
-def get_catchments(gpkg_file):
-    # Get list of catchments from gpkg divides layer using geopandas
-    try:
-        divides_layer = gpd.read_file(gpkg_file, layer = "divides")
-        try:
-            catchments = divides_layer["divide_id"].tolist()
-        except:
-            # TODO: Replace 'except' with proper catch
-            error_str = 'Error reading divides layer in ' + gpkg_file
-            error = dict(error = error_str) 
-            logger.error(error_str)
-            return error
-    except:# TODO: Replace 'except' with proper catch
-        error_str = 'Error opening ' + gpkg_file
-        error = dict(error = error_str) 
-        logger.error(error_str)
-        return error
-    
-    # Read model attributes Hive partitioned Parquet dataset using pyarrow, remove rows containing null, convert to pandas dataframe
-    try:
-        attr_file = get_hydrofabric_input_attr_file()
-        attr = pq.read_table(attr_file)
-    except FileNotFoundError as fnfe:
-        logger.error(fnfe)
-        error_str = 'Hydrofabric data input directory does not exist'
-        error = dict(error=error_str)
-        return error
-    except Exception as exc:
-        error_str = 'Error opening ' + attr_file
-        error = dict(error = error_str)
-        logger.error(error_str, exc)
-        return error
-    
-    attr = attr.drop_null()
-    attr_df = pa.Table.to_pandas(attr)
-    
-    # Filter rows with catchments in gpkg
-    filtered = attr_df[attr_df['divide_id'].isin(catchments)]
-
-    if len(filtered) == 0:
-        error_str = 'No matching catchments in attribute file'
-        error = dict(error = error_str) 
-        logger.error(error_str)
-        return error
-    else:
-        return filtered

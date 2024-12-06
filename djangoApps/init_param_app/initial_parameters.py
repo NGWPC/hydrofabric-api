@@ -19,7 +19,7 @@ from .lasam_ipe import *
 logger = logging.getLogger(__name__)
 
 
-def get_ipe(gage_id, source, domain, modules, gage_file_mgmt):
+def get_ipe(gage_id, version, source, domain, modules, gage_file_mgmt):
     '''
     Build initial parameter estimates (IPE) for a module.  
 
@@ -42,13 +42,13 @@ def get_ipe(gage_id, source, domain, modules, gage_file_mgmt):
 
     module_output_list = []
     for module in modules:
-        found, ipe_json = gage_file_mgmt.ipe_files_exists(gage_id, domain, source, module)
+        found, ipe_json = gage_file_mgmt.ipe_files_exists(gage_id, version, domain, source, module)
         if not found:
             if module in dependent_module_list:
-                module_results = calculate_dependent_module_params(gage_id, source, domain, module, modules,
+                module_results = calculate_dependent_module_params(gage_id, version, source, domain, module, modules,
                                                                    subset_dir, gpkg_file, gage_file_mgmt)
             else:
-                module_results = calculate_module_params(gage_id, source, domain, module, subset_dir, gpkg_file, gage_file_mgmt)
+                module_results = calculate_module_params(gage_id, version, source, domain, module, subset_dir, gpkg_file, gage_file_mgmt)
 
             if 'error' not in module_results:
                 # add ipe_json to Database
@@ -77,7 +77,7 @@ def get_ipe(gage_id, source, domain, modules, gage_file_mgmt):
     return Response(module_output_list, status=status.HTTP_200_OK)
 
 
-def calculate_dependent_module_params(gage_id, source, domain, module, modules, subset_dir, gpkg_file, gage_file_mgmt):
+def calculate_dependent_module_params(gage_id, version, source, domain, module, modules, subset_dir, gpkg_file, gage_file_mgmt):
     subset_dir = os.path.join(subset_dir, module)
     if not os.path.exists(subset_dir):
         os.mkdir(subset_dir)
@@ -88,10 +88,10 @@ def calculate_dependent_module_params(gage_id, source, domain, module, modules, 
     logger.info(f"Get IPEs for {module} module")
 
     if module == "SFT":
-        results = sft_ipe(module, gage_id, source, domain, subset_dir,
+        results = sft_ipe(module, gage_id, version, source, domain, subset_dir,
                           gpkg_file, modules, module_metadata, gage_file_mgmt)
     elif module == "SMP":
-        results = smp_ipe(module, gage_id, source, domain, subset_dir,
+        results = smp_ipe(module, gage_id, version, source, domain, subset_dir,
                           gpkg_file, modules, module_metadata, gage_file_mgmt)
 
     else:
@@ -103,7 +103,7 @@ def calculate_dependent_module_params(gage_id, source, domain, module, modules, 
     return results
 
 
-def calculate_module_params(gage_id, source, domain, module, subset_dir, gpkg_file, gage_file_mgmt):
+def calculate_module_params(gage_id, version, source, domain, module, subset_dir, gpkg_file, gage_file_mgmt):
     subset_dir = os.path.join(subset_dir, module)
     if not os.path.exists(subset_dir):
         os.mkdir(subset_dir)
@@ -117,22 +117,22 @@ def calculate_module_params(gage_id, source, domain, module, subset_dir, gpkg_fi
     # TODO Replace with SWITCH or dict of module and function call
     # TODO Validate module name to a Enum to prevent string/case corruption
     if module == "CFE-S" or module == "CFE-X":
-        results = cfe_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
+        results = cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "Noah-OWP-Modular":
-        results = noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
+        results = noah_owp_modular_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "T-Route":
-        results = t_route_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
+        results = t_route_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "Snow17":
-        results = snow17_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
+        results = snow17_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "Sac-SMA":
-        results = sac_sma_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
+        results = sac_sma_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "TopModel":
-        results = topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
+        results = topmodel_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == 'UEB':
         ueb = UEB()
-        results = ueb.initial_parameters(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
+        results = ueb.initial_parameters(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "LASAM":
-        results = lasam_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
+        results = lasam_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     else:
         error_str = "Module name not valid:" + module
         error = dict(error=error_str)

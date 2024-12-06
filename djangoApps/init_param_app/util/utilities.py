@@ -26,10 +26,10 @@ def get_config():
         config = yaml.safe_load(file)
     return config
 
-def get_hydrofabric_input_attr_file():
+def get_hydrofabric_input_attr_file(version):
     config = get_config()
     hydrofabric_dir = config['hydrofabric_dir']
-    hydrofabric_version = config['hydrofabric_version']
+    hydrofabric_version = version
     hydrofabric_type = config['hydrofabric_type']
 
     grandparent_dir = os.path.dirname(settings.BASE_DIR)

@@ -28,6 +28,7 @@ class GageFileManagement(FileManagement):
         """
         super().__init__()
         self.gage_id = None
+        self.hydro_version = None
         self.domain = None
         self.data_type = None
         self.source = None
@@ -82,7 +83,7 @@ class GageFileManagement(FileManagement):
             except Exception as e:
                 logger.error(f"Error deleting directory '{directory}': {e}")       
 
-    def param_files_exists(self, gage_id, domain, source, data_type, modules):
+    def param_files_exists(self, version, gage_id, domain, source, data_type, modules):
         """
         Go through the list of modules and determine if files have already been calculated. Return list of modules to 
         be computed
@@ -100,21 +101,22 @@ class GageFileManagement(FileManagement):
         #result = {}
         return modules
 
-    def file_exists(self, gage_id, domain, source, data_type):
+    def file_exists(self, gage_id, version, domain, source, data_type):
         """
         Determines if a data file exists in S3 and in HFFILES table
         :param gage_id: The gage the data was requested for
         :param domain: Domain of the gage (CONUS, Alaska, Hawaii, Puerto Rico, American Virgin Islands)
         :param source: Source or Agency owning the gage (Ex USGS, USARC, Env Canada ... etc)
         :param data_type: The type of data retrieved (Ex. GEOPACKAGE, Observational, Forcing ... etc)
+        :param version:  Hydrofabric version
         :return: If file is found and the S3 URI
         """
         file_found = False
         results = None
-        my_data = HFFiles.objects.filter(gage_id=gage_id, source=source, domain=domain, data_type=data_type).values()
+        my_data = HFFiles.objects.filter(gage_id=gage_id, source=source, domain=domain, data_type=data_type, hydrofabric_version=version).values()
 
         if not my_data:
-            log_string = f"Database missing entry for gage_id - {gage_id}, data type - {data_type}, source -  {source}, domain - {domain}."
+            log_string = f"Database missing entry for gage_id - {gage_id}, data type - {data_type}, version - {version}, source -  {source}, domain - {domain}."
             logger.debug(log_string)
         else:
             # Check S3 for file from DB call.
@@ -131,7 +133,7 @@ class GageFileManagement(FileManagement):
                 results = dict(uri=uri)
         return file_found, results
 
-    def ipe_files_exists(self, gage_id, domain, source, module):
+    def ipe_files_exists(self, gage_id, version, domain, source, module):
         """
         Determines if a ipe data files exists in S3 and in HFFILES table
         :param gage_id: The gage the data was requested for
@@ -143,7 +145,7 @@ class GageFileManagement(FileManagement):
         file_found = False
         results = None
         data_type = FileTypeEnum.PARAMS
-        my_data = HFFiles.objects.filter(gage_id=gage_id, source=source, domain=domain, module_id=module, data_type=FileTypeEnum.PARAMS).values()
+        my_data = HFFiles.objects.filter(gage_id=gage_id, source=source, domain=domain, module_id=module, data_type=FileTypeEnum.PARAMS, hydrofabric_version=version).values()
 
         if not my_data:
             log_string = f"Database missing entry for gage_id - {gage_id}, module - {module}, data type - {data_type}, source -  {source}, domain - {domain}."
@@ -174,7 +176,7 @@ class GageFileManagement(FileManagement):
                 results = ipe_json
         return file_found, results
 
-    def write_file_to_s3(self, gage_id, domain, data_type, source, input_directory, input_filenames, module=None):
+    def write_file_to_s3(self, gage_id, version, domain, data_type, source, input_directory, input_filenames, module=None):
         """
 
         :param module:
@@ -189,6 +191,7 @@ class GageFileManagement(FileManagement):
 
         """
         self.gage_id = gage_id
+        self.hydro_version = version
         self.domain = domain
         self.data_type = data_type
         self.source = source
@@ -242,10 +245,10 @@ class GageFileManagement(FileManagement):
 
         return self.full_s3_path
 
-    def get_file_from_s3(self, gage_id, domain, source, data_type):
+    def get_file_from_s3(self, gage_id, version, domain, source, data_type):
         #Find file in HFFles table
         try:
-            file_found, results = self.file_exists(gage_id, domain, source, data_type)
+            file_found, results = self.file_exists(gage_id, version, domain, source, data_type)
 
             #Create the local temp directory to put the file into
             loc_temp_dir = self.get_local_temp_directory(data_type, gage_id)

@@ -18,7 +18,6 @@ class FileManagement:
         self.s3_url = config['s3url']
         self.s3_bucket = config["s3bucket"]
         self.s3_uri = config['s3uri']
-        self.hydro_version = config['hydrofabric_output_version']
         # Get region from config or environment, with a fallback default of us-east-1
         self.region = (
             config.get('region') or
