@@ -147,8 +147,12 @@ class GetObservationalData(APIView):
         domain = request.query_params.get('domain')
         gage_file_mgmt = GageFileManagement()
 
+        #TODO:  file_exists needs a version after the 2.2 updates.  Observational data is currently
+        #tied to 2.1 so hardcoding this for now.
+        version = '2.1'
+
         # Check DB and HFFiles table for pre-existing data
-        file_found, results = gage_file_mgmt.file_exists(gage_id, domain, source, FileTypeEnum.OBSERVATIONAL)
+        file_found, results = gage_file_mgmt.file_exists(gage_id, version, domain, source, FileTypeEnum.OBSERVATIONAL)
         if not file_found:
             loc_status = status.HTTP_422_UNPROCESSABLE_ENTITY
             results = f"Non-Headwater Basin gage or missing data for gage_id - {gage_id}, source -  {source}, domain - {domain}"
