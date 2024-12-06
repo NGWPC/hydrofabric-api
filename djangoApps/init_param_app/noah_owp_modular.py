@@ -26,12 +26,26 @@ def noah_owp_modular_ipe(gage_id, version, source, domain, subset_dir, gpkg_file
     module = "Noah-OWP-Modular"
     filename_list = []
 
-    divide_attr = get_hydrofabric_attributes(gpkg_file)
+    divide_attr = get_hydrofabric_attributes(gpkg_file, version)
 
+    attr22 = {'divide_id':'divide_id', 'slope':'mean.slope', 'aspect': 'circ_mean.aspect',
+              'lat':'centroid_y', 'lon':'centroid_x', 'soil_type':'mode.ISLTYP',
+              'veg_type':'mode.IVGTYP'}
+
+    attr21 =  {'divide_id':'divide_id', 'slope':'slope_mean', 'aspect': 'aspect_c_mean',
+              'lat':'Y', 'lon':'X', 'soil_type':'ISLTYP',
+              'veg_type':'IVGTYP'}
+
+    if version == '2.2':
+        attr = attr22
+    elif version == '2.1':
+        attr = attr21
+
+ 
     #Loop through catchments, get soil type, populate config file template, write config file to temp 
     for index, row in divide_attr.iterrows():
 
-        catchment_id = row['divide_id']
+        catchment_id = row[attr['divide_id']]
 
         startdate = '202408260000'
         enddate = '202408260000'
@@ -39,12 +53,13 @@ def noah_owp_modular_ipe(gage_id, version, source, domain, subset_dir, gpkg_file
 
         # Define namelist template
 
-        tslp = row['slope_mean']
-        azimuth = row['aspect_c_mean']
-        lat = row['Y']
-        lon = row['X']
-        isltype = row['ISLTYP']
-        vegtype = row['IVGTYP']
+        tslp = row[attr['slope']]
+        azimuth = row[attr['aspect']]
+        lat = row[attr['lat']]
+        lon = row[attr['lon']]
+        isltype = row[attr['soil_type']]
+        vegtype = row[attr['veg_type']]
+        x = type(vegtype)
         if vegtype == 16:
             sfctype = '2'
         else:

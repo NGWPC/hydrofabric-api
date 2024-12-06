@@ -28,8 +28,9 @@ if (hydrofabric_version == '2.1.1'){
   hf_version = hydrofabric_version,
   type = hydrofabric_type, outfile = outpathfile, overwrite = TRUE)
 }   else if(hydrofabric_version == '2.2'){
-    hf_gpkg_path = paste(hydrofabric_data,hydrofabric_version,hydrofabric_type,domain,hf_gpkg, sep='/')
     hydrofabric_version <- paste('v',hydrofabric_version,sep='')
+    hf_gpkg_path = paste(hydrofabric_data,hydrofabric_version,hydrofabric_type,domain,hf_gpkg, sep='/')
+    
     
     get_subset(hl_uri = gauge_id, gpkg = hf_gpkg_path, lyrs = layers22,
     outfile = outpathfile, overwrite = TRUE)

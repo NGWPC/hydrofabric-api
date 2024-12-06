@@ -132,7 +132,7 @@ class UEB:
                                       "0\n"
                                       "{longitude}")
 
-    def initial_parameters(self, gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
+    def initial_parameters(self, gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
         """
         Builds initial parameter estimates (IPE) for UEB (Utah Energy Balance) Module
         :param gage_id: The gage ID, e.g., 06710385

@@ -96,25 +96,26 @@ def return_geopackage(request):
 @api_view(['POST'])
 def return_ipe(request):
     gage_id = request.data.get("gage_id")
+    version = request.data.get("version")
     source = request.data.get("source")
     domain = request.data.get("domain")
     modules = request.data.get("modules")
     gage_file_mgmt = GageFileManagement()
 
     # TODO: Determine if IPE files already exists for this module and gage
-    modules_to_calculate = gage_file_mgmt.param_files_exists(gage_id, domain, source, FileTypeEnum.PARAMS, modules)
+    modules_to_calculate = gage_file_mgmt.param_files_exists(gage_id, version, domain, source, FileTypeEnum.PARAMS, modules)
     #Determine if GEOPACKAGE is necessary and file for this gage exists
     if len(modules_to_calculate) != 0:
         # Geopackage file needed
-        geopackage_file_found, results = gage_file_mgmt.file_exists(gage_id, domain, source, FileTypeEnum.GEOPACKAGE)
+        geopackage_file_found, results = gage_file_mgmt.file_exists(gage_id, version, domain, source, FileTypeEnum.GEOPACKAGE)
         if geopackage_file_found:
             # Get the Geopackage file from S3 and put into local directory
-            gage_file_mgmt.get_file_from_s3(gage_id, domain, source, FileTypeEnum.GEOPACKAGE)
+            gage_file_mgmt.get_file_from_s3(gage_id, version, domain, source, FileTypeEnum.GEOPACKAGE)
         else:
             # Build the Geopackage file from scratch
-            results = get_geopackage(gage_id, source, domain, keep_file=True)
+            results = get_geopackage(gage_id, version, source, domain, keep_file=True)
 
-    results = get_ipe(gage_id, source, domain, modules, gage_file_mgmt)
+    results = get_ipe(gage_id, version, source, domain, modules, gage_file_mgmt)
 
     return results
 

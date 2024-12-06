@@ -83,7 +83,7 @@ class GageFileManagement(FileManagement):
             except Exception as e:
                 logger.error(f"Error deleting directory '{directory}': {e}")       
 
-    def param_files_exists(self, gage_id, domain, source, data_type, modules):
+    def param_files_exists(self, version, gage_id, domain, source, data_type, modules):
         """
         Go through the list of modules and determine if files have already been calculated. Return list of modules to 
         be computed
@@ -133,7 +133,7 @@ class GageFileManagement(FileManagement):
                 results = dict(uri=uri)
         return file_found, results
 
-    def ipe_files_exists(self, gage_id, domain, source, module):
+    def ipe_files_exists(self, gage_id, version, domain, source, module):
         """
         Determines if a ipe data files exists in S3 and in HFFILES table
         :param gage_id: The gage the data was requested for
@@ -145,7 +145,7 @@ class GageFileManagement(FileManagement):
         file_found = False
         results = None
         data_type = FileTypeEnum.PARAMS
-        my_data = HFFiles.objects.filter(gage_id=gage_id, source=source, domain=domain, module_id=module, data_type=FileTypeEnum.PARAMS).values()
+        my_data = HFFiles.objects.filter(gage_id=gage_id, source=source, domain=domain, module_id=module, data_type=FileTypeEnum.PARAMS, hydrofabric_version=version).values()
 
         if not my_data:
             log_string = f"Database missing entry for gage_id - {gage_id}, module - {module}, data type - {data_type}, source -  {source}, domain - {domain}."
@@ -245,10 +245,10 @@ class GageFileManagement(FileManagement):
 
         return self.full_s3_path
 
-    def get_file_from_s3(self, gage_id, domain, source, data_type):
+    def get_file_from_s3(self, gage_id, version, domain, source, data_type):
         #Find file in HFFles table
         try:
-            file_found, results = self.file_exists(gage_id, domain, source, data_type)
+            file_found, results = self.file_exists(gage_id, version, domain, source, data_type)
 
             #Create the local temp directory to put the file into
             loc_temp_dir = self.get_local_temp_directory(data_type, gage_id)

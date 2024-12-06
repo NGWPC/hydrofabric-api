@@ -7,13 +7,14 @@ import math
 from .util.enums import FileTypeEnum
 from .util.utilities import *
 from .util import utilities
+from .hf_attributes import *
 
 
 #setup logging
 logger = logging.getLogger(__name__)
 
 
-def snow17_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
+def snow17_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
     '''
     Build initial parameter estimates (IPE) for Sac-SMA
 
@@ -52,22 +53,6 @@ def snow17_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, 
             logger.error(error_str)
             return error
 
-        try:
-            # get path to Hydrofabric VPUID parquet files and read table
-            attr_abs_filename = get_hydrofabric_input_attr_file()
-            attr_tbl = pq.read_table(attr_abs_filename)
-
-            # drop any nulls and filter on divide_ids to reduce size
-            attr_tbl = attr_tbl.drop_null()
-            attr_df = pa.Table.to_pandas(attr_tbl)
-            att_df_filtered = attr_df[attr_df['divide_id'].isin(catchments)]
-        except:
-            error_str = f"Error reading loading attr_df from {attr_abs_filename}"
-            error = dict(error=error_str)
-            print(error_str)
-            logger.error(error_str)
-            return error
-
     except:
         # TODO: Replace 'except' with proper catch
         error_str = 'Error opening ' + gpkg_file
@@ -75,13 +60,23 @@ def snow17_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, 
         print(error_str)
         logger.error(error_str)
         return error
+    
+    divide_attr = get_hydrofabric_attributes(gpkg_file, version)
+
+    attr21 = {'elevation_mean':'elevation_mean', 'lat':'Y'}
+    attr22 = {'elevation_mean':'mean.elevation', 'lat':'centroid_y'}
+
+    if version == '2.1':
+        attr = attr21
+    elif version == '2.2':
+        attr=attr22
  
     #Read parameters from ascii created CSV file into a dataframe and filter on divide ids in geopackage.
     parameters_df = pd.read_csv(f'{input_dir}/snow17_params.csv')
     filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
 
     #Join parameters from csv, area, and attribute file into single dataframe using divide_id as index
-    df_all = filtered_parameters.join(area.set_index('divide_id'), on='divide_id').join(att_df_filtered.set_index('divide_id'), on='divide_id')
+    df_all = filtered_parameters.join(area.set_index('divide_id'), on='divide_id').join(divide_attr.set_index('divide_id'), on='divide_id')
 
     # set default values for vars (eventually this will be retrieved from db)
     mfmax = 1.00
@@ -100,8 +95,8 @@ def snow17_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, 
 
         param_list = ['hru_id ' + str(row['divide_id']),
                       'hru_area ' + str(row['areasqkm']),
-                      'latitude ' + str(row['Y']),
-                      'elev ' + str(row['elevation_mean']),  # elevation_mean[1]
+                      'latitude ' + str(row[attr['lat']]),
+                      'elev ' + str(row[attr['elevation_mean']]),  # elevation_mean[1]
                       'scf 1.100',
                       'mfmax ' + str(mfmax),
                       'mfmin ' + str(mfmin),
@@ -172,7 +167,7 @@ def snow17_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, 
 
     
     # Write files to DB and S3
-    uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
+    uri = gage_file_mgmt.write_file_to_s3(gage_id, version, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
     status_str = "Config files written to:  " + uri
     logger.info(status_str)
 
