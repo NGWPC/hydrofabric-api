@@ -6,10 +6,11 @@ import pyarrow.parquet as pq
 import pyarrow as pa
 from .util.utilities import get_hydrofabric_input_attr_file, get_subset_dir_file_names
 from .util.enums import FileTypeEnum
+from .hf_attributes import *
 
 logger = logging.getLogger(__name__)
 
-def noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
+def noah_owp_modular_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
     ''' 
     Build initial parameter estimates (IPE) for NOAH-OWP-Modular 
 
@@ -25,54 +26,26 @@ def noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_
     module = "Noah-OWP-Modular"
     filename_list = []
 
-    # Get list of catchments from gpkg divides layer using geopandas
-    try:
-        divides_layer = gpd.read_file(gpkg_file, layer = "divides")
-        try:
-            catchments = divides_layer["divide_id"].tolist()
-        except:
-            # TODO: Replace 'except' with proper catch
-            error_str = 'Error reading divides layer in ' + gpkg_file
-            error = dict(error = error_str)
-            logger.error(error_str)
-            return error
-    except:# TODO: Replace 'except' with proper catch
-        error_str = 'Error opening ' + gpkg_file
-        error = dict(error = error_str)
-        logger.error(error_str)
-        return error
+    divide_attr = get_hydrofabric_attributes(gpkg_file, version)
 
-    #Read model attributes Hive partitioned Parquet dataset using pyarrow, remove rows containing null, convert to pandas dataframe
-    try:
-        attr_file = get_hydrofabric_input_attr_file()
-        attr = pq.read_table(attr_file)
-    except FileNotFoundError as fnfe:
-        logger.error(fnfe)
-        error_str = 'Hydrofabric data input directory does not exist'
-        error = dict(error=error_str)
-        return error
-    except Exception as exc:
-        error_str = 'Error opening ' + attr_file
-        error = dict(error = error_str)
-        logger.error(error_str, exc)
-        return error
+    attr22 = {'divide_id':'divide_id', 'slope':'mean.slope', 'aspect': 'circ_mean.aspect',
+              'lat':'centroid_y', 'lon':'centroid_x', 'soil_type':'mode.ISLTYP',
+              'veg_type':'mode.IVGTYP'}
 
-    attr = attr.drop_null()
-    attr_df = pa.Table.to_pandas(attr)
+    attr21 =  {'divide_id':'divide_id', 'slope':'slope_mean', 'aspect': 'aspect_c_mean',
+              'lat':'Y', 'lon':'X', 'soil_type':'ISLTYP',
+              'veg_type':'IVGTYP'}
 
-    #filter rows with catchments in gpkg
-    filtered = attr_df[attr_df['divide_id'].isin(catchments)]
+    if version == '2.2':
+        attr = attr22
+    elif version == '2.1':
+        attr = attr21
 
-    if len(filtered) == 0:
-        error_str = 'No matching catchments in attribute file'
-        error = dict(error = error_str)
-        logger.error(error_str)
-        return error
-
+ 
     #Loop through catchments, get soil type, populate config file template, write config file to temp 
-    for index, row in filtered.iterrows():
+    for index, row in divide_attr.iterrows():
 
-        catchment_id = row['divide_id']
+        catchment_id = row[attr['divide_id']]
 
         startdate = '202408260000'
         enddate = '202408260000'
@@ -80,12 +53,13 @@ def noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_
 
         # Define namelist template
 
-        tslp = row['slope_mean']
-        azimuth = row['aspect_c_mean']
-        lat = row['Y']
-        lon = row['X']
-        isltype = row['ISLTYP']
-        vegtype = row['IVGTYP']
+        tslp = row[attr['slope']]
+        azimuth = row[attr['aspect']]
+        lat = row[attr['lat']]
+        lon = row[attr['lon']]
+        isltype = row[attr['soil_type']]
+        vegtype = row[attr['veg_type']]
+        x = type(vegtype)
         if vegtype == 16:
             sfctype = '2'
         else:
@@ -168,7 +142,7 @@ def noah_owp_modular_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_
                             outfile.write("\n")
 
     # Write files to DB and S3
-    uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list,
+    uri = gage_file_mgmt.write_file_to_s3(gage_id, version, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list,
                                           module=module)
     status_str = "Config files written to:  " + uri
     logger.info(status_str)

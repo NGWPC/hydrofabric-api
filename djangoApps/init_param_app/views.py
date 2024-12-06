@@ -74,20 +74,31 @@ def return_geopackage(request):
     http_200 = status.HTTP_200_OK
     http_422 = status.HTTP_422_UNPROCESSABLE_ENTITY
     gage_id = request.query_params.get('gage_id')
+    version = request.query_params.get('version')
     source = request.query_params.get('source')
     domain = request.query_params.get('domain')
     gage_file_mgmt = GageFileManagement()
     results = None
     loc_status = http_200
 
+    if version != '2.1' and version != '2.2':
+        results = 'Hydrofabric version must be 2.2 or 2.1'
+        loc_status = http_200
+        return Response(results, status=loc_status)
+    
+    if version == '2.1' and domain != 'CONUS':
+        results = 'oCONUS domains not availiable in Hydrofabric version 2.1'
+        loc_status = http_200
+        return Response(results, status=loc_status)
+
     # Determine if this has already been computed, Check DB HFFiles table and S3 for pre-existing data
-    file_found, results = gage_file_mgmt.file_exists(gage_id, domain, source, FileTypeEnum.GEOPACKAGE)
+    file_found, results = gage_file_mgmt.file_exists(gage_id, version, domain, source, FileTypeEnum.GEOPACKAGE)
     if not file_found:
-        results = get_geopackage(gage_id, source, domain)
+        results = get_geopackage(gage_id, version, source, domain)
         if 'error' in results:
             loc_status = http_422
     else:
-        logger.debug(f"Prexisting Geopackage found for gage_id - {gage_id}, domain - {domain}, source - {source}")
+        logger.debug(f"Prexisting Geopackage found for gage_id - {gage_id}, version - {version}, domain - {domain}, source - {source}")
 
     return Response(results, status=loc_status)
 
@@ -95,25 +106,34 @@ def return_geopackage(request):
 @api_view(['POST'])
 def return_ipe(request):
     gage_id = request.data.get("gage_id")
+    version = request.data.get("version")
     source = request.data.get("source")
     domain = request.data.get("domain")
     modules = request.data.get("modules")
     gage_file_mgmt = GageFileManagement()
 
+    if version != '2.1' and version != '2.2':
+        results = 'Hydrofabric version must be 2.2 or 2.1'
+        return results
+    
+    if version == '2.1' and domain != 'CONUS':
+        results = 'oCONUS domains not availiable in Hydrofabric version 2.1'
+        return results
+
     # TODO: Determine if IPE files already exists for this module and gage
-    modules_to_calculate = gage_file_mgmt.param_files_exists(gage_id, domain, source, FileTypeEnum.PARAMS, modules)
+    modules_to_calculate = gage_file_mgmt.param_files_exists(gage_id, version, domain, source, FileTypeEnum.PARAMS, modules)
     #Determine if GEOPACKAGE is necessary and file for this gage exists
     if len(modules_to_calculate) != 0:
         # Geopackage file needed
-        geopackage_file_found, results = gage_file_mgmt.file_exists(gage_id, domain, source, FileTypeEnum.GEOPACKAGE)
+        geopackage_file_found, results = gage_file_mgmt.file_exists(gage_id, version, domain, source, FileTypeEnum.GEOPACKAGE)
         if geopackage_file_found:
             # Get the Geopackage file from S3 and put into local directory
-            gage_file_mgmt.get_file_from_s3(gage_id, domain, source, FileTypeEnum.GEOPACKAGE)
+            gage_file_mgmt.get_file_from_s3(gage_id, version, domain, source, FileTypeEnum.GEOPACKAGE)
         else:
             # Build the Geopackage file from scratch
-            results = get_geopackage(gage_id, source, domain, keep_file=True)
+            results = get_geopackage(gage_id, version, source, domain, keep_file=True)
 
-    results = get_ipe(gage_id, source, domain, modules, gage_file_mgmt)
+    results = get_ipe(gage_id, version, source, domain, modules, gage_file_mgmt)
 
     return results
 

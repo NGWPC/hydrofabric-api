@@ -11,11 +11,12 @@ import pyarrow as pa
 from .util.utilities import *
 #from utilities import *
 from .util.enums import FileTypeEnum
+from .hf_attributes import *
 
 logger = logging.getLogger(__name__)
 
 #def smp_ipe(gage_id, subset_dir, module_metadata_list, module_metadata, gpkg_file):
-def smp_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, modules, module_metadata, gage_file_mgmt):
+def smp_ipe(module, gage_id, version, source, domain, subset_dir, gpkg_file, modules, module_metadata, gage_file_mgmt):
     '''
         Description: Build initial parameter estimates (IPE) for soil moisture profile (smp)
         Parameters:
@@ -25,9 +26,6 @@ def smp_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, modules, mod
         Returns:
             dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
     '''
-
-    # get attrib file
-    attr_file = get_hydrofabric_input_attr_file()
 
     try:
         divides_layer = gpd.read_file(gpkg_file, layer="divides")
@@ -53,7 +51,7 @@ def smp_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, modules, mod
         #print(row['divide_id'], row['areasqkm'])
         catch_dict[str(catchments[index])] = {"areasqkm": str(areas[index])}
 
-    response = create_smp_input(gage_id, source, domain, catch_dict, attr_file, subset_dir, modules, module_metadata, gage_file_mgmt)
+    response = create_smp_input(gage_id, version, source, domain, catch_dict, gpkg_file, subset_dir, modules, module_metadata, gage_file_mgmt)
     logger.info("smp::smp_ipe:returning response as " + str(response))
 
     # TODO Returning just the "first" record, does not match Swagger docs. Verify!
@@ -61,28 +59,23 @@ def smp_ipe(module, gage_id, source, domain, subset_dir, gpkg_file, modules, mod
     return response[0]
 
 
-def create_smp_input(gage_id, source, domain, catch_dict, attr_file, output_dir, modules, module_metadata, gage_file_mgmt):
+def create_smp_input(gage_id, version, source, domain, catch_dict, gpkg_file, output_dir, modules, module_metadata, gage_file_mgmt):
 
     #this dir should exist here already, but just in case...
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
 
-    try:
-        attr = pq.read_table(attr_file)
-    except:
-        error_str = 'Error opening ' + attr_file
-        error = dict(error=error_str)
-        print(error_str)
-        logger.error(error_str)
-        return error
+    divide_attr = get_hydrofabric_attributes(gpkg_file, version)
 
-    attr = attr.drop_null()
-    attr_df = pa.Table.to_pandas(attr)
+    attr21 = {'smcmax':'smcmax', 'bexp':'bexp', 'psisat':'psisat', 'quartz':'quartz'}
+    attr22 = {'smcmax':'mean.smcmax', 'bexp':'mode.bexp', 'psisat':'geom_mean.psisat', 'quartz':'quartz'}
 
-    # filter rows with catchments in gpkg
-    filtered = attr_df[attr_df['divide_id'].isin(catch_dict.keys())]
+    if version == '2.1':
+        attr = attr21
+    elif version == '2.2':
+        attr=attr22
 
-    if len(filtered) == 0:
+    if len(divide_attr) == 0:
         error_str = 'No matching catchments in attribute file'
         error = dict(error=error_str)
         print(error_str)
@@ -99,7 +92,7 @@ def create_smp_input(gage_id, source, domain, catch_dict, attr_file, output_dir,
     s3_file_list = []
 
     # for key in catch_dict.keys(): LOOP CATCH_IDs HERE (from filtered dataframe)!!
-    for index, row in filtered.iterrows():
+    for index, row in divide_attr.iterrows():
 
         catID = row['divide_id']
 
@@ -111,13 +104,13 @@ def create_smp_input(gage_id, source, domain, catch_dict, attr_file, output_dir,
         smcmax_val = bexp_val = psisat_val = quartz_val = 0.0
         smcmax_count = bexp_count = psisat_count = quartz_count = 0
         for key, value in row.items():
-            if key.startswith('smcmax'):
+            if key.startswith(attr['smcmax']):
                 smcmax_val += value
                 smcmax_count += 1
-            elif key.startswith('bexp'):
+            elif key.startswith(attr['bexp']):
                 bexp_val += value
                 bexp_count += 1
-            elif key.startswith('psisat'):
+            elif key.startswith(attr['psisat']):
                 psisat_val += value
                 psisat_count += 1
 
@@ -159,7 +152,7 @@ def create_smp_input(gage_id, source, domain, catch_dict, attr_file, output_dir,
 
     # Now write files to db AND S3 via GageFileManagement class
     module_name = module_metadata["module_name"]
-    uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source,
+    uri = gage_file_mgmt.write_file_to_s3(gage_id, version, domain, FileTypeEnum.PARAMS, source,
                                           output_dir, s3_file_list, module=module_name)
 
     # log the S3 path to the files

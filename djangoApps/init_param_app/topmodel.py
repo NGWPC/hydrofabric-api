@@ -9,10 +9,11 @@ import pyarrow as pa
 from collections import OrderedDict
 from .util.utilities import get_hydrofabric_input_attr_file, get_subset_dir_file_names, get_config
 from .util.enums import FileTypeEnum
+from .hf_attributes import *
 
 logger = logging.getLogger(__name__)
 
-def topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
+def topmodel_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
     ''' 
     Build initial parameter estimates (IPE) for TopModel
 
@@ -49,34 +50,17 @@ def topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata
         logger.error(error_str)
         return error
     
-    #Read model attributes Hive partitioned Parquet dataset using pyarrow, remove rows containing null, convert to pandas dataframe
-    try:
-        attr_file = get_hydrofabric_input_attr_file()
-        attr = pq.read_table(attr_file)
-    except FileNotFoundError as fnfe:
-        logger.error(fnfe)
-        error_str = 'Hydrofabric data input directory does not exist'
-        error = dict(error=error_str)
-        return error
-    except Exception as exc:
-        error_str = 'Error opening ' + attr_file
-        error = dict(error = error_str)
-        logger.error(error_str, exc)
-        return error
-    
-    attr = attr.drop_null()
-    attr_df = pa.Table.to_pandas(attr)
-    
-    #filter rows with catchments in gpkg
-    filtered = attr_df[attr_df['divide_id'].isin(catchments)]
+    divide_attr = get_hydrofabric_attributes(gpkg_file, version)
 
-    if len(filtered) == 0:
-        error_str = 'No matching catchments in attribute file'
-        error = dict(error = error_str) 
-        logger.error(error_str)
-        return error
+    attr21 = {'twi':'twi_dist_4'}
+    attr22 = {'twi':'dist_4.twi'}
 
-    for index, row in filtered.iterrows():
+    if version == '2.1':
+        attr = attr21
+    elif version == '2.2':
+        attr=attr22
+
+    for index, row in divide_attr.iterrows():
 
         #build subcatchment data
         #TWI values are from Hydrofabric divide attributes, num_channels, cum_dist_area_with_dist,
@@ -86,7 +70,7 @@ def topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata
         yes_print_output = 1
         divide_id = row['divide_id']
         area = 1
-        twi = json.loads(row['twi_dist_4'])
+        twi = json.loads(row[attr['twi']])
         num_topodex_values = len(twi)
         num_channels = 1
         cum_dist_area_with_dist = 1
@@ -162,7 +146,7 @@ def topmodel_ipe(gage_id, source, domain, subset_dir, gpkg_file, module_metadata
          
     # Write files to DB and S3
     print(FileTypeEnum.PARAMS)
-    uri = gage_file_mgmt.write_file_to_s3(gage_id, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
+    uri = gage_file_mgmt.write_file_to_s3(gage_id, version, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
     status_str = "Config files written to:  " + uri
     logger.info(status_str)
  
