@@ -42,7 +42,7 @@ if (hydrofabric_version == '2.1.1'){
       get_subset(hl_uri = gauge_id, gpkg = hf_gpkg_path, lyrs = layers22,
       outfile = outpathfile, overwrite = TRUE)
     } else {
-      print('ALASKA!!')
+      #TODO add trycatch for gages that are missing
       poi <- as_ogr(hf_gpkg_path, 'hydrolocations') |>
       dplyr::filter(hl_reference == 'Gages', hl_link == !!gauge_id) |>
       dplyr::collect()

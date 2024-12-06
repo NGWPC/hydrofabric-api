@@ -112,7 +112,7 @@ def return_ipe(request):
     modules = request.data.get("modules")
     gage_file_mgmt = GageFileManagement()
 
-    if version != '2.1' or version != '2.2':
+    if version != '2.1' and version != '2.2':
         results = 'Hydrofabric version must be 2.2 or 2.1'
         return results
     
