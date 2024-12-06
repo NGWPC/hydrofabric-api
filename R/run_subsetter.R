@@ -30,23 +30,23 @@ layers21 <- c('divides', 'flowlines',
 
 if (hydrofabric_version == '2.1.1'){
   gauge_id <- paste('Gages',gauge_id, sep = '-')
-  get_subset(hl_uri = gauge_id, lyrs = layers21, source = hydrofabric_data,
+  suppressWarnings(get_subset(hl_uri = gauge_id, lyrs = layers21, source = hydrofabric_data,
   hf_version = hydrofabric_version,
-  type = hydrofabric_type, outfile = outpathfile, overwrite = TRUE)
+  type = hydrofabric_type, outfile = outpathfile, overwrite = TRUE))
 }   else if(hydrofabric_version == '2.2'){
     hydrofabric_version <- paste('v',hydrofabric_version,sep='')
     hf_gpkg_path = paste(hydrofabric_data,hydrofabric_version,hydrofabric_type,domain,hydrofabric_filename, sep='/')
     
     if (domain == 'CONUS'){
       gauge_id <- paste('gages',gauge_id, sep = '-')
-      get_subset(hl_uri = gauge_id, gpkg = hf_gpkg_path, lyrs = layers22,
-      outfile = outpathfile, overwrite = TRUE)
+      suppressWarnings(get_subset(hl_uri = gauge_id, gpkg = hf_gpkg_path, lyrs = layers22,
+      outfile = outpathfile, overwrite = TRUE))
     } else {
       #TODO add trycatch for gages that are missing
       poi <- as_ogr(hf_gpkg_path, 'hydrolocations') |>
       dplyr::filter(hl_reference == 'Gages', hl_link == !!gauge_id) |>
       dplyr::collect()
-      get_subset(poi_id = poi$poi_id, gpkg = hf_gpkg_path, lyrs = layers22_oCONUS,
-      outfile = outpathfile, overwrite = TRUE)
+      suppressWarnings(get_subset(poi_id = poi$poi_id, gpkg = hf_gpkg_path, lyrs = layers22_oCONUS,
+      outfile = outpathfile, overwrite = TRUE))
     }
 }
