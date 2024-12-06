@@ -45,7 +45,7 @@ def get_ipe(gage_id, version, source, domain, modules, gage_file_mgmt):
         found, ipe_json = gage_file_mgmt.ipe_files_exists(gage_id, version, domain, source, module)
         if not found:
             if module in dependent_module_list:
-                module_results = calculate_dependent_module_params(gage_id, source, domain, module, modules,
+                module_results = calculate_dependent_module_params(gage_id, version, source, domain, module, modules,
                                                                    subset_dir, gpkg_file, gage_file_mgmt)
             else:
                 module_results = calculate_module_params(gage_id, version, source, domain, module, subset_dir, gpkg_file, gage_file_mgmt)
@@ -77,7 +77,7 @@ def get_ipe(gage_id, version, source, domain, modules, gage_file_mgmt):
     return Response(module_output_list, status=status.HTTP_200_OK)
 
 
-def calculate_dependent_module_params(gage_id, source, domain, module, modules, subset_dir, gpkg_file, gage_file_mgmt):
+def calculate_dependent_module_params(gage_id, version, source, domain, module, modules, subset_dir, gpkg_file, gage_file_mgmt):
     subset_dir = os.path.join(subset_dir, module)
     if not os.path.exists(subset_dir):
         os.mkdir(subset_dir)
@@ -88,10 +88,10 @@ def calculate_dependent_module_params(gage_id, source, domain, module, modules, 
     logger.info(f"Get IPEs for {module} module")
 
     if module == "SFT":
-        results = sft_ipe(module, gage_id, source, domain, subset_dir,
+        results = sft_ipe(module, gage_id, version, source, domain, subset_dir,
                           gpkg_file, modules, module_metadata, gage_file_mgmt)
     elif module == "SMP":
-        results = smp_ipe(module, gage_id, source, domain, subset_dir,
+        results = smp_ipe(module, gage_id, version, source, domain, subset_dir,
                           gpkg_file, modules, module_metadata, gage_file_mgmt)
 
     else:

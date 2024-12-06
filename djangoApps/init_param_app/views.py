@@ -81,6 +81,16 @@ def return_geopackage(request):
     results = None
     loc_status = http_200
 
+    if version != '2.1' and version != '2.2':
+        results = 'Hydrofabric version must be 2.2 or 2.1'
+        loc_status = http_200
+        return Response(results, status=loc_status)
+    
+    if version == '2.1' and domain != 'CONUS':
+        results = 'oCONUS domains not availiable in Hydrofabric version 2.1'
+        loc_status = http_200
+        return Response(results, status=loc_status)
+
     # Determine if this has already been computed, Check DB HFFiles table and S3 for pre-existing data
     file_found, results = gage_file_mgmt.file_exists(gage_id, version, domain, source, FileTypeEnum.GEOPACKAGE)
     if not file_found:
@@ -101,6 +111,14 @@ def return_ipe(request):
     domain = request.data.get("domain")
     modules = request.data.get("modules")
     gage_file_mgmt = GageFileManagement()
+
+    if version != '2.1' or version != '2.2':
+        results = 'Hydrofabric version must be 2.2 or 2.1'
+        return results
+    
+    if version == '2.1' and domain != 'CONUS':
+        results = 'oCONUS domains not availiable in Hydrofabric version 2.1'
+        return results
 
     # TODO: Determine if IPE files already exists for this module and gage
     modules_to_calculate = gage_file_mgmt.param_files_exists(gage_id, version, domain, source, FileTypeEnum.PARAMS, modules)

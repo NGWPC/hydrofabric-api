@@ -4,8 +4,8 @@ from .views import modules, return_geopackage, return_ipe, GetObservationalData,
 
 urlpatterns = [
     path('hydrofabric/2.1/modules/', modules, name='modules'),
-    path("hydrofabric/2.1/modules/parameters/", return_ipe, name='return_ipe'),
-    path("hydrofabric/2.1/geopackages", return_geopackage, name='return_geopackage'),
+    path("hydrofabric/modules/parameters/", return_ipe, name='return_ipe'),
+    path("hydrofabric/geopackages", return_geopackage, name='return_geopackage'),
     path('hydrofabric/2.1/observational', GetObservationalData.as_view(), name='observationalDataQuery'),
     path('create/', HFFilesCreate.as_view(), name='create-HFFiles'),
     path('list/', HFFilesList.as_view()),

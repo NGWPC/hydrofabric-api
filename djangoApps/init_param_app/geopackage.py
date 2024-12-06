@@ -37,10 +37,18 @@ def get_geopackage(gage_id, version, source, domain, keep_file=False):
         hydrofabric_version = version
         # hydrofabric input data version type
         hydrofabric_type = config['hydrofabric_type']
+        # hydrofabric v2.2 filename by domain
+        if domain == 'CONUS':
+            hydrofabric_filename = config['hydrofabric_conus_filename']
+        elif domain == 'Alaska':
+            hydrofabric_filename = config['hydrofabric_ak_filename']
+        elif domain == 'Hawaii':
+            hydrofabric_filename = config['hydrofabric_hi_filename']
+        elif domain == 'Puerto_Rico':
+            hydrofabric_filename = config['hydrofabric_prvi_filename']
         # Tell the subsetter what to retrieve
         #Hydrofabric version 2.1 uses Gages, while 2.2 uses gages in the gage id hl_uri.
-        subsetter_gage_id = f"Gages-{gage_id}"
-        if(hydrofabric_version == '2.2'): subsetter_gage_id = f"gages-{gage_id}"
+        subsetter_gage_id = gage_id
         
         #Hydrofabric version 2.1 is 2.1.1 for the data path
         hydrofabric_version_subsetter = hydrofabric_version
@@ -64,7 +72,10 @@ def get_geopackage(gage_id, version, source, domain, keep_file=False):
                        gpkg_filename,
                        hydrofabric_dir,
                        hydrofabric_version_subsetter,
-                       hydrofabric_type]
+                       hydrofabric_type,
+                       domain,
+                       hydrofabric_filename]
+        
         
         result = run(run_command, capture_output=True)
         stderr = str(result.stderr.decode('utf-8'))
