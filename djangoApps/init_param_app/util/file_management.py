@@ -16,8 +16,8 @@ class FileManagement:
     def __init__(self):
         config = get_config()
         self.s3_url = config['s3url']
-        self.s3_bucket = config["s3bucket"]
-        self.s3_uri = config['s3uri']
+        self.s3_bucket = os.getenv('S3_BUCKET', 'ngwpc-hydrofabric-oe')
+        self.s3_uri = f's3://{self.s3_bucket}/'
         # Get region from config or environment, with a fallback default of us-east-1
         self.region = (
             config.get('region') or
