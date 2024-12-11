@@ -8,6 +8,7 @@ import json
 from datetime import datetime, timezone
 from minio import Minio, S3Error
 from .utilities import get_config
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ class FileManagement:
     def __init__(self):
         config = get_config()
         self.s3_url = config['s3url']
-        self.s3_bucket = os.getenv('S3_BUCKET', 'ngwpc-hydrofabric-oe')
+        self.s3_bucket = settings.S3_BUCKET
         self.s3_uri = f's3://{self.s3_bucket}/'
         # Get region from config or environment, with a fallback default of us-east-1
         self.region = (
