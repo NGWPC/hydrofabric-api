@@ -8,7 +8,4 @@ hydrofabric_ak_filename: "ak_nextgen_workaround.gpkg"
 hydrofabric_hi_filename: "hi_nextgen_workaround.gpkg"
 hydrofabric_prvi_filename: "prvi_nextgen_workaround.gpkg"
 s3url: "s3.amazonaws.com"
-s3uri: "s3://ngwpc-hydrofabric/"
-s3bucket: "ngwpc-hydrofabric"
-s3prefix: "~"
 region: us-east-1
