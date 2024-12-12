@@ -4,13 +4,13 @@ from unittest.mock import patch, MagicMock
 from datetime import datetime, timezone, timedelta
 import requests
 from djangoApps.init_param_app.util.file_management import FileManagement
+from django.test import override_settings
 
 
 @pytest.fixture
 def mock_config():
     return {
         's3url': 's3.us-east-1.amazonaws.com',
-        's3bucket': 'test-bucket',
         's3uri': 's3://test-bucket',
         'hydrofabric_output_version': '1.0',
         'region': 'us-east-1'
@@ -18,6 +18,7 @@ def mock_config():
 
 
 @pytest.fixture
+@override_settings(S3_BUCKET='test-bucket')
 def file_management(mock_config):
     with patch('djangoApps.init_param_app.util.file_management.get_config', return_value=mock_config):
         return FileManagement()
@@ -46,13 +47,15 @@ def mock_imds_credentials():
 
 
 class TestFileManagement:
+    @override_settings(S3_BUCKET='test-bucket')
     def test_init(self, file_management, mock_config):
         """Test initialization of FileManagement"""
         assert file_management.s3_url == mock_config['s3url']
-        assert file_management.s3_bucket == mock_config['s3bucket']
+        assert file_management.s3_bucket == 'test-bucket'
         assert file_management.region == mock_config['region']
         assert file_management.client is None
 
+    @override_settings(S3_BUCKET='test-bucket')
     @patch('requests.put')
     def test_get_imds_token_success(self, mock_put, file_management):
         """Test successful IMDSv2 token retrieval"""
@@ -70,6 +73,7 @@ class TestFileManagement:
             timeout=2
         )
 
+    @override_settings(S3_BUCKET='test-bucket')
     @patch('requests.put')
     def test_get_imds_token_failure(self, mock_put, file_management):
         """Test failed IMDSv2 token retrieval"""
@@ -80,6 +84,7 @@ class TestFileManagement:
         assert token is None
         mock_put.assert_called_once()
 
+    @override_settings(S3_BUCKET='test-bucket')
     @patch('requests.get')
     @patch('requests.put')
     def test_get_instance_credentials_success(self, mock_put, mock_get, file_management, mock_imds_credentials):
@@ -109,6 +114,7 @@ class TestFileManagement:
         assert creds['session_token'] == mock_imds_credentials['Token']
         assert isinstance(creds['expiry'], datetime)
 
+    @override_settings(S3_BUCKET='test-bucket')
     def test_get_credentials_from_env(self, file_management, mock_env_credentials):
         """Test getting credentials from environment variables"""
         creds = file_management._get_credentials()
@@ -117,6 +123,7 @@ class TestFileManagement:
         assert creds['secret_key'] == mock_env_credentials['AWS_SECRET_ACCESS_KEY']
         assert creds['session_token'] == mock_env_credentials['AWS_SESSION_TOKEN']
 
+    @override_settings(S3_BUCKET='test-bucket')
     @patch('djangoApps.init_param_app.util.file_management.FileManagement._get_instance_credentials')
     def test_get_credentials_fallback_to_imds(self, mock_get_instance_creds, file_management, mock_imds_credentials):
         """Test fallback to IMDS when no environment variables"""
@@ -134,6 +141,7 @@ class TestFileManagement:
         assert creds == instance_creds
         mock_get_instance_creds.assert_called_once()
 
+    @override_settings(S3_BUCKET='test-bucket')
     def test_should_refresh_credentials(self, file_management):
         """Test credential refresh logic"""
         # Test with no credentials
@@ -152,10 +160,10 @@ class TestFileManagement:
         file_management._credentials_expiry = datetime.now(timezone.utc) + timedelta(minutes=4)
         assert file_management._should_refresh_credentials() is True
 
-    @patch('djangoApps.init_param_app.util.file_management.Minio')  # Updated patch path
+    @override_settings(S3_BUCKET='test-bucket')
+    @patch('djangoApps.init_param_app.util.file_management.Minio')
     def test_start_minio_client_with_env_creds(self, mock_minio, file_management, mock_env_credentials):
         """Test Minio client initialization with environment credentials"""
-        # Create a mock Minio instance
         mock_client = MagicMock()
         mock_minio.return_value = mock_client
 
@@ -169,12 +177,13 @@ class TestFileManagement:
             region=file_management.region
         )
 
-    @patch('djangoApps.init_param_app.util.file_management.Minio')  # Updated patch path
+    @override_settings(S3_BUCKET='test-bucket')
+    @patch('djangoApps.init_param_app.util.file_management.Minio')
     @patch('djangoApps.init_param_app.util.file_management.FileManagement._get_instance_credentials')
-    def test_start_minio_client_with_imds_creds(self, mock_get_instance_creds, mock_minio,
-                                                file_management, mock_imds_credentials):
+    def test_start_minio_client_with_imds_creds(
+        self, mock_get_instance_creds, mock_minio, file_management, mock_imds_credentials
+    ):
         """Test Minio client initialization with IMDS credentials"""
-        # Create a mock Minio instance
         mock_client = MagicMock()
         mock_minio.return_value = mock_client
 
@@ -197,10 +206,10 @@ class TestFileManagement:
             region=file_management.region
         )
 
+    @override_settings(S3_BUCKET='test-bucket')
     @patch('minio.Minio')
-    def test_check_s3_bucket_exists(self, mock_minio, file_management):
+    def test_check_s3_bucket(self, mock_minio, file_management):
         """Test bucket existence check"""
-        # Create a mock Minio instance
         mock_client = MagicMock()
         mock_client.bucket_exists.return_value = True
         mock_minio.return_value = mock_client
@@ -211,6 +220,7 @@ class TestFileManagement:
         assert result is True
         mock_client.bucket_exists.assert_called_once_with(file_management.s3_bucket)
 
+    @override_settings(S3_BUCKET='test-bucket')
     @patch('minio.Minio')
     def test_s3_file_exists(self, mock_minio, file_management):
         """Test S3 file existence check"""
@@ -224,6 +234,7 @@ class TestFileManagement:
         assert result is True
         mock_client.stat_object.assert_called_once()
 
+    @override_settings(S3_BUCKET='test-bucket')
     @patch('minio.Minio')
     def test_write_minio(self, mock_minio, file_management):
         """Test writing file to S3"""
@@ -243,6 +254,7 @@ class TestFileManagement:
             "/tmp/test.txt"
         )
 
+    @override_settings(S3_BUCKET='test-bucket')
     @patch('minio.Minio')
     def test_retrieve_minio(self, mock_minio, file_management):
         """Test retrieving file from S3"""
