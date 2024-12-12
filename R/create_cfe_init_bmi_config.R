@@ -163,7 +163,7 @@ for (c1 in dtParsAll$divide_id) {
     gage1 <- subset(dtParsAll,divide_id==c1)$gage
 
     # outfile <- paste0(output_dir,"/Gage_",gage1,"/",c1,"_bmi_config.ini")
-    outfile <- paste0(output_dir,"/",c1,"_bmi_config.txt")
+    outfile <- paste0(output_dir,"/",c1,"_bmi_config_cfe.txt")
     if(!dir.exists(dirname(outfile))) dir.create(dirname(outfile),recursive=TRUE)
 
     writeLines(lines1,outfile)
