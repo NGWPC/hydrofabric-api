@@ -83,12 +83,12 @@ def return_geopackage(request):
 
     if version != '2.1' and version != '2.2':
         results = 'Hydrofabric version must be 2.2 or 2.1'
-        loc_status = http_200
+        loc_status = http_422
         return Response(results, status=loc_status)
     
     if version == '2.1' and domain != 'CONUS':
         results = 'oCONUS domains not availiable in Hydrofabric version 2.1'
-        loc_status = http_200
+        loc_status = http_422
         return Response(results, status=loc_status)
 
     # Determine if this has already been computed, Check DB HFFiles table and S3 for pre-existing data
