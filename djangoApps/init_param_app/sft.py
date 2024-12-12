@@ -173,8 +173,8 @@ def create_sft_input(gage_id, version, source, domain, catch_dict, gpkg_file, ou
                       'soil_params.quartz=' + str(quartz_avg),
                       'ice_fraction_scheme=' + icefscheme,
                       'soil_z=0.1,0.3,1.0,2.0[m]',
-                      #'soil_temperature=' + ','.join([str(mtemp)] * 4) + '[K]',
-                      'soil_temperature=' + str(mtemp) + '[K]'
+                      'soil_temperature=' + ','.join([str(mtemp)] * 4) + '[K]',
+                      #'soil_temperature=' + str(mtemp) + '[K]'
                       ]
 
         module_metadata_rec = set_ipe_json_values(param_list, module_metadata, sep="=")
