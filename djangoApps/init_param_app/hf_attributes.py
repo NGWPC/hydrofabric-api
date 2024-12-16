@@ -2,6 +2,7 @@ import os
 import logging
 
 import geopandas as gpd
+from pyproj import Transformer
 from .util.enums import FileTypeEnum
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,17 @@ def get_hydrofabric_attributes(gpkg_file,version):
     elif version == '2.2':
         divides_layer = divides_layer.astype({'mode.ISLTYP':'int'})
         divides_layer = divides_layer.astype({'mode.IVGTYP':'int'})
+    
+    #Convert centroid_x and centroid_y (lat/lon) from CONUS Albers to WGS84 for decimal degrees for 2.2.
+    if version == '2.2':
+        transformer = Transformer.from_crs(5070, 4326)
+        for index, row in divides_layer.iterrows():
+            y = row['centroid_y']
+            x = row['centroid_x']
+            wgs84_latlon = transformer.transform(x,y)
+            divides_layer.loc[index, 'centroid_y'] = wgs84_latlon[0] #latitude
+            divides_layer.loc[index, 'centroid_x'] = wgs84_latlon[1] #longitude
+    
     return divides_layer
 
     

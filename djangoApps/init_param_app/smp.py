@@ -131,7 +131,7 @@ def create_smp_input(gage_id, version, source, domain, catch_dict, gpkg_file, ou
 
         if 'CFE-S' in modules or 'CFE-X' in modules:
             param_list += ['soil_storage_model=conceptual',
-                           'soil_storage_model_depth=2.0']
+                           'soil_storage_depth=2.0']
         elif 'TopModel' in modules:
             param_list += ['soil_storage_model=TopModel',
                            'water_table_based_method=flux-based']
