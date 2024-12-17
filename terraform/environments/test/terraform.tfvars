@@ -1,0 +1,27 @@
+environment         = "test"
+aws_region          = "us-east-1"
+api_name            = "hydro-api"
+hosted_zone_id      = "Z02236893I4ID2HMPI6WJ" # test.nextgenwaterprediction.com
+#ami_id              = "ami-xxxxxxxxxxxxx" # Optional: The most recent AL2 will be used by default
+instance_type       = "t3.medium"
+root_volume_type    = "gp3"
+root_volume_size    = 100
+vpc_name            = "Test-Main"
+subnet_name_pattern = "Test-App*"
+db_host             = "test-sharedpostgres.cx5yvcyhzwoi.us-east-1.rds.amazonaws.com"
+db_name             = "hydrofabric_db"
+db_port             = 5432
+session_manager_logging_policy_arn = "arn:aws:iam::591210920133:policy/AWSAccelerator-SessionManagerLogging"
+secrets_manager_arn = "arn:aws:secretsmanager:us-east-1:591210920133:secret:test-hydroapi-rds-db-credentials-VjEzjK"
+#certificate_arn     = "arn:aws:acm:us-east-1:xxxxxxxxxxxx:certificate/xxxxxxxx"
+log_retention_days  = 7
+container_port      = 8000
+#sns_alert_topic_arn = "arn:aws:sns:us-east-1:xxxxxxxxxxxx:hydro-api-alerts"
+registry_url        = "registry.sh.nextgenwaterprediction.com"
+registry_secret_arn = "arn:aws:secretsmanager:us-east-1:591210920133:secret:test-hydroapi-gitlab-registry-credentials-q19bgN"
+docker_image        = "registry.sh.nextgenwaterprediction.com/ngwpc/hydrofabric-group/hydrofabric_api:development"
+hydro_s3_bucket     = "ngwpc-hydrofabric"
+additional_vpc_cidrs = ["10.105.0.0/16","10.10.0.0/22"]
+enable_deletion_protection = false
+# Update this when you want to force a redeployment. Consider versions or git hashes or something else in the future.
+deployment_timestamp = "2024-12-13_09:36:00"
