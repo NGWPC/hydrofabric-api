@@ -14,6 +14,7 @@ sys.path.append(str(root_dir / 'djangoApps'))
 def pytest_configure():
     settings.configure(
         S3_BUCKET='test-bucket',
+        VERSION='1.0.0',
         DEBUG=True,
         DATABASES={
             'default': {
@@ -38,7 +39,7 @@ def pytest_configure():
             'django.contrib.auth.middleware.AuthenticationMiddleware',
             'django.contrib.messages.middleware.MessageMiddleware',
         ],
-        ROOT_URLCONF='initialParameters.urls',
+        ROOT_URLCONF='djangoApps.init_param_app.urls',
         TEMPLATES=[
             {
                 'BACKEND': 'django.template.backends.django.DjangoTemplates',

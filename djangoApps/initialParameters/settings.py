@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import os
 from pathlib import Path
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -130,3 +131,11 @@ S3_BUCKET = os.getenv('S3_BUCKET')
 if not S3_BUCKET:
     print('S3_BUCKET is not set')
     exit()
+
+# Load version at startup
+try:
+    version_file = Path(BASE_DIR).resolve().parent / 'VERSION'
+    with open(version_file, 'r') as f:
+        VERSION = f.read().strip()
+except FileNotFoundError:
+    VERSION = 'unknown'
