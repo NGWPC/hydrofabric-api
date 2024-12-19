@@ -28,3 +28,7 @@ coverage.xml
 test-results.xml
 pytest_cache/
 *.pytest_cache
+
+# Ignore terraform artifacts
+.terraform
+*.terraform.lock*

@@ -24,6 +24,12 @@ file = /var/log/docker
 log_group_name = ${log_group_name}
 log_stream_name = {instance_id}/docker
 datetime_format = %Y-%m-%d %H:%M:%S
+
+[/opt/hydro-api/logs/hf.log]
+file = /opt/hydro-api/logs/hf.log
+log_group_name = ${log_group_name}
+log_stream_name = {instance_id}/hf.log
+datetime_format = %Y-%m-%d %H:%M:%S
 EOF
 
 # Configure region for awslogs
@@ -227,6 +233,7 @@ cat > /opt/hydro-api/.env << EOF
 DB_HOST=${db_host}
 DB_PORT=${db_port}
 DB_NAME=${db_name}
+LOG_DIR=/opt/hydro-api/logs/
 DEPLOYMENT_TIMESTAMP=${deployment_timestamp}
 DB_USER=$(printf '%s' "$DB_USER" | sed 's/[\/&]/\\&/g')
 DB_PASSWORD=$(printf '%s' "$DB_PASSWORD" | sed 's/[\/&]/\\&/g')
@@ -248,15 +255,10 @@ services:
       - "${container_port}:8000"
     volumes:
       - /Hydrofabric:/Hydrofabric:rw
-    logging:
-      driver: awslogs
-      options:
-        awslogs-group: ${log_group_name}
-        awslogs-region: ${aws_region}
-        awslogs-stream: api-container
+      - /opt/hydro-api/logs/:/opt/hydro-api/logs/:rw
     restart: always
     healthcheck:
-      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8000"]
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8000/version/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -273,12 +275,43 @@ if ! command -v docker-compose &> /dev/null; then
     chmod +x /usr/local/bin/docker-compose
 fi
 
-docker-compose up -d
+# Create systemd service for Docker Compose
+cat > /etc/systemd/system/hydro-api.service << EOF
+[Unit]
+Description=Hydro API Docker Compose Service
+After=docker.service
+Requires=docker.service
+
+[Service]
+Restart=always
+WorkingDirectory=/opt/hydro-api
+ExecStart=/usr/local/bin/docker-compose up
+ExecStop=/usr/local/bin/docker-compose down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Reload systemd and enable the service
+systemctl daemon-reload
+systemctl enable hydro-api.service
+systemctl start hydro-api.service
 
 echo "Setting up log rotation..."
 cat > /etc/logrotate.d/docker << 'EOF'
 /var/log/docker {
-    rotate 7
+    rotate 5
+    daily
+    compress
+    size 50M
+    missingok
+    delaycompress
+    copytruncate
+}
+
+/opt/hydro-api/logs/hf.log {
+    rotate 5
     daily
     compress
     size 50M

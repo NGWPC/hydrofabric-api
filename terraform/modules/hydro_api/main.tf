@@ -366,8 +366,8 @@ resource "aws_lb_target_group" "app" {
     enabled             = true
     healthy_threshold   = 2
     interval            = 30
-    matcher            = "200-499"  # Accept any response as healthy
-    path               = "/"        # Use root path
+    matcher            = "200"  # Accept 200 from the version endpoint
+    path               = "/version/"
     port               = "traffic-port"
     timeout            = 10
     unhealthy_threshold = 3
