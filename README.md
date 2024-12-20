@@ -7,7 +7,7 @@ To ease integration testing for the other teams, we've tried to simplify the bas
 - AWS CLI installed on your machine.
 - AWS Credentials (SoftwareEngineersFull or Admin) against the Data account set as ENV var appropriate for CLI access.
 - Sudo (for docker commands)  This technically is workable without sudo if you configured your docker engine appropriately, but that is... uncommon...
-- An ENV var populated with DB_PASSWORD (speak with a team member for this, and it will likely change soon)
+- An ENV var populated with DB_USER, DB_PASSWORD, and DB_HOST (speak with a team member for this, and it will likely change)
 
 ### Getting started
 We've added a Makefile with 3 targets to make things easier.
@@ -46,7 +46,7 @@ This file configures the development container for VS Code. It defines which Doc
  2. docker-compose.yml
 Defines the services for your application. In this case, it includes the app service and a PostgreSQL database.
        - app service: The main application service built from the Dockerfile. It also mounts local directories into the container.
-       - db service: PostgreSQL database with PostGIS extension.
+       - db service: PostgreSQL database with PostGIS extension.  (This code doesn't include the required migrations, so you do need to setup your DB.)
        - volumes: Defines a volume for persisting PostgreSQL data.
 3. Dockerfile
 Specifies the base image and sets up the Python environment.
