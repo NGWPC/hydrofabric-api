@@ -19,12 +19,6 @@ cat > /etc/awslogs/awslogs.conf << 'EOF'
 [general]
 state_file = /var/lib/awslogs/agent-state
 
-[/var/log/docker]
-file = /var/log/docker
-log_group_name = ${log_group_name}
-log_stream_name = {instance_id}/docker
-datetime_format = %Y-%m-%d %H:%M:%S
-
 [/opt/hydro-api/logs/hf.log]
 file = /opt/hydro-api/logs/hf.log
 log_group_name = ${log_group_name}
@@ -258,7 +252,7 @@ services:
       - /opt/hydro-api/logs/:/opt/hydro-api/logs/:rw
     restart: always
     healthcheck:
-      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8000/version/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/version/"]
       interval: 30s
       timeout: 10s
       retries: 3

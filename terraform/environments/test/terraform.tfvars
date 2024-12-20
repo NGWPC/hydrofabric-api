@@ -24,4 +24,4 @@ hydro_s3_bucket     = "ngwpc-hydrofabric"
 additional_vpc_cidrs = ["10.105.0.0/16","10.10.0.0/22"]
 enable_deletion_protection = false
 # Update this when you want to force a redeployment. Consider versions or git hashes or something else in the future.
-deployment_timestamp = "2024-12-13_09:36:00"
+deployment_timestamp = "2024-12-20_00:22:00"

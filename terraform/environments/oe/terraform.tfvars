@@ -19,12 +19,13 @@ container_port     = 8000
 #sns_alert_topic_arn = "arn:aws:sns:us-east-1:xxxxxxxxxxxx:hydro-api-alerts-oe"
 registry_url = "registry.sh.nextgenwaterprediction.com"
 registry_secret_arn = "arn:aws:secretsmanager:us-east-1:154735606025:secret:hydroapi-gitlab-registry-credentials-KGYKvn"
-docker_image = "registry.sh.nextgenwaterprediction.com/ngwpc/hydrofabric-group/hydrofabric_api:1.0.0"
+docker_image = "registry.sh.nextgenwaterprediction.com/ngwpc/hydrofabric-group/hydrofabric_api:1.0.1"
 hydro_s3_bucket     = "ngwpc-hydrofabric-oe"
 additional_vpc_cidrs = ["10.105.0.0/16","10.10.0.0/22", "10.6.0.0/22", "10.203.0.0/16"]
 enable_deletion_protection = false
 
-# Update this when you want to force a redeployment. Consider versions or git hashes or something else in the future.
-deployment_timestamp = "2024-12-12_15:30:00"
+# Update this when you want to force a redeployment and don't have a new docker image tag to target.
+# Consider versions or git hashes or something else in the future.
+deployment_timestamp = "2024-12-20_17:00:00"
 
 

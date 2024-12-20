@@ -220,8 +220,8 @@ resource "aws_launch_template" "app" {
   name_prefix   = "${var.api_name}-${var.environment}"
   #image_id      = var.ami_id != null ? var.ami_id : data.aws_ami.amazon_linux_2.id
   image_id      = coalesce(var.ami_id, data.aws_ami.amazon_linux_2.id)
-
   instance_type = var.instance_type
+  update_default_version = true
 
   network_interfaces {
     associate_public_ip_address = false
@@ -297,6 +297,7 @@ resource "aws_autoscaling_group" "app" {
   target_group_arns   = [aws_lb_target_group.app[0].arn]
   vpc_zone_identifier = data.aws_subnets.private.ids
   health_check_grace_period = 900 # The HydroAPI takes a while to setup from scratch
+  health_check_type   = "ELB"
 
   launch_template {
     id      = aws_launch_template.app[0].id
@@ -306,8 +307,10 @@ resource "aws_autoscaling_group" "app" {
   instance_refresh {
     strategy = "Rolling"
     preferences {
-      min_healthy_percentage = 50
-      instance_warmup       = 900
+      min_healthy_percentage  = 100
+      instance_warmup         = 900
+      checkpoint_delay        = 900
+      checkpoint_percentages  = [25, 50, 75, 100] 
     }
   }
 
@@ -364,7 +367,7 @@ resource "aws_lb_target_group" "app" {
 
   health_check {
     enabled             = true
-    healthy_threshold   = 2
+    healthy_threshold   = 3
     interval            = 30
     matcher            = "200"  # Accept 200 from the version endpoint
     path               = "/version/"
@@ -470,7 +473,7 @@ resource "aws_s3_bucket_policy" "alb_logs" {
       {
         Effect = "Allow"
         Principal = {
-          AWS = "arn:aws:iam::127311923021:root"  # ALB service account for us-east-1
+          AWS = "arn:aws:iam::${lookup(var.alb_service_account_ids, var.aws_region)}:root"
         }
         Action = "s3:PutObject"
         Resource = [
@@ -499,6 +502,20 @@ resource "aws_s3_bucket_policy" "alb_logs" {
         }
         Action = "s3:GetBucketAcl"
         Resource = aws_s3_bucket.alb_logs[0].arn
+      },
+      {
+        Effect = "Deny"
+        Principal = "*"
+        Action = "s3:*"
+        Resource = [
+          aws_s3_bucket.alb_logs[0].arn,
+          "${aws_s3_bucket.alb_logs[0].arn}/*"
+        ]
+        Condition = {
+          Bool = {
+            "aws:SecureTransport": "false"
+          }
+        }
       }
     ]
   })
@@ -614,4 +631,37 @@ resource "aws_cloudwatch_metric_alarm" "high_5xx_errors" {
   }
 
   tags = local.common_tags
+}
+
+resource "null_resource" "asg_refresh" {
+  count = var.is_test_env ? 0 : 1
+  depends_on = [aws_autoscaling_group.app]
+
+  triggers = {
+    # Trigger ASG instance refresh when user_data content changes
+    user_data_hash = base64sha256(templatefile("${path.module}/templates/user_data.sh.tpl", {
+      aws_region           = var.aws_region
+      docker_image         = var.docker_image
+      container_port       = var.container_port
+      db_host             = var.db_host
+      db_port             = var.db_port
+      db_name             = var.db_name
+      hydro_s3_bucket     = var.hydro_s3_bucket
+      secrets_manager_arn  = var.secrets_manager_arn
+      registry_secret_arn  = var.registry_secret_arn
+      registry_url         = var.registry_url
+      log_group_name      = aws_cloudwatch_log_group.api_logs.name
+      environment         = var.environment
+      deployment_timestamp = var.deployment_timestamp
+    }))
+  }
+
+  provisioner "local-exec" {
+    command = <<EOF
+      aws autoscaling start-instance-refresh \
+        --auto-scaling-group-name "${var.api_name}-${var.environment}" \
+        --preferences '{"MinHealthyPercentage": 100, "InstanceWarmup": 900, "CheckpointDelay": 900, "CheckpointPercentages": [25, 50, 75, 100]}' \
+        --desired-configuration '{"LaunchTemplate": {"LaunchTemplateId": "${aws_launch_template.app[0].id}", "Version": "${aws_launch_template.app[0].latest_version}"}}'
+    EOF
+  }
 }

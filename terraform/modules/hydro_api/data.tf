@@ -3,6 +3,18 @@
 # AWS Account
 data "aws_caller_identity" "current" {}
 
+# ALB Service Account IDs for S3 Bucket Policy Permissions
+variable "alb_service_account_ids" {
+  default = {
+    "us-east-1"      = "127311923021"
+    "us-east-2"      = "033677994240"
+    "us-west-1"      = "027434742980"
+    "us-west-2"      = "797873946194"
+    "us-gov-east-1"  = "190560391635"
+    "us-gov-west-1"  = "048591011584"
+  }
+}
+
 # VPC
 data "aws_vpc" "main" {
   tags = {
