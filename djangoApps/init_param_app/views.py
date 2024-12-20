@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import generics
 from django.db import connection
+from django.conf import settings
 from collections import OrderedDict
 
 from rest_framework.views import APIView
@@ -18,12 +19,11 @@ from .geopackage import get_geopackage
 from .initial_parameters import get_ipe
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename='hf.log',
-                    filemode='a',
-                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-                    datefmt='%H:%M:%S',
-                    level=logging.DEBUG)
 
+# Get the App Version
+@api_view(['GET'])
+def version(request):
+    return Response({'version': settings.VERSION})
 
 
 # Execute the query  to fetch all models and model_ids.
@@ -85,7 +85,7 @@ def return_geopackage(request):
         results = 'Hydrofabric version must be 2.2 or 2.1'
         loc_status = http_422
         return Response(results, status=loc_status)
-    
+
     if version == '2.1' and domain != 'CONUS':
         results = 'oCONUS domains not availiable in Hydrofabric version 2.1'
         loc_status = http_422
@@ -115,7 +115,7 @@ def return_ipe(request):
     if version != '2.1' and version != '2.2':
         results = 'Hydrofabric version must be 2.2 or 2.1'
         return results
-    
+
     if version == '2.1' and domain != 'CONUS':
         results = 'oCONUS domains not availiable in Hydrofabric version 2.1'
         return results
@@ -190,7 +190,3 @@ class HFFilesDelete(generics.RetrieveDestroyAPIView):
     # API endpoint that allows a HFFiles record to be deleted.
     queryset = HFFiles.objects.all()
     serializer_class = HFFilesSerializers
-
-
-
-

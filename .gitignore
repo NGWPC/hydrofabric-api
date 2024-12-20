@@ -3,6 +3,7 @@ Hydrofabric/
 
 # There's a default log file here. Let's not commit it before we get these things moved and configurable
 hf.log
+logs/
 
 # Ignore vs code settings
 .vscode/
