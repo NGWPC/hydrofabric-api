@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import os
 from pathlib import Path
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -85,6 +86,71 @@ DATABASES = {
     }
 }
 
+# Default log directory at root level
+ROOT_DIR = os.path.dirname(BASE_DIR)
+DEFAULT_LOG_DIR = os.path.join(ROOT_DIR, 'logs')
+
+# Get log directory from environment variable, with fallback to default
+LOG_DIR = os.getenv('LOG_DIR', DEFAULT_LOG_DIR)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} {levelname} {name} {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'hf.log'),
+            'formatter': 'verbose',
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 5,
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        '': {  # Root logger
+            'handlers': ['console', 'file'],
+            'level': os.getenv('DJANGO_ROOT_LOG_LEVEL', 'INFO'),
+        },
+        'django': {  # Django framework logging
+            'handlers': ['console', 'file'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+        'django.db.backends': {  # Database logging
+            'handlers': ['console', 'file'],
+            'level': os.getenv('DJANGO_DB_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+        'django.request': {  # Request logging
+            'handlers': ['console', 'file'],
+            'level': os.getenv('DJANGO_REQUEST_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+        'django.security': {  # Security logging
+            'handlers': ['console', 'file'],
+            'level': os.getenv('DJANGO_SECURITY_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+    },
+}
+
+# Create logs directory if it doesn't exist and we're using the default
+if LOG_DIR == DEFAULT_LOG_DIR:
+    os.makedirs(LOG_DIR, exist_ok=True)
+
+
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
@@ -130,3 +196,11 @@ S3_BUCKET = os.getenv('S3_BUCKET')
 if not S3_BUCKET:
     print('S3_BUCKET is not set')
     exit()
+
+# Load version at startup
+try:
+    version_file = Path(BASE_DIR).resolve().parent / 'VERSION'
+    with open(version_file, 'r') as f:
+        VERSION = f.read().strip()
+except FileNotFoundError:
+    VERSION = 'unknown'
