@@ -27,7 +27,7 @@ RUN groupadd --gid $USER_GID $USERNAME \
 # Install Python Dependencies and test tools
 COPY requirements.txt /tmp/pip/
 RUN pip install --no-cache-dir -r /tmp/pip/requirements.txt \
-    && pip install pytest flake8 \
+    && pip install pytest pytest-django flake8 \
     && rm -rf /tmp/pip
 
 # Set library path

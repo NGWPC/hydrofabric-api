@@ -45,7 +45,7 @@ unit_test:
     #- pip install . --index-url ${CI_SERVER_PROTOCOL}://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple
     #- pip install .[testing] --index-url ${CI_SERVER_PROTOCOL}://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple
     - pip install -r requirements.txt
-    - pip install pytest coverage
+    - pip install pytest pytest-django coverage
     - coverage run -m pytest tests/unit --junitxml=test-results.xml
     - coverage xml
   artifacts:

@@ -17,7 +17,7 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 \
 # Install Python Dependencies and test tools
 COPY requirements.txt /tmp/pip/
 RUN pip install --no-cache-dir -r /tmp/pip/requirements.txt \
-    && pip install pytest flake8 \
+    && pip install pytest pytest-django flake8 \
     && rm -rf /tmp/pip
 
 # Just to make it a little easier for people to get running in dev / test
