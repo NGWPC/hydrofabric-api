@@ -67,27 +67,34 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
         filename_list.append(cfg_filename)
         cfg_filename_path = os.path.join(subset_dir, cfg_filename)
     
+        params_out = []
+    
+        
+        #get non-parameter items            
+        params_out.append('forcing_file=BMI')
+        params_out.append('verbosity=0')
+        params_out.append(f'surface_partitioning_scheme={scheme}')
+        params_out.append('num_timesteps=0')
+
+        #get items from divide attributes and CFE-X csv file
+        for param in from_attr:
+            param_name = param['name']
+            attr_name = json.loads(param['nwm_name'])[attr_name_key]
+            attr_value = divide[attr_name]
+            cfg_line = f"{param_name}={attr_value}"
+            params_out.append(cfg_line)
+
+        #get constants
+        for param in consts:
+            param_name = param['name']
+            attr_value = param['default_value']
+            cfg_line = f"{param_name}={attr_value}"
+            params_out.append(cfg_line)
+
+        params_out = '\n'.join(params_out)
         with open(cfg_filename_path, 'w') as outfile:
-            #write non-parameter items            
-            outfile.write('forcing_file=BMI\n')
-            outfile.write('verbosity=0\n')
-            outfile.write(f'surface_partitioning_scheme={scheme}\n')
-            outfile.write('num_timesteps=0\n')
-
-            #write items from divide attributes and CFE-X csv file
-            for param in from_attr:
-                param_name = param['name']
-                attr_name = json.loads(param['nwm_name'])[attr_name_key]
-                attr_value = divide[attr_name]
-                cfg_line = f"{param_name}={attr_value}\n"
-                outfile.write(cfg_line)
-
-            #write constants
-            for param in consts:
-                param_name = param['name']
-                attr_value = param['default_value']
-                cfg_line = f"{param_name}={attr_value}\n"
-                outfile.write(cfg_line)
+            outfile.write(params_out)
+            
     
     # Write files to DB and S3
     uri = gage_file_mgmt.write_file_to_s3(gage_id, version, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
