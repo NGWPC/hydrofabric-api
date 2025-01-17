@@ -30,16 +30,21 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
     config = get_config()
     input_dir = config['input_dir']
     
+    #List of parameters specific to CFE-X
     cfe_x_params = ('a_Xinanjiang_inflection_point_parameter', 'b_Xinanjiang_shape_parameter', 'x_Xinanjiang_shape_parameter', 'urban_decimal_fraction')
 
+    #Set surface partitioning scheme based on module name
     if module == 'CFE-S':
         scheme = 'Schaake'
     elif module == 'CFE-X':
         scheme = 'Xinanjiang'
 
+    #Set divide attribute name based on hydrofabric version
     attr_name_key = f"{version}_name"
+    #Set CFE-X parameter CSV filename based on hydrofabric version
     csv_path_filename = f'{input_dir}/CFE-X_params_{version}.csv'
 
+    #Create empty list to store BMI config file names
     filename_list = []
 
     #Get all parameters from the database    
@@ -51,7 +56,6 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
     catchments = divide_attr["divide_id"].tolist()
 
     #Read CSV file for CFE-X parameters
-    
     if module == 'CFE-X':
         try:
             parameters_df = pd.read_csv(csv_path_filename)
@@ -66,8 +70,21 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
             logger.error(error_str)
             return error   
         
+        #Make sure that catchements exist in CSV file
         filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
-
+        if filtered_parameters.empty:
+            error_str = f'Catchments in geopackage not found in CFE-X CSV file'
+            error = {'error': error_str}
+            logger.error(error_str)
+            return error
+        
+        #Make sure that there are a matching number of catchements
+        if(len(catchments) != len(filtered_parameters.index)):
+            error_str = f'Number of matching catchments found in CFE-X CSV file does not match number of catchments in geopackage'
+            error = {'error': error_str}
+            logger.error(error_str)
+            return error
+         
         #Join parameters from csv and attribute file into single dataframe using divide_id as index
         df_all = filtered_parameters.join(divide_attr.set_index('divide_id'), on='divide_id')
     else:
@@ -120,7 +137,6 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
     status_str = "Config files written to:  " + uri
     logger.info(status_str)
     
-
     #Put data for last catchment into a dictionary and fill in the inital parameter values in the output JSON
     cfg_file_ipes = {}
     for line in params_out:
