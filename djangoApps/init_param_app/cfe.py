@@ -12,7 +12,6 @@ from .hf_attributes import *
 # Setup logging
 logger = logging.getLogger(__name__)
 
-
 def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
     ''' 
     Build initial parameter estimates (IPE) for CFE-S and CFE-X 
@@ -26,6 +25,11 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
     Returns:
     dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
     '''
+    
+    # Get config file for paths
+    config = get_config()
+    input_dir = config['input_dir']
+    
     cfe_x_params = ('a_Xinanjiang_inflection_point_parameter', 'b_Xinanjiang_shape_parameter', 'x_Xinanjiang_shape_parameter', 'urban_decimal_fraction')
 
     if module == 'CFE-S':
@@ -34,41 +38,46 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
         scheme = 'Xinanjiang'
 
     attr_name_key = f"{version}_name"
-
-    # Get config file for paths
-    config = get_config()
-    input_dir = config['input_dir']
+    csv_path_filename = f'{input_dir}/CFE-X_params_{version}.csv'
 
     filename_list = []
-        
+
+    #Get all parameters from the database    
     from_attr = CfeParams.objects.filter(source_file='attr').values('name', 'nwm_name', 'default_value')
     consts = CfeParams.objects.filter(source_file='const').values('name', 'nwm_name', 'default_value')
 
+    #Get divide attributes from geopackage
     divide_attr = get_hydrofabric_attributes(gpkg_file, version)
-
     catchments = divide_attr["divide_id"].tolist()
 
-    parameters_df = pd.read_csv(f'{input_dir}/cfe_x.csv')
-    filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
+    #Read CSV file for CFE-X parameters
+    
+    if module == 'CFE-X':
+        try:
+            parameters_df = pd.read_csv(csv_path_filename)
+        except FileNotFoundError:
+            error_str = f'CFE-X Parameters CSV file not found: {csv_path_filename}'
+            error = {'error': error_str}
+            logger.error(error_str)
+            return error
+        except Exception as e:
+            error_str = f'CFE-X Parameters CSV Pandas read error: {csv_path_filename}'
+            error = {'error': error_str}
+            logger.error(error_str)
+            return error   
+        
+        filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
 
-    #Join parameters from csv, area, and attribute file into single dataframe using divide_id as index
-    df_all = filtered_parameters.join(divide_attr.set_index('divide_id'), on='divide_id')
+        #Join parameters from csv and attribute file into single dataframe using divide_id as index
+        df_all = filtered_parameters.join(divide_attr.set_index('divide_id'), on='divide_id')
+    else:
+        df_all = divide_attr
 
-    if(module == 'CFE-S'):
-        for param in cfe_x_params:
-           df_all.drop(param, axis=1, inplace=True)
-           
-    #print(df_all)
-
+    #Loop through catchments and create BMI config files
     for index, divide in df_all.iterrows():
 
-        divide_id = divide['divide_id']
-        cfg_filename = f'{divide_id}_bmi_config_cfe.txt'
-        filename_list.append(cfg_filename)
-        cfg_filename_path = os.path.join(subset_dir, cfg_filename)
-    
+        #empty list for accumulate parameter strings
         params_out = []
-    
         
         #get non-parameter items            
         params_out.append('forcing_file=BMI')
@@ -79,6 +88,8 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
         #get items from divide attributes and CFE-X csv file
         for param in from_attr:
             param_name = param['name']
+            if module == 'CFE-S' and param_name in cfe_x_params:
+                continue
             attr_name = json.loads(param['nwm_name'])[attr_name_key]
             attr_value = divide[attr_name]
             cfg_line = f"{param_name}={attr_value}"
@@ -87,28 +98,33 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
         #get constants
         for param in consts:
             param_name = param['name']
+            if module == 'CFE-S' and param_name in cfe_x_params:
+                continue
             attr_value = param['default_value']
             cfg_line = f"{param_name}={attr_value}"
             params_out.append(cfg_line)
 
-        params_out = '\n'.join(params_out)
+        #join all list items into single string with line breaks
+        params_out_all = '\n'.join(params_out)
+        
+        #write BMI cfg file for catchment to temp dir
+        divide_id = divide['divide_id']
+        cfg_filename = f'{divide_id}_bmi_config_cfe.txt'
+        filename_list.append(cfg_filename)
+        cfg_filename_path = os.path.join(subset_dir, cfg_filename)
         with open(cfg_filename_path, 'w') as outfile:
-            outfile.write(params_out)
+            outfile.write(params_out_all)
             
-    
     # Write files to DB and S3
     uri = gage_file_mgmt.write_file_to_s3(gage_id, version, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list, module=module)
     status_str = "Config files written to:  " + uri
     logger.info(status_str)
     
-    #write s3 location and ipe values from one of the subset_dir files to output json
-    file = os.path.join(subset_dir, filename_list[0])
-    with open(file, 'r') as file:
-        lines = file.readlines()
 
+    #Put data for last catchment into a dictionary and fill in the inital parameter values in the output JSON
     cfg_file_ipes = {}
-
-    for line in lines:
+    for line in params_out:
+        print(line)
         key, value = line.strip().split('=')
         cfg_file_ipes[key.strip()] = value.strip()
 
