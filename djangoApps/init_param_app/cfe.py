@@ -53,6 +53,7 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
 
     #Get divide attributes from geopackage
     divide_attr = get_hydrofabric_attributes(gpkg_file, version)
+    if('error' in divide_attr): return divide_attr
     catchments = divide_attr["divide_id"].tolist()
 
     #Read CSV file for CFE-X parameters
@@ -107,8 +108,9 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
             param_name = param['name']
             if module == 'CFE-S' and param_name in cfe_x_params:
                 continue
-            attr_name = json.loads(param['nwm_name'])[attr_name_key]
-            attr_value = divide[attr_name]
+            attr_value = divide.filter(regex=param['nwm_name']).values
+            #If attribute has more than 1 layer, use the first.
+            if(len(attr_value > 1)):  attr_value = attr_value[0]
             cfg_line = f"{param_name}={attr_value}"
             params_out.append(cfg_line)
 
@@ -140,7 +142,6 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
     #Put data for last catchment into a dictionary and fill in the inital parameter values in the output JSON
     cfg_file_ipes = {}
     for line in params_out:
-        print(line)
         key, value = line.strip().split('=')
         cfg_file_ipes[key.strip()] = value.strip()
 
