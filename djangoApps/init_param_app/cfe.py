@@ -39,8 +39,6 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
     elif module == 'CFE-X':
         scheme = 'Xinanjiang'
 
-    #Set divide attribute name based on hydrofabric version
-    attr_name_key = f"{version}_name"
     #Set CFE-X parameter CSV filename based on hydrofabric version
     csv_path_filename = f'{input_dir}/CFE-X_params_{version}.csv'
 
