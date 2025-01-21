@@ -38,7 +38,7 @@ def snow17_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_m
     #Create empty list for collecting config files
     filename_list = []
 
-    module = 'Snow17'
+    module = 'Snow-17'
 
     try:
         divides_layer = gpd.read_file(gpkg_file, layer = "divides")
