@@ -122,7 +122,7 @@ def calculate_module_params(gage_id, version, source, domain, module, subset_dir
         results = noah_owp_modular_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "T-Route":
         results = t_route_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
-    elif module == "Snow17":
+    elif module == "Snow-17":
         results = snow17_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "Sac-SMA":
         results = sac_sma_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
