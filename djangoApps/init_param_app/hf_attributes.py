@@ -28,6 +28,13 @@ def get_hydrofabric_attributes(gpkg_file,version):
     elif version == '2.2':
         divides_layer = divides_layer.astype({'mode.ISLTYP':'int'})
         divides_layer = divides_layer.astype({'mode.IVGTYP':'int'})
+
+    #Zmax/max_gw_storage units are mm in the hydrofabric but CFE expects m.
+    if version == '2.1':
+        divides_layer['gw_Zmax'] = divides_layer['gw_Zmax'].apply(lambda x: x/1000)
+
+    elif version == '2.2':
+        divides_layer['mean.Zmax'] = divides_layer['mean.Zmax'].apply(lambda x: x/1000)
     
     #Convert centroid_x and centroid_y (lat/lon) from CONUS Albers to WGS84 for decimal degrees for 2.2.
     if version == '2.2':

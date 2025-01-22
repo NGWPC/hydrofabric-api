@@ -46,8 +46,8 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
     filename_list = []
 
     #Get all parameters from the database    
-    from_attr = CfeParams.objects.filter(source_file='attr').values('name', 'nwm_name', 'default_value')
-    consts = CfeParams.objects.filter(source_file='const').values('name', 'nwm_name', 'default_value')
+    from_attr = CfeParams.objects.filter(source_file='attr').values('name', 'nwm_name', 'default_value', 'units')
+    consts = CfeParams.objects.filter(source_file='const').values('name', 'nwm_name', 'default_value', 'units')
 
     #Get divide attributes from geopackage
     divide_attr = get_hydrofabric_attributes(gpkg_file, version)
@@ -99,7 +99,9 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
         params_out.append('forcing_file=BMI')
         params_out.append('verbosity=0')
         params_out.append(f'surface_partitioning_scheme={scheme}')
-        params_out.append('num_timesteps=0')
+        params_out.append('surface_runoff_scheme=GIUH')
+        params_out.append('DEBUG=0')
+        params_out.append('num_timesteps=1')
 
         #get items from divide attributes and CFE-X csv file
         for param in from_attr:
@@ -109,7 +111,9 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
             attr_value = divide.filter(regex=param['nwm_name']).values
             #If attribute has more than 1 layer, use the first.
             if(len(attr_value > 1)):  attr_value = attr_value[0]
-            cfg_line = f"{param_name}={attr_value}"
+            units = param['units']
+            if(units == 'unitless'):  units = ''
+            cfg_line = f"{param_name}={attr_value}[{units}]"
             params_out.append(cfg_line)
 
         #get constants
@@ -118,7 +122,9 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
             if module == 'CFE-S' and param_name in cfe_x_params:
                 continue
             attr_value = param['default_value']
-            cfg_line = f"{param_name}={attr_value}"
+            units = param['units']
+            if(units == 'unitless'):  units = ''
+            cfg_line = f"{param_name}={attr_value}[{units}]"
             params_out.append(cfg_line)
 
         #join all list items into single string with line breaks
