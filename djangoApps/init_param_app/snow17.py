@@ -158,7 +158,7 @@ def snow17_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_m
                       ''
                       ]
 
-        ctl_filename = f'{hru_id}.namelist.input'
+        ctl_filename = f'snow17-init-{hru_id}.namelist.input'
         filename_list.append(ctl_filename)
         cfg_filename_path = os.path.join(subset_dir, ctl_filename)
         with open(cfg_filename_path, 'w') as outfile:
