@@ -84,7 +84,7 @@ def topmodel_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module
 
         df = pd.DataFrame(twi)
 
-        cfg_filename_subcat = f'{divide_id}_subcat.dat'
+        cfg_filename_subcat = f'{divide_id}_topmodel_subcat.dat'
         filename_list.append(cfg_filename_subcat)
         cfg_filename_path = os.path.join(subset_dir, cfg_filename_subcat)
     
@@ -116,7 +116,7 @@ def topmodel_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module
         line1 = divide_id + '\n'
         line2 = " ".join(f'{v}' for k,v in params.items())
 
-        cfg_filename = f'{divide_id}_params.dat'
+        cfg_filename = f'{divide_id}_topmodel_params.dat'
         filename_list.append(cfg_filename)
         cfg_filename_path = os.path.join(subset_dir, cfg_filename)
         with open(cfg_filename_path, 'w') as outfile:
