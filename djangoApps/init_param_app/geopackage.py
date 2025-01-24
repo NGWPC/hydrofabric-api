@@ -80,7 +80,7 @@ def get_geopackage(gage_id, version, source, domain, keep_file=False):
         result = run(run_command, capture_output=True)
         stderr = str(result.stderr.decode('utf-8'))
         if len(stderr) > 0:
-            error_str = f'Hydrofabric subsetting failed:  {stderr}'
+            error_str = f'Hydrofabric subsetting failed: {stderr}'
             error = {'error': error_str}
             logger.error(error_str)
             return error
