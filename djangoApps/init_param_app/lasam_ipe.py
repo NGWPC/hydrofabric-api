@@ -31,6 +31,7 @@ def lasam_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_me
     soil_param_file =  get_hydrus_data()       # Van Genuchton soil parameters 
     ponded_depth_max = "1.1[cm]"                                            # Maximum amount of water unavailable for surface drainage
     field_capacity_psi = "340.9[cm]"                                        # Capillary head corresponding to volumetric water content at which gravity drainage becomes slower
+    soil_z = '10,30,100.0,200.0[cm]'
 
     # Skeleton for the config file. Needs layer soil types to be specified per-catchment
     lasam_lst = ['verbosity=none',
@@ -48,7 +49,9 @@ def lasam_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_me
                  'field_capacity_psi=' + field_capacity_psi,
                  'giuh_ordinates=0.06,0.51,0.28,0.12,0.03',
                  'calib_params=true',
-                 'adaptive_timestep=true'
+                 'adaptive_timestep=true',
+                 'sft_coupled=true',
+                 'soil_z=' + soil_z
                 ]
     
     # Make directory and add soil params file there. Also add it to the filelist.
