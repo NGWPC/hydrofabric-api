@@ -1,0 +1,351 @@
+{
+    "modules": [
+        {
+            "module_name": "CFE-S",
+            "parameter_file": {
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/CFE-S/2025_Jan_23_18_13_56"
+            },
+            "calibrate_parameters": [
+                {
+                    "name": "soil_params.b",
+                    "initial_value": "5.021543025970459[]",
+                    "description": "beta exponent on Clapp-Hornberger (1978) soil water relations",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "soil_params.satdk",
+                    "initial_value": "1.1253661716168919e-07[m s-1]",
+                    "description": "saturated hydraulic conductivity",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": "m s-1"
+                },
+                {
+                    "name": "soil_params.satpsi",
+                    "initial_value": "0.01064312453240063[m]",
+                    "description": "saturated capillary head",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": "m"
+                },
+                {
+                    "name": "soil_params.slop",
+                    "initial_value": "0.32550981640815735[m/m]",
+                    "description": "this factor (0-1) modifies the gradient of the hydraulic head at the soil bottom.  0=no-flow.",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": "m/m"
+                },
+                {
+                    "name": "soil_params.smcmax",
+                    "initial_value": "0.48602351546287537[m/m]",
+                    "description": "saturated soil moisture content",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": "m/m"
+                },
+                {
+                    "name": "max_gw_storage",
+                    "initial_value": "0.16291060999999998[m]",
+                    "description": "maximum storage in the conceptual reservoir",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": "m"
+                },
+                {
+                    "name": "Cgw",
+                    "initial_value": "0.005[m h-1]",
+                    "description": "the primary outlet coefficient",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": "m h-1"
+                },
+                {
+                    "name": "expon",
+                    "initial_value": "1.0[]",
+                    "description": "exponent parameter (1.0 for linear reservoir)",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "K_lf",
+                    "initial_value": "0.1[]",
+                    "description": "Nash Config param - primary reservoir",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "refkdt",
+                    "initial_value": "2.0[]",
+                    "description": "Parameter in the surface runoff parameterization",
+                    "min": null,
+                    "max": null,
+                    "data_type": null,
+                    "units": null
+                }
+            ],
+            "output_variables": [
+                {
+                    "variable": "ACTUAL_ET",
+                    "description": null
+                },
+                {
+                    "variable": "DEEP_GW_TO_CHANNEL_FLUX",
+                    "description": null
+                },
+                {
+                    "variable": "DIRECT_RUNOFF",
+                    "description": null
+                },
+                {
+                    "variable": "GIUH_RUNOFF",
+                    "description": null
+                },
+                {
+                    "variable": "GW_STORAGE",
+                    "description": null
+                },
+                {
+                    "variable": "INFILTRATION_EXCESS",
+                    "description": null
+                },
+                {
+                    "variable": "NASH_LATERAL_RUNOFF",
+                    "description": null
+                },
+                {
+                    "variable": "NWM_PONDED_DEPTH",
+                    "description": null
+                },
+                {
+                    "variable": "POTENTIAL_ET",
+                    "description": null
+                },
+                {
+                    "variable": "Q_OUT",
+                    "description": null
+                },
+                {
+                    "variable": "RAIN_RATE",
+                    "description": null
+                },
+                {
+                    "variable": "SOIL_STORAGE",
+                    "description": null
+                },
+                {
+                    "variable": "SOIL_STORAGE_CHANGE",
+                    "description": null
+                },
+                {
+                    "variable": "SOIL_TO_GW_FLUX",
+                    "description": null
+                },
+                {
+                    "variable": "SURF_RUNOFF_SCHEME",
+                    "description": null
+                }
+            ]
+        },
+        {
+            "module_name": "CFE-X",
+            "parameter_file": {
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/CFE-X/2025_Jan_23_18_13_54"
+            },
+            "calibrate_parameters": [
+                {
+                    "name": "a_Xinanjiang_inflection_point_parameter",
+                    "initial_value": "-0.131728619337082[]",
+                    "description": "when surface_water_partitioning_scheme=Xinanjiang ",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "b_Xinanjiang_shape_parameter",
+                    "initial_value": "0.0351632460951805[]",
+                    "description": "when surface_water_partitioning_scheme=Xinanjiang ",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "x_Xinanjiang_shape_parameter",
+                    "initial_value": "0.0182866919785738[]",
+                    "description": "when surface_water_partitioning_scheme=Xinanjiang ",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "soil_params.b",
+                    "initial_value": "5.021543025970459[]",
+                    "description": "beta exponent on Clapp-Hornberger (1978) soil water relations",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "soil_params.satdk",
+                    "initial_value": "2.33461082646306e-07[m s-1]",
+                    "description": "saturated hydraulic conductivity",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": "m s-1"
+                },
+                {
+                    "name": "soil_params.satpsi",
+                    "initial_value": "0.023717452719940885[m]",
+                    "description": "saturated capillary head",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": "m"
+                },
+                {
+                    "name": "soil_params.slop",
+                    "initial_value": "0.3376252055168152[m/m]",
+                    "description": "this factor (0-1) modifies the gradient of the hydraulic head at the soil bottom.  0=no-flow.",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": "m/m"
+                },
+                {
+                    "name": "soil_params.smcmax",
+                    "initial_value": "0.4820225238800049[m/m]",
+                    "description": "saturated soil moisture content",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": "m/m"
+                },
+                {
+                    "name": "max_gw_storage",
+                    "initial_value": "0.16306290999999998[m]",
+                    "description": "maximum storage in the conceptual reservoir",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": "m"
+                },
+                {
+                    "name": "Cgw",
+                    "initial_value": "0.005[m h-1]",
+                    "description": "the primary outlet coefficient",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": "m h-1"
+                },
+                {
+                    "name": "expon",
+                    "initial_value": "1.0[]",
+                    "description": "exponent parameter (1.0 for linear reservoir)",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "K_lf",
+                    "initial_value": "0.1[]",
+                    "description": "Nash Config param - primary reservoir",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "refkdt",
+                    "initial_value": "2.0[]",
+                    "description": "Parameter in the surface runoff parameterization",
+                    "min": null,
+                    "max": null,
+                    "data_type": null,
+                    "units": null
+                }
+            ],
+            "output_variables": [
+                {
+                    "variable": "ACTUAL_ET",
+                    "description": null
+                },
+                {
+                    "variable": "DEEP_GW_TO_CHANNEL_FLUX",
+                    "description": null
+                },
+                {
+                    "variable": "DIRECT_RUNOFF",
+                    "description": null
+                },
+                {
+                    "variable": "GIUH_RUNOFF",
+                    "description": null
+                },
+                {
+                    "variable": "GW_STORAGE",
+                    "description": null
+                },
+                {
+                    "variable": "INFILTRATION_EXCESS",
+                    "description": null
+                },
+                {
+                    "variable": "NASH_LATERAL_RUNOFF",
+                    "description": null
+                },
+                {
+                    "variable": "NWM_PONDED_DEPTH",
+                    "description": null
+                },
+                {
+                    "variable": "POTENTIAL_ET",
+                    "description": null
+                },
+                {
+                    "variable": "Q_OUT",
+                    "description": null
+                },
+                {
+                    "variable": "RAIN_RATE",
+                    "description": null
+                },
+                {
+                    "variable": "SOIL_STORAGE",
+                    "description": null
+                },
+                {
+                    "variable": "SOIL_STORAGE_CHANGE",
+                    "description": null
+                },
+                {
+                    "variable": "SOIL_TO_GW_FLUX",
+                    "description": null
+                },
+                {
+                    "variable": "SURF_RUNOFF_SCHEME",
+                    "description": null
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,403 @@
+{
+    "modules": [
+        {
+            "module_name": "UEB",
+            "parameter_file": {
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/01123000/PARAMS/USGS/UEB/2025_Jan_23_19_28_32"
+            },
+            "calibrate_parameters": [
+                {
+                    "name": "df",
+                    "initial_value": "1",
+                    "description": "Drift factor multiplier",
+                    "min": "0.5",
+                    "max": "6",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "cc",
+                    "initial_value": "0.4",
+                    "description": "Canopy coverage fraction",
+                    "min": "0",
+                    "max": "0.8",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "hcan",
+                    "initial_value": "5",
+                    "description": "Canopy height",
+                    "min": "0",
+                    "max": "10",
+                    "data_type": "integer",
+                    "units": "m"
+                },
+                {
+                    "name": "lai",
+                    "initial_value": "2",
+                    "description": "Leaf area index",
+                    "min": "0",
+                    "max": "4",
+                    "data_type": "integer",
+                    "units": null
+                },
+                {
+                    "name": "subalb",
+                    "initial_value": "0.25",
+                    "description": "The fraction of shortwave radiation (fraction 0-1) reflected by the substrate beneath the snow (ground or glacier)",
+                    "min": "0.25",
+                    "max": "0.7",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "ems",
+                    "initial_value": null,
+                    "description": "Emissivity of snow",
+                    "min": ".98",
+                    "max": ".99",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "cg",
+                    "initial_value": null,
+                    "description": "Ground heat capacity",
+                    "min": "2.09",
+                    "max": "2.12",
+                    "data_type": "double",
+                    "units": "KJ/kg/ ̊C"
+                },
+                {
+                    "name": "zo",
+                    "initial_value": null,
+                    "description": "Roughness length",
+                    "min": "0.0002\n",
+                    "max": "0.014",
+                    "data_type": "double",
+                    "units": "m"
+                },
+                {
+                    "name": "rho",
+                    "initial_value": null,
+                    "description": "Snow density",
+                    "min": "100",
+                    "max": "600",
+                    "data_type": "double",
+                    "units": "kg/m3"
+                },
+                {
+                    "name": "rhog",
+                    "initial_value": null,
+                    "description": "Soil density\n",
+                    "min": "1100\n",
+                    "max": "1700\n",
+                    "data_type": "double",
+                    "units": "kg/m3"
+                },
+                {
+                    "name": "Ks",
+                    "initial_value": null,
+                    "description": "Snow saturated hydraulic conductivity\n",
+                    "min": "0",
+                    "max": "20",
+                    "data_type": "integer",
+                    "units": "m/hr\n"
+                },
+                {
+                    "name": "de",
+                    "initial_value": null,
+                    "description": "Thermally active soil depth",
+                    "min": ".1",
+                    "max": ".4",
+                    "data_type": "double",
+                    "units": "m"
+                },
+                {
+                    "name": "avo",
+                    "initial_value": null,
+                    "description": "Visual new snow albedo\n",
+                    "min": ".85",
+                    "max": ".95\n",
+                    "data_type": "double\n",
+                    "units": null
+                }
+            ],
+            "output_variables": [
+                {
+                    "variable": "Alb",
+                    "description": "The fraction of shortwave radiation reflected by the snow surface.  "
+                },
+                {
+                    "variable": "Cf",
+                    "description": "The fraction (between 0 and 1) of the sky occupied by clouds."
+                },
+                {
+                    "variable": "Day",
+                    "description": "Day of beginning of time step (integer)"
+                },
+                {
+                    "variable": "Eacl",
+                    "description": "Clear sky emissivity quantifies the emission of longwave radiation energy from a cloud free atmosphere towards the surface relative to black body radiation at the air temperature"
+                },
+                {
+                    "variable": "Ec",
+                    "description": "The flux expressed as snow water equivalent of removal of snow from canopy interception by sublimation.  This is positive away from the canopy. "
+                },
+                {
+                    "variable": "Ema",
+                    "description": "Atmospheric emissivity quantifies the emission of longwave radiation energy from the atmosphere towards the surface relative to black body radiation at the air temperature.  The emission from clouds is included"
+                },
+                {
+                    "variable": "Es",
+                    "description": "Amount of water removed from the snow surface by sublimation"
+                },
+                {
+                    "variable": "FM",
+                    "description": "The net sum of all surface layer mass fluxes"
+                },
+                {
+                    "variable": "FMc",
+                    "description": "The net sum of all canopy mass fluxes "
+                },
+                {
+                    "variable": "HRI",
+                    "description": "Integration of solar radiation incident angle cosine over time step. When radiation data is not input IRAD flag (in param.dat file) set to 0 incoming solar radiation is calculated as Tf * HRI * Solar constant."
+                },
+                {
+                    "variable": "Inmax",
+                    "description": "Maximum amount of snow that a canopy can hold during a snowfall.  This is a function of maximum snow load per unit leaf area leaf area index and the density of fresh snow."
+                },
+                {
+                    "variable": "Mc",
+                    "description": "The flux expressed as snow water equivalent of removal of snow from canopy interception by melting.  This is subtracted from the intercepted snow and added to surface snow."
+                },
+                {
+                    "variable": "Month",
+                    "description": "Month of beginning of time step (integer)"
+                },
+                {
+                    "variable": "NetRads",
+                    "description": "Modeled net radiation exchange between the snow surface and atmosphere above and canopy above if present."
+                },
+                {
+                    "variable": "P",
+                    "description": "Precipitation that is the sum of both rain and snowfall expressed as water equivalent"
+                },
+                {
+                    "variable": "Pr",
+                    "description": "Amount of precipitation that occurred in the form of rain at any time step"
+                },
+                {
+                    "variable": "Ps",
+                    "description": "Amount of precipitation that occurred in the form of snow at any time step expressed as water equivalent"
+                },
+                {
+                    "variable": "Q",
+                    "description": "The net sum of all surface layer (snow plus thermally interacting substrate) energy fluxes"
+                },
+                {
+                    "variable": "QEs",
+                    "description": "Surface latent heat flux is the flux of energy transferred from the snow surface to the atmosphere by water vapor carried in air movement (wind and turbulence)."
+                },
+                {
+                    "variable": "QHc",
+                    "description": "Energy flux from the air within the canopy to the canopy.  This is positive towards the canopy and is calculated based on temperature gradient and bulk leaf boundary layer resistance.  "
+                },
+                {
+                    "variable": "QHs",
+                    "description": "Surface sensible heat flux is the flux of energy transferred from the snow surface to the atmosphere by air movement (wind and turbulence)."
+                },
+                {
+                    "variable": "QMs",
+                    "description": "Energy removed from the snowpack by total outflow  "
+                },
+                {
+                    "variable": "Qec",
+                    "description": "Latent energy flux from the air within the canopy to the canopy.  This is positive towards the canopy and is calculated based on the vapor pressure gradient and bulk leaf boundary layer resistance.  It represents the energy flux associated with the phase change due to sublimation (removal) or condensation/deposition (addition) of canopy intercepted snow from water vapor in the air."
+                },
+                {
+                    "variable": "Qli",
+                    "description": "Modeled incoming longwave radiation"
+                },
+                {
+                    "variable": "Qlnc",
+                    "description": "Amount of longwave radiation absorbed in canopy"
+                },
+                {
+                    "variable": "Qlns",
+                    "description": "Amount of longwave radiation absorbed at snow surface"
+                },
+                {
+                    "variable": "Qmc",
+                    "description": "The flux of energy removed from the canopy due to melt.  This represents the energy flux due to the latent heat of fusion energy difference between melt water and the reference condition of 0 °C solid phase.  This is subtracted from the canopy and added to the surface snow energy content. "
+                },
+                {
+                    "variable": "Qnet",
+                    "description": "Observed net radiation that was input to the model"
+                },
+                {
+                    "variable": "Qpc",
+                    "description": "The flux of energy added to the canopy by interception.  This represents the flux due to the energy difference between the phase and temperature of precipitation and the reference condition of 0 °C solid phase."
+                },
+                {
+                    "variable": "Qsi",
+                    "description": "Modeled incoming shortwave radiation accounting for slope and aspect of the surface.  This may be different from input Qsi for sloping surfaces"
+                },
+                {
+                    "variable": "Qsib",
+                    "description": "The incident solar radiation received at the surface or top of canopy if present as direct solar radiation."
+                },
+                {
+                    "variable": "Qsid",
+                    "description": "The incident solar radiation received at the surface or top of canopy if present as diffuse solar radiation."
+                },
+                {
+                    "variable": "Qsnc",
+                    "description": "Amount of solar radiation absorbed in canopy"
+                },
+                {
+                    "variable": "Qsns",
+                    "description": "Amount of solar radiation absorbed at snow surface"
+                },
+                {
+                    "variable": "RH",
+                    "description": "Relative humidity at a point z m above the snow surface or top of canopy if present"
+                },
+                {
+                    "variable": "SWE",
+                    "description": "State variable that gives the Snow Water Equivalent (SWE) of snow on the surface.  It can be considered as the depth of water that would theoretically result if the whole snow pack instantaneously melts.  This tracks snow accumulation and ablation on top of a substrate layer which may be ground or glacier.  In the case that the substrate is glacier this does not track the quantity of glacier ice."
+                },
+                {
+                    "variable": "SWIGM",
+                    "description": "The part of outflow from the base of the snowpack and glacier that is generated from glacier melting. SWIGM includes melt originating from glacial ice as well as outflow that may occur due to rain on a glacier as any precipitation that falls on the snow or glacier surface is first added to the snow/glacier to account for its energy in the total energy content then melt outflow occurs if the energy content results in liquid water in excess of the liquid holding capacity."
+                },
+                {
+                    "variable": "SWIR",
+                    "description": "The part of outflow that is due to rain or snow that immediately melts.  This only occurs on a non-glacier surface and when the surface snow water equivalent is 0.  Precipitation that is rain or that is snow that immediately melts due to a high temperature of the thermally active ground layer comprises this outflow."
+                },
+                {
+                    "variable": "SWISM",
+                    "description": "The part of outflow that is due to the melting of the seasonal snow pack.  SWISM includes melt originating from the seasonal snow as well as outflow that may occur due to rain on a snowpack as any precipitation that falls on the snow or glacier surface is first added to the snow/glacier to account for its energy in the total energy content then melt outflow occurs if the energy content results in liquid water in excess of the liquid holding capacity.  If surface snow is present then melt outflow is generated from the surface snow.  Glacier melt outflow is only generated when the surface snow water equivalent ablates to 0 and the substrate is glacier."
+                },
+                {
+                    "variable": "SWIT",
+                    "description": "Total outflow from the base of the snowpack (and glacier). This includes rainfall melt from seasonal snow and melt from glaciated surface."
+                },
+                {
+                    "variable": "Smelt",
+                    "description": "Amount of melt generated at the snow surface due to rain snowmelt or glacier melt. Smelt does not include snow melt from the canopy.  Smelt also does not equate to melt outflow since it infiltrates into the snow and is subject to refreezing or liquid retention depending on the thermal state of the snow."
+                },
+                {
+                    "variable": "TSURFs",
+                    "description": "Temperature at the surface of the snow"
+                },
+                {
+                    "variable": "Ta",
+                    "description": "Air temperature at a point z m above the snow surface or top of canopy if present"
+                },
+                {
+                    "variable": "Tac",
+                    "description": "Temperature of air within the canopy.  This is used in the calculation of energy fluxes between the canopy and within canopy air and in the calculation of energy fluxes between within canopy air and the atmosphere above and snow surface below."
+                },
+                {
+                    "variable": "Taub",
+                    "description": "The fraction of direct solar radiation incident at the top of the canopy that is transmitted through the canopy as direct solar radiation without being scattered or absorbed."
+                },
+                {
+                    "variable": "Taud",
+                    "description": "The fraction of diffuse solar radiation incident at the top of the canopy that is transmitted through the canopy without being scattered or absorbed.    "
+                },
+                {
+                    "variable": "Taufb",
+                    "description": "The part of the atmospheric transmissivity that quantifies direct solar radiation defined as the ratio of top of atmosphere radiation to direct solar radiation at the surface or top of canopy if present. "
+                },
+                {
+                    "variable": "Taufd",
+                    "description": "The part of the atmospheric transmissivity that quantifies diffuse solar radiation defined as the ratio of top of atmosphere radiation to diffuse solar radiation at the surface or top of canopy if present. "
+                },
+                {
+                    "variable": "Tave",
+                    "description": "Average temperature of the snow and thermally interacting substrate."
+                },
+                {
+                    "variable": "Tc",
+                    "description": "Temperature of the leaves and branches within the canopy.  This is used in the calculation of energy fluxes between the canopy and within canopy air. "
+                },
+                {
+                    "variable": "Ur",
+                    "description": "The flux of snow unloaded from the canopy.  Unloading rate is the intercepted snow state variable times the unloading rate coefficient and represents the transfer of snow from the canopy to the surface.  It quantifies snow water equivalent removed from the canopy and added to the surface snow water equivalent. "
+                },
+                {
+                    "variable": "Us",
+                    "description": "State variable that gives the energy content of the snow pack plus thermally active soil per unit of horizontal area defined with respect to solid (ice) phase snow at 0 °C.."
+                },
+                {
+                    "variable": "V",
+                    "description": "Wind speed at a point z m above the snow surface or top of canopy if present"
+                },
+                {
+                    "variable": "Vz",
+                    "description": "Modeled wind speed beneath canopy at height z above the surface"
+                },
+                {
+                    "variable": "Wc",
+                    "description": "Intercepted snow state variable giving the water equivalent of snow held as interception in the canopy."
+                },
+                {
+                    "variable": "Year",
+                    "description": "Year of beginning of time step (integer)"
+                },
+                {
+                    "variable": "atff",
+                    "description": "The fraction of radiation at the top of the atmosphere that reaches the top of the canopy or in its absence the snow surface."
+                },
+                {
+                    "variable": "conZen",
+                    "description": "Cosine of solar illumination angle (accounts for slope)"
+                },
+                {
+                    "variable": "cumMr",
+                    "description": "Cumulative melt outflow from beginning of model run"
+                },
+                {
+                    "variable": "cumes",
+                    "description": "Cumulative sublimation from beginning of model run "
+                },
+                {
+                    "variable": "cump",
+                    "description": "Cumulative precipitation from beginning of model run"
+                },
+                {
+                    "variable": "dHour",
+                    "description": "Hour of beginning of time step (may be fraction)"
+                },
+                {
+                    "variable": "errMB",
+                    "description": "A running total of the sum of all inputs to and outputs from the model.  Theoretically this should be 0 but practically differs from 0 due to numerical precision and rounding errors in the computation.  It is included as a check on the functioning of the model and if significantly different from 0 is indicative of a problem."
+                },
+                {
+                    "variable": "ieff",
+                    "description": "Fraction of precipitation intercepted by the canopy"
+                },
+                {
+                    "variable": "intc",
+                    "description": "The flux if precipitation that is intercepted by the canopy.  This is a function of the interception capacity and intercepted snow state variable."
+                },
+                {
+                    "variable": "refDepth",
+                    "description": "The depth of a refreezing front that is active in impacting surface temperature.  This quantifies the depth that refreezing has propagated into the snowpack where liquid water is present.  This is reset to 0 when it exceeds the depth to which diurnal temperature fluctuations propagate and refreezing becomes inactive in snow surface temperature and energy exchange.  "
+                },
+                {
+                    "variable": "tausn",
+                    "description": "Dimensionless age of the snow surface state variable to account for aging of the snow surface dependent on snow surface temperature and snowfall"
+                },
+                {
+                    "variable": "totalRefDepth",
+                    "description": "The depth the refreezing front has propagated into the snowpack where liquid water is present.  This is physically the same as RefDepAct but is not set to 0 when it exceeds the depth to which diurnal temperature fluctuations propagate so records refreezing depth whenever there has been refreezing and there is still liquid water present."
+                }
+            ]
+        }
+    ]
+}

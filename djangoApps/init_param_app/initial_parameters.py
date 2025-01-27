@@ -95,7 +95,7 @@ def calculate_dependent_module_params(gage_id, version, source, domain, module, 
                           gpkg_file, modules, module_metadata, gage_file_mgmt)
 
     else:
-        error_str = "Module name not valid:" + module
+        error_str = f"Module name not valid: {module}"
         error = dict(error=error_str)
         logger.error(error_str)
         return error
@@ -134,7 +134,7 @@ def calculate_module_params(gage_id, version, source, domain, module, subset_dir
     elif module == "LASAM":
         results = lasam_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     else:
-        error_str = "Module name not valid:" + module
+        error_str = f"Module name not valid: {module}"
         error = dict(error=error_str)
         logger.error(error_str)
         return error

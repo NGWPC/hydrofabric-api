@@ -1,0 +1,244 @@
+{
+    "modules": [
+        {
+            "module_name": "Snow-17",
+            "parameter_file": {
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/Snow-17/2025_Jan_23_18_25_25"
+            },
+            "calibrate_parameters": [
+                {
+                    "name": "scf",
+                    "initial_value": "1.100",
+                    "description": "The multiplying factor which adjusts precipitation that is determined to be in the form of snow",
+                    "min": "0.900",
+                    "max": "1.800",
+                    "data_type": "double",
+                    "units": ""
+                },
+                {
+                    "name": "mfmax",
+                    "initial_value": "1.58939576148987",
+                    "description": " Maximum melt factor during non-rain periods – assumed to occur on June 21",
+                    "min": "0.10",
+                    "max": "2.20",
+                    "data_type": "double",
+                    "units": "mm/ ̊C/6 hr"
+                },
+                {
+                    "name": "mfmin",
+                    "initial_value": "0.485516011714935",
+                    "description": " Minimum melt factor during non-rain periods – assumed to occur on December 21",
+                    "min": "0.01",
+                    "max": "0.60",
+                    "data_type": "double",
+                    "units": "mm/ ̊C/6 hr"
+                },
+                {
+                    "name": "uadj",
+                    "initial_value": "0.0284209009259939",
+                    "description": " The average wind function during rain-on-snow periods",
+                    "min": "0.01",
+                    "max": "0.20",
+                    "data_type": "double",
+                    "units": "mm/mb/6 hr"
+                },
+                {
+                    "name": "si",
+                    "initial_value": "500.00",
+                    "description": " The mean areal water equivalent above which there is always 100 percent areal snow cover",
+                    "min": "0",
+                    "max": "10000",
+                    "data_type": "double",
+                    "units": "mm"
+                },
+                {
+                    "name": "adc1",
+                    "initial_value": "0.050",
+                    "description": " Curve that defines the areal extent of the snow cover as a function of how much of the original snow cover remains after significant bare ground shows up",
+                    "min": "0.050",
+                    "max": "0.050",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "adc2",
+                    "initial_value": "0.100",
+                    "description": " Curve that defines the areal extent of the snow cover as a function of how much of the original snow cover remains after significant bare ground shows up",
+                    "min": "0.100",
+                    "max": "0.100",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "adc3",
+                    "initial_value": "0.200",
+                    "description": " Curve that defines the areal extent of the snow cover as a function of how much of the original snow cover remains after significant bare ground shows up",
+                    "min": "0.200",
+                    "max": "0.200",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "adc4",
+                    "initial_value": "0.300",
+                    "description": " Curve that defines the areal extent of the snow cover as a function of how much of the original snow cover remains after significant bare ground shows up",
+                    "min": "0.300",
+                    "max": "0.300",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "adc5",
+                    "initial_value": "0.400",
+                    "description": " Curve that defines the areal extent of the snow cover as a function of how much of the original snow cover remains after significant bare ground shows up",
+                    "min": "0.400",
+                    "max": "0.400",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "adc6",
+                    "initial_value": "0.500",
+                    "description": " Curve that defines the areal extent of the snow cover as a function of how much of the original snow cover remains after significant bare ground shows up",
+                    "min": "0.500",
+                    "max": "0.500",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "adc7",
+                    "initial_value": "0.600",
+                    "description": " Curve that defines the areal extent of the snow cover as a function of how much of the original snow cover remains after significant bare ground shows up",
+                    "min": "0.600",
+                    "max": "0.600",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "adc8",
+                    "initial_value": "0.700",
+                    "description": " Curve that defines the areal extent of the snow cover as a function of how much of the original snow cover remains after significant bare ground shows up",
+                    "min": "0.700",
+                    "max": "0.700",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "adc9",
+                    "initial_value": "0.800",
+                    "description": " Curve that defines the areal extent of the snow cover as a function of how much of the original snow cover remains after significant bare ground shows up",
+                    "min": "0.800",
+                    "max": "0.800",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "adc10",
+                    "initial_value": "0.900",
+                    "description": " Curve that defines the areal extent of the snow cover as a function of how much of the original snow cover remains after significant bare ground shows up",
+                    "min": "0.900",
+                    "max": "0.900",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "adc11",
+                    "initial_value": "1.000",
+                    "description": " Curve that defines the areal extent of the snow cover as a function of how much of the original snow cover remains after significant bare ground shows up",
+                    "min": "1.000",
+                    "max": "1.000",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "nmf",
+                    "initial_value": "0.150",
+                    "description": " Maximum negative melt factor",
+                    "min": "0.010",
+                    "max": "0.300",
+                    "data_type": "double",
+                    "units": "mm/ ̊C/6 hr"
+                },
+                {
+                    "name": "tipm",
+                    "initial_value": "0.100",
+                    "description": " Antecedent temperature index parameter",
+                    "min": "0.000",
+                    "max": "1.000",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "pxtemp",
+                    "initial_value": "1.000",
+                    "description": " Antecedent temperature index parameter",
+                    "min": "0.500",
+                    "max": "5",
+                    "data_type": "double",
+                    "units": " ̊C"
+                },
+                {
+                    "name": "mbase",
+                    "initial_value": "0.000",
+                    "description": "  Base temperature for snowmelt computations during non-rain periods",
+                    "min": "0.000",
+                    "max": "0.000",
+                    "data_type": "double",
+                    "units": " ̊C"
+                },
+                {
+                    "name": "plwhc",
+                    "initial_value": "0.030",
+                    "description": " maximum amount of liquid water as a fraction of the ice portion of the snow that can be held against gravity drainage",
+                    "min": "0.010",
+                    "max": "0.300",
+                    "data_type": "double",
+                    "units": " %"
+                },
+                {
+                    "name": "daygm",
+                    "initial_value": "0.000",
+                    "description": " Constant daily amount of melt which takes place at the snow-soil interface whenever there is a snow cover",
+                    "min": "0.000",
+                    "max": "0.500",
+                    "data_type": "double",
+                    "units": "mm/day"
+                }
+            ],
+            "output_variables": [
+                {
+                    "variable": "cs",
+                    "description": "19-element vector per HRU used in snow19: (n_hrus, 19)"
+                },
+                {
+                    "variable": "raim",
+                    "description": "rain and melt output"
+                },
+                {
+                    "variable": "raim_comb",
+                    "description": null
+                },
+                {
+                    "variable": "sneqv",
+                    "description": "snow water equivalent"
+                },
+                {
+                    "variable": "sneqv_comb",
+                    "description": null
+                },
+                {
+                    "variable": "snow",
+                    "description": "snow"
+                },
+                {
+                    "variable": "snowh",
+                    "description": "snow height"
+                },
+                {
+                    "variable": "snowh_comb\n",
+                    "description": null
+                }
+            ]
+        }
+    ]
+}

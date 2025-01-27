@@ -1,0 +1,169 @@
+{
+    "modules": [
+        {
+            "module_name": "Noah-OWP-Modular",
+            "parameter_file": {
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/Noah-OWP-Modular/2025_Jan_22_15_01_25"
+            },
+            "calibrate_parameters": [
+                {
+                    "name": "MFSNO",
+                    "initial_value": 2.5,
+                    "description": "snowmelt curve parameter",
+                    "min": ".5",
+                    "max": "4",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "CWPVT",
+                    "initial_value": 0.18,
+                    "description": "empirical canopy wind parameter",
+                    "min": ".09",
+                    "max": ".36",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "VCMX25",
+                    "initial_value": 50.0,
+                    "description": "maximum rate of carboxylation at 25c",
+                    "min": "24",
+                    "max": "112",
+                    "data_type": "double",
+                    "units": "umol co2/m**2/s"
+                },
+                {
+                    "name": "MP",
+                    "initial_value": 6.0,
+                    "description": "slope of conductance-to-photosynthesis relationship",
+                    "min": "3.6",
+                    "max": "12.6",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "RSURF_SNOW",
+                    "initial_value": 50.0,
+                    "description": "surface resistence for snow [s/m]",
+                    "min": ".136",
+                    "max": "100",
+                    "data_type": "double",
+                    "units": "s/m"
+                },
+                {
+                    "name": "RSURF_EXP",
+                    "initial_value": 5.0,
+                    "description": "exponent in the shape parameter for soil resistance option 1",
+                    "min": "1",
+                    "max": "6",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "SCAMAX",
+                    "initial_value": 0.9,
+                    "description": "Maximum fractional snow-covered area",
+                    "min": "0",
+                    "max": "1",
+                    "data_type": "double",
+                    "units": null
+                }
+            ],
+            "output_variables": [
+                {
+                    "variable": "ACSNOM",
+                    "description": " Accumulated meltwater from bottom snow layer (mm) (NWM 3.0 output variable)"
+                },
+                {
+                    "variable": "CMC",
+                    "description": " Total canopy water (liquid + ice) (mm) (NWM 3.0 output variable)"
+                },
+                {
+                    "variable": "ECAN",
+                    "description": " evaporation of intercepted water (mm) (NWM 3.0 output variable)"
+                },
+                {
+                    "variable": "ETRAN",
+                    "description": "transpiration rate (mm/s)"
+                },
+                {
+                    "variable": "EVAPOTRANS",
+                    "description": "evapotranspiration rate (m/s)"
+                },
+                {
+                    "variable": "FIRA",
+                    "description": " Total net LW radiation to atmosphere (W/m-2) (NWM 3.0 output variable)"
+                },
+                {
+                    "variable": "FSA",
+                    "description": " Total absorbed SW radiation (W/m-2) (NWM 3.0 output variable)"
+                },
+                {
+                    "variable": "FSH",
+                    "description": " Total sensible heat to the atmosphere (W/m-2) (NWM 3.0 output variable)"
+                },
+                {
+                    "variable": "FSNO",
+                    "description": " Snow-cover fraction on the ground ( fraction) (NWM 3.0 output variable)"
+                },
+                {
+                    "variable": "GH",
+                    "description": " Heat flux into the soil (W/m-2) (NWM 3.0 output variable)"
+                },
+                {
+                    "variable": "LH",
+                    "description": " Total latent heat to the atmosphere (W/m-2) (NWM 3.0 output variable)"
+                },
+                {
+                    "variable": "QINSUR",
+                    "description": "total liquid water input to surface rate (m/s)"
+                },
+                {
+                    "variable": "QRAIN",
+                    "description": " Rainfall rate on the ground (mm/s) (NWM 3.0 output variable)"
+                },
+                {
+                    "variable": "QSEVA",
+                    "description": "evaporation rate (m/s)"
+                },
+                {
+                    "variable": "QSNOW",
+                    "description": " Snowfall rate on the ground (mm/s) (NWM 3.0 output variable)"
+                },
+                {
+                    "variable": "SNEQV",
+                    "description": "snow water equivalent (mm)"
+                },
+                {
+                    "variable": "SNLIQ",
+                    "description": " Snow layer liquid water (mm) (NWM 3.0 output variable)"
+                },
+                {
+                    "variable": "SNOW",
+                    "description": " Number of snow layers () (NWM 3.0 output variable)"
+                },
+                {
+                    "variable": "SNOWH",
+                    "description": " Snow depth (m) (NWM 3.0 output variable)"
+                },
+                {
+                    "variable": "SNOWT_AVG",
+                    "description": " Average snow temperature (K) (by layer mass) (NWM 3.0 output variable)"
+                },
+                {
+                    "variable": "TG",
+                    "description": "surface/ground temperature (becomes snow surface temperature when snow is present)"
+                },
+                {
+                    "variable": "TGS",
+                    "description": "ground temperature (K) (is equal to TG when no snow and equal to bottom snow element temperature when there is snow)"
+                },
+                {
+                    "variable": "TRAD",
+                    "description": " Surface radiative temperature (K) (NWM 3.0 output variable)"
+                }
+            ]
+        }
+    ]
+}
