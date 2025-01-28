@@ -14,7 +14,7 @@ get_deps: check-env
 	tar -xzf /tmp/hydro_api/hydrofabric_data.tgz -C $(shell pwd)/
 
 build:
-	sudo docker build -t hydrofabric_api .
+	sudo docker build --no-cache -t hydrofabric_api .
 
 run: check-env
 	@echo "Starting the docker container running the hydrofabric_api on port 8000 \n"

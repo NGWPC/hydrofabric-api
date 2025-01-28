@@ -20,6 +20,11 @@ from .initial_parameters import get_ipe
 
 logger = logging.getLogger(__name__)
 
+HTTP_OK = status.HTTP_200_OK
+HTTP_UNPROCESSABLE_ENTITY = status.HTTP_422_UNPROCESSABLE_ENTITY
+HTTP_INTERNAL_SERVER_ERROR = status.HTTP_500_INTERNAL_SERVER_ERROR
+HTTP_NOT_FOUND = status.HTTP_404_NOT_FOUND
+
 # Get the App Version
 @api_view(['GET'])
 def version(request):
@@ -37,13 +42,13 @@ def get_modules(request):
             rows = db.selectAllModules()
             if rows:
                 results = [OrderedDict({"model_id": row[0], "name": row[1]}) for row in rows]
-                return Response(results, status=status.HTTP_200_OK)
+                return Response(results, status=HTTP_OK)
             else:
-                return Response({"error": "No data found"}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"error": "No data found"}, status=HTTP_NOT_FOUND)
 
     except Exception as e:
         logger.error(f"Error executing query: {e}")
-        return Response({"Error executing query": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"Error executing query": str(e)}, status=HTTP_INTERNAL_SERVER_ERROR)
 
 
 # Execute the query  to fetch all models details .
@@ -62,43 +67,43 @@ def modules(request):
                     results.append(result)
 
                 # Wrap results in the "modules" key
-                return Response({"modules": results}, status=status.HTTP_200_OK)
+                return Response({"modules": results}, status=HTTP_OK)
 
     except Exception as e:
         logger.error(f"Error executing query: {e}")
-        return Response({"Error executing query": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"Error executing query": str(e)}, status=HTTP_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
 def return_geopackage(request):
-    http_200 = status.HTTP_200_OK
-    http_422 = status.HTTP_422_UNPROCESSABLE_ENTITY
     gage_id = request.query_params.get('gage_id')
     version = request.query_params.get('version')
     source = request.query_params.get('source')
     domain = request.query_params.get('domain')
     gage_file_mgmt = GageFileManagement()
+    
     results = None
-    loc_status = http_200
+    loc_status = HTTP_OK
 
     if version != '2.1' and version != '2.2':
-        results = 'Hydrofabric version must be 2.2 or 2.1'
-        loc_status = http_422
-        return Response(results, status=loc_status)
-
-    if version == '2.1' and domain != 'CONUS':
-        results = 'oCONUS domains not availiable in Hydrofabric version 2.1'
-        loc_status = http_422
-        return Response(results, status=loc_status)
-
-    # Determine if this has already been computed, Check DB HFFiles table and S3 for pre-existing data
-    file_found, results = gage_file_mgmt.file_exists(gage_id, version, domain, source, FileTypeEnum.GEOPACKAGE)
-    if not file_found:
-        results = get_geopackage(gage_id, version, source, domain)
-        if 'error' in results:
-            loc_status = http_422
+        error_str = 'Hydrofabric version must be 2.2 or 2.1'
+        logger.error(error_str)
+        results = {'error': error_str}
+        loc_status = HTTP_UNPROCESSABLE_ENTITY
+    elif version == '2.1' and domain != 'CONUS':
+        error_str = 'oCONUS domains not availiable in Hydrofabric version 2.1'
+        logger.error(error_str)
+        results = {'error': error_str}
+        loc_status = HTTP_UNPROCESSABLE_ENTITY
     else:
-        logger.debug(f"Prexisting Geopackage found for gage_id - {gage_id}, version - {version}, domain - {domain}, source - {source}")
+        # Determine if this has already been computed, Check DB HFFiles table and S3 for pre-existing data
+        file_found, results = gage_file_mgmt.file_exists(gage_id, version, domain, source, FileTypeEnum.GEOPACKAGE)
+        if not file_found:
+            results = get_geopackage(gage_id, version, source, domain)
+            if 'error' in results:
+                loc_status = HTTP_UNPROCESSABLE_ENTITY
+        else:
+            logger.debug(f"Prexisting Geopackage found for gage_id - {gage_id}, version - {version}, domain - {domain}, source - {source}")
 
     return Response(results, status=loc_status)
 
@@ -113,12 +118,15 @@ def return_ipe(request):
     gage_file_mgmt = GageFileManagement()
 
     if version != '2.1' and version != '2.2':
-        results = 'Hydrofabric version must be 2.2 or 2.1'
-        return results
-
-    if version == '2.1' and domain != 'CONUS':
-        results = 'oCONUS domains not availiable in Hydrofabric version 2.1'
-        return results
+        error_str = 'Hydrofabric version must be 2.2 or 2.1'
+        logger.error(error_str)
+        results = {'error': error_str}
+        return Response(results, status=HTTP_UNPROCESSABLE_ENTITY)
+    elif version == '2.1' and domain != 'CONUS':
+        error_str = 'oCONUS domains not availiable in Hydrofabric version 2.1'
+        logger.error(error_str)
+        results = {'error': error_str}
+        return Response(results, status=HTTP_UNPROCESSABLE_ENTITY)
 
     # TODO: Determine if IPE files already exists for this module and gage
     modules_to_calculate = gage_file_mgmt.param_files_exists(gage_id, version, domain, source, FileTypeEnum.PARAMS, modules)
@@ -132,20 +140,21 @@ def return_ipe(request):
         else:
             # Build the Geopackage file from scratch
             results = get_geopackage(gage_id, version, source, domain, keep_file=True)
+            if 'error' in results:
+                return Response(results, status=HTTP_UNPROCESSABLE_ENTITY)
 
     results = get_ipe(gage_id, version, source, domain, modules, gage_file_mgmt)
-
     return results
 
 
 class GetObservationalData(APIView):
 
     def get(self, request):
-        loc_status = status.HTTP_200_OK
         gage_id = request.query_params.get('gage_id')
         source = request.query_params.get('source')
         domain = request.query_params.get('domain')
         gage_file_mgmt = GageFileManagement()
+        loc_status = HTTP_OK
 
         #TODO:  file_exists needs a version after the 2.2 updates.  Observational data is currently
         #tied to 2.1 so hardcoding this for now.
@@ -154,8 +163,8 @@ class GetObservationalData(APIView):
         # Check DB and HFFiles table for pre-existing data
         file_found, results = gage_file_mgmt.file_exists(gage_id, version, domain, source, FileTypeEnum.OBSERVATIONAL)
         if not file_found:
-            loc_status = status.HTTP_422_UNPROCESSABLE_ENTITY
-            results = f"Non-Headwater Basin gage or missing data for gage_id - {gage_id}, source -  {source}, domain - {domain}"
+            loc_status = HTTP_UNPROCESSABLE_ENTITY
+            results = {"error": f"Non-Headwater Basin gage or missing data for gage_id - {gage_id}, source -  {source}, domain - {domain}"}
             log_string = f"Database or S3 bucket missing gage_id - {gage_id}, data type - {FileTypeEnum.OBSERVATIONAL}, source -  {source}, domain - {domain}."
             logger.error(log_string)
 
