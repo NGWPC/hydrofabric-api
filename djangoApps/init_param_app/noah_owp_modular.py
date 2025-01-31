@@ -26,6 +26,9 @@ def noah_owp_modular_ipe(gage_id, version, source, domain, subset_dir, gpkg_file
     module = "Noah-OWP-Modular"
     filename_list = []
 
+    num_soil_type = 19
+    num_veg_type = 27
+
     divide_attr = get_hydrofabric_attributes(gpkg_file, version)
 
     attr22 = {'divide_id':'divide_id', 'slope':'mean.slope', 'aspect': 'circ_mean.aspect',
@@ -155,7 +158,10 @@ def noah_owp_modular_ipe(gage_id, version, source, domain, subset_dir, gpkg_file
             initial_values = module_metadata["calibrate_parameters"][x]["initial_value"]
             #If initial values are an array, get proper value for vegtype, otherwise use the single value.
             if len(initial_values) > 1:
-                 module_metadata["calibrate_parameters"][x]["initial_value"] = initial_values[vegtype - 1]
+                 if len(initial_values) == num_veg_type:
+                    module_metadata["calibrate_parameters"][x]["initial_value"] = initial_values[vegtype - 1]
+                 if len(initial_values)== num_soil_type:
+                    module_metadata["calibrate_parameters"][x]["initial_value"] = initial_values[isltype - 1]
             else:
                  module_metadata["calibrate_parameters"][x]["initial_value"] = initial_values[0]
 
