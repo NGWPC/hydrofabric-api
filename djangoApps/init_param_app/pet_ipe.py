@@ -18,4 +18,5 @@ def pet_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_meta
     module = "PET"
 
     # TODO: Fill this file out once PET is fully implemented.
+    module_metadata["module_name"] = module
     return module_metadata
