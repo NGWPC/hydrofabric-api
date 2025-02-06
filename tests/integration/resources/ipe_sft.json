@@ -3,7 +3,7 @@
         {
             "module_name": "SFT",
             "parameter_file": {
-                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/01123000/PARAMS/USGS/SFT/2025_Jan_23_20_02_24"
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/01123000/PARAMS/USGS/SFT/2025_Feb_06_20_31_15"
             },
             "calibrate_parameters": [
                 {
@@ -11,7 +11,7 @@
                     "initial_value": "0.4009084105491638",
                     "description": "saturated soil moisture content",
                     "min": null,
-                    "max": null,
+                    "max": "1",
                     "data_type": "double",
                     "units": "m/m"
                 },
@@ -19,8 +19,8 @@
                     "name": "soil_params.satpsi",
                     "initial_value": "0.027170022789296738",
                     "description": "saturated capillary head",
-                    "min": null,
-                    "max": null,
+                    "min": "0.03",
+                    "max": "0.955",
                     "data_type": "double",
                     "units": "m"
                 },
@@ -28,53 +28,13 @@
                     "name": "soil_params.b",
                     "initial_value": "7.551834583282471",
                     "description": "beta exponent on Clapp-Hornberger (1978) soil water relations",
-                    "min": null,
-                    "max": null,
+                    "min": "2",
+                    "max": "15",
                     "data_type": "double",
                     "units": null
                 }
             ],
             "output_variables": [
-                {
-                    "variable": "ACTUAL_ET",
-                    "description": "AET"
-                },
-                {
-                    "variable": "DEEP_GW_TO_CHANNEL_FLUX",
-                    "description": "deep_gw_to_channel_flux"
-                },
-                {
-                    "variable": "DIRECT_RUNOFF",
-                    "description": "direct_runoff"
-                },
-                {
-                    "variable": "GIUH_RUNOFF",
-                    "description": "giuh_runoff"
-                },
-                {
-                    "variable": "NASH_LATERAL_RUNOFF",
-                    "description": "nash_lateral_runoff"
-                },
-                {
-                    "variable": "POTENTIAL_ET",
-                    "description": "PET"
-                },
-                {
-                    "variable": "Q_OUT",
-                    "description": "q_out"
-                },
-                {
-                    "variable": "RAIN_RATE",
-                    "description": "rain_rate"
-                },
-                {
-                    "variable": "SOIL_STORAGE",
-                    "description": "soil_storage"
-                },
-                {
-                    "variable": "TG",
-                    "description": "ground_temperature"
-                },
                 {
                     "variable": "ground_heat_flux",
                     "description": null
@@ -94,10 +54,6 @@
                 {
                     "variable": "soil_ice_fraction",
                     "description": "soil_ice_fraction"
-                },
-                {
-                    "variable": "soil_moisture_fraction",
-                    "description": "soil_moisture_fraction"
                 },
                 {
                     "variable": "soil_temperature_profile",

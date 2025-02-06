@@ -3,139 +3,139 @@
         {
             "module_name": "Sac-SMA",
             "parameter_file": {
-                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/Sac-SMA/2025_Jan_23_18_21_03"
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/Sac-SMA/2025_Feb_06_20_31_20"
             },
             "calibrate_parameters": [
                 {
                     "name": "uztwm",
                     "initial_value": "65.9280395507812",
                     "description": "upper zone tension water maximum storage",
-                    "min": null,
-                    "max": null,
-                    "data_type": null,
+                    "min": "25",
+                    "max": "125",
+                    "data_type": "double",
                     "units": "mm"
                 },
                 {
                     "name": "uzfwm",
                     "initial_value": "36.3320770263672",
                     "description": "Maximum upper zone free water",
-                    "min": null,
-                    "max": null,
-                    "data_type": null,
+                    "min": "10",
+                    "max": "75",
+                    "data_type": "double",
                     "units": "mm"
                 },
                 {
                     "name": "lztwm",
                     "initial_value": "248.049942016602",
                     "description": "Maximum lower zone tension water",
-                    "min": null,
-                    "max": null,
-                    "data_type": null,
+                    "min": "75",
+                    "max": "300",
+                    "data_type": "double",
                     "units": "mm"
                 },
                 {
                     "name": "lzfsm",
                     "initial_value": "28.2874584197998",
                     "description": "Maximum lower zone free water, secondary (aka supplemental)",
-                    "min": null,
-                    "max": null,
-                    "data_type": null,
+                    "min": "15",
+                    "max": "300",
+                    "data_type": "double",
                     "units": "mm"
                 },
                 {
                     "name": "lzfpm",
                     "initial_value": "115.512680053711",
                     "description": "Maximum lower zone free water, primary",
-                    "min": null,
-                    "max": null,
-                    "data_type": null,
+                    "min": "40",
+                    "max": "600",
+                    "data_type": "double",
                     "units": "mm"
                 },
                 {
                     "name": "adimp",
                     "initial_value": "0.0",
                     "description": "Additional impervious area due to saturation",
-                    "min": null,
-                    "max": null,
-                    "data_type": null,
+                    "min": "0",
+                    "max": "0.2",
+                    "data_type": "double",
                     "units": "decimal percent"
                 },
                 {
                     "name": "uzk",
                     "initial_value": "0.339933335781097",
                     "description": "Upper zone recession coefficient",
-                    "min": null,
-                    "max": null,
-                    "data_type": null,
+                    "min": "0.2",
+                    "max": "0.5",
+                    "data_type": "double",
                     "units": "per day "
                 },
                 {
                     "name": "lzpk",
                     "initial_value": "0.0118987094610929",
                     "description": "Lower zone recession coefficient, primary",
-                    "min": null,
-                    "max": null,
-                    "data_type": null,
+                    "min": "0.001",
+                    "max": "0.015",
+                    "data_type": "double",
                     "units": "decimal percent"
                 },
                 {
                     "name": "lzsk",
                     "initial_value": "0.128256008028984",
                     "description": "Lower zone recession coefficient, secondary (aka supplemental)",
-                    "min": null,
-                    "max": null,
-                    "data_type": null,
+                    "min": "0.03",
+                    "max": "0.2",
+                    "data_type": "double",
                     "units": "decimal percent"
                 },
                 {
                     "name": "zperc",
                     "initial_value": "82.60107421875",
                     "description": "Minimum percolation rate coefficient",
-                    "min": null,
-                    "max": null,
-                    "data_type": null,
+                    "min": "20",
+                    "max": "300",
+                    "data_type": "double",
                     "units": null
                 },
                 {
                     "name": "rexp",
                     "initial_value": "2.12224531173706",
                     "description": "Percolation equation exponent",
-                    "min": null,
-                    "max": null,
-                    "data_type": null,
+                    "min": "1.4",
+                    "max": "3.5",
+                    "data_type": "double",
                     "units": null
                 },
                 {
                     "name": "pctim",
                     "initial_value": "0.0",
                     "description": "impervious  fraction of the watershed area ",
-                    "min": null,
-                    "max": null,
-                    "data_type": null,
+                    "min": "0",
+                    "max": "0.05",
+                    "data_type": "double",
                     "units": "decimal percent"
                 },
                 {
                     "name": "pfree",
                     "initial_value": "0.218659713864326",
                     "description": "fraction of water percolating from upper zone directly to lower zone free water storage. ",
-                    "min": null,
-                    "max": null,
-                    "data_type": null,
+                    "min": "0",
+                    "max": "0.5",
+                    "data_type": "double",
                     "units": "decimal percent"
                 },
                 {
                     "name": "riva",
                     "initial_value": "0.0",
                     "description": "Percent of the basin that is riparian area",
-                    "min": null,
-                    "max": null,
-                    "data_type": null,
+                    "min": "0",
+                    "max": "0.2",
+                    "data_type": "double",
                     "units": "decimal percent"
                 }
             ],
             "output_variables": [
                 {
-                    "variable": "baseflow non-channel component ",
+                    "variable": "bfncc",
                     "description": "baseflow non-channel component "
                 },
                 {

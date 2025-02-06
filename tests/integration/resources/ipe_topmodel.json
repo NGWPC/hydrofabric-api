@@ -3,7 +3,7 @@
         {
             "module_name": "TopModel",
             "parameter_file": {
-                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/TopModel/2025_Jan_23_18_31_01"
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/TopModel/2025_Feb_06_20_31_30"
             },
             "calibrate_parameters": [
                 {
@@ -11,7 +11,7 @@
                     "initial_value": "0.000075",
                     "description": "downslope transmissivity when the soil is just saturated to the surface",
                     "min": "0",
-                    "max": "0.001",
+                    "max": "0.0001",
                     "data_type": "double",
                     "units": "meters/hour"
                 },

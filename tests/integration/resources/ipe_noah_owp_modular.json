@@ -3,15 +3,78 @@
         {
             "module_name": "Noah-OWP-Modular",
             "parameter_file": {
-                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/Noah-OWP-Modular/2025_Jan_22_15_01_25"
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/Noah-OWP-Modular/2025_Feb_06_20_31_13"
             },
             "calibrate_parameters": [
+                {
+                    "name": "bexp",
+                    "initial_value": 4.74,
+                    "description": "Pore size distribution index (expenontial term)",
+                    "min": "0",
+                    "max": "20.387",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "MAXSMC",
+                    "initial_value": 0.434,
+                    "description": "porosity (volumetric)",
+                    "min": "0",
+                    "max": "1",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "SATDK",
+                    "initial_value": 5.23e-06,
+                    "description": "saturated conductivity",
+                    "min": "0",
+                    "max": "0.00141",
+                    "data_type": "double",
+                    "units": "m/s"
+                },
+                {
+                    "name": "AXAJ",
+                    "initial_value": 0.009,
+                    "description": "Xinanjiang: Tension water distribution inflection parameter",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "BXAJ",
+                    "initial_value": 0.09,
+                    "description": "Xinanjiang: Tension water distribution shape parameter",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "XXAJ",
+                    "initial_value": 0.09,
+                    "description": "Xinanjiang: Free water distribution shape parameter",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "HVT",
+                    "initial_value": 20.0,
+                    "description": "top of canopy",
+                    "min": null,
+                    "max": null,
+                    "data_type": "double",
+                    "units": "m"
+                },
                 {
                     "name": "MFSNO",
                     "initial_value": 2.5,
                     "description": "snowmelt curve parameter",
-                    "min": ".5",
-                    "max": "4",
+                    "min": "0.625",
+                    "max": "5",
                     "data_type": "double",
                     "units": null
                 },
@@ -19,10 +82,10 @@
                     "name": "CWPVT",
                     "initial_value": 0.18,
                     "description": "empirical canopy wind parameter",
-                    "min": ".09",
-                    "max": ".36",
+                    "min": "0.09",
+                    "max": "10",
                     "data_type": "double",
-                    "units": null
+                    "units": "1/m"
                 },
                 {
                     "name": "VCMX25",
@@ -37,7 +100,7 @@
                     "name": "MP",
                     "initial_value": 6.0,
                     "description": "slope of conductance-to-photosynthesis relationship",
-                    "min": "3.6",
+                    "min": "5.4",
                     "max": "12.6",
                     "data_type": "double",
                     "units": null
@@ -46,7 +109,7 @@
                     "name": "RSURF_SNOW",
                     "initial_value": 50.0,
                     "description": "surface resistence for snow [s/m]",
-                    "min": ".136",
+                    "min": "0.136",
                     "max": "100",
                     "data_type": "double",
                     "units": "s/m"
@@ -66,6 +129,24 @@
                     "description": "Maximum fractional snow-covered area",
                     "min": "0",
                     "max": "1",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "SLOPE",
+                    "initial_value": 0.1,
+                    "description": "Linear scaling of \"openness\" of bottom drainage boundary",
+                    "min": "0",
+                    "max": "1",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "REFKDT",
+                    "initial_value": 2e-06,
+                    "description": "Surface runoff parameter; REFKDT is a tuneable parameter that significantly impacts surface infiltration and hence the partitioning of total runoff into surface and subsurface runoff. Increasing REFKDT decreases surface runoff",
+                    "min": null,
+                    "max": null,
                     "data_type": "double",
                     "units": null
                 }
@@ -112,6 +193,10 @@
                     "description": " Heat flux into the soil (W/m-2) (NWM 3.0 output variable)"
                 },
                 {
+                    "variable": "ISNOW",
+                    "description": " Number of snow layers () (NWM 3.0 output variable)"
+                },
+                {
                     "variable": "LH",
                     "description": " Total latent heat to the atmosphere (W/m-2) (NWM 3.0 output variable)"
                 },
@@ -125,7 +210,7 @@
                 },
                 {
                     "variable": "QSEVA",
-                    "description": "evaporation rate (m/s)"
+                    "description": "evaporation rate (mm/s)"
                 },
                 {
                     "variable": "QSNOW",
@@ -138,10 +223,6 @@
                 {
                     "variable": "SNLIQ",
                     "description": " Snow layer liquid water (mm) (NWM 3.0 output variable)"
-                },
-                {
-                    "variable": "SNOW",
-                    "description": " Number of snow layers () (NWM 3.0 output variable)"
                 },
                 {
                     "variable": "SNOWH",
