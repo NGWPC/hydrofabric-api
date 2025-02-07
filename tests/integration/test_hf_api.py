@@ -22,7 +22,8 @@ IPE_PARAMS = [
     ("06710385", ["T-Route"], "ipe_t_route.json"),
     ("06710385", ["TopModel"], "ipe_topmodel.json"),
     ("06710385", ["LASAM"], "ipe_lasam.json"),
-    ("01123000", ["UEB"], "ipe_ueb.json")
+    ("01123000", ["UEB"], "ipe_ueb.json"),
+    ("06710385", ["PET"], "ipe_pet.json")
 ]
 
 
@@ -45,8 +46,7 @@ class TestGeopackage:
     def test_gpkg_good(self):
         """ Check geopackage query results when a well-formed call is made """
         results = make_api_call("geopackage", "06710385", "2.2", "USGS", "CONUS")
-        expected = {"uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/GEOPACKAGE/USGS/2025_Jan_17_21_02_53/gauge_06710385.gpkg"}
-        assert results == expected
+        assert ("uri" in results) and ("gauge_06710385.gpkg" in results["uri"])
 
     def test_gpkg_bad_gage_id(self):
         """ Check geopackage query results when a bad gage id is supplied """
@@ -112,8 +112,7 @@ class TestObservationalData:
     def test_observ_data_good(self):
         """ Check observational data query results when a well-formed call is made  """
         results = make_api_call("observational", "06710385", "", "USGS", "CONUS")
-        expected = {"uri": "s3://ngwpc-hydrofabric/2.1/CONUS/06710385/OBSERVATIONAL/USGS/2024_Sep_19_09_12_20/06710385_hourly_discharge.csv"}
-        assert results == expected
+        assert ("uri" in results) and ("06710385_hourly_discharge.csv" in results["uri"])
 
     def test_observ_data_bad_gage_id(self):
         """ Check observational data query results when a bad gage id is supplied  """

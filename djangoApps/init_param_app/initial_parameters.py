@@ -14,6 +14,7 @@ from .sft import *
 from .smp import *
 from .ueb import UEB
 from .lasam_ipe import *
+from .pet_ipe import *
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -51,10 +52,12 @@ def get_ipe(gage_id, version, source, domain, modules, gage_file_mgmt):
                 module_results = calculate_module_params(gage_id, version, source, domain, module, subset_dir, gpkg_file, gage_file_mgmt)
 
             if 'error' not in module_results:
-                # add ipe_json to Database
-                hffiles_row = gage_file_mgmt.get_db_object()
-                hffiles_row.ipe_json = json.dumps(module_results)
-                hffiles_row.save()
+                # TODO: Remove PET module stipulation when the module is implemented
+                if module != "PET":
+                    # add ipe_json to Database
+                    hffiles_row = gage_file_mgmt.get_db_object()
+                    hffiles_row.ipe_json = json.dumps(module_results)
+                    hffiles_row.save()
 
             else:
                 results = module_results
@@ -109,7 +112,11 @@ def calculate_module_params(gage_id, version, source, domain, module, subset_dir
         os.mkdir(subset_dir)
     #Add the trailing /
     subset_dir += "/"
-    module_metadata = get_module_metadata(module)
+    # TODO: Remove this exception for PET once it's no longer returning empty an IPE list as a placeholder
+    if module == "PET":
+        module_metadata = OrderedDict()
+    else:
+        module_metadata = get_module_metadata(module)
     logger.debug(module_metadata)
     logger.info(f"Get IPEs for {module} module")
 
@@ -133,6 +140,8 @@ def calculate_module_params(gage_id, version, source, domain, module, subset_dir
         results = ueb.initial_parameters(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "LASAM":
         results = lasam_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
+    elif module == "PET":
+        results = pet_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     else:
         error_str = f"Module name not valid: {module}"
         error = dict(error=error_str)
