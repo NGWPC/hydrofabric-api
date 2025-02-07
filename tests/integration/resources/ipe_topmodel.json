@@ -1,0 +1,124 @@
+{
+    "modules": [
+        {
+            "module_name": "TopModel",
+            "parameter_file": {
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/TopModel/2025_Feb_06_20_31_30"
+            },
+            "calibrate_parameters": [
+                {
+                    "name": "t0",
+                    "initial_value": "0.000075",
+                    "description": "downslope transmissivity when the soil is just saturated to the surface",
+                    "min": "0",
+                    "max": "0.0001",
+                    "data_type": "double",
+                    "units": "meters/hour"
+                },
+                {
+                    "name": "td",
+                    "initial_value": "20",
+                    "description": "unsaturated zone time delay per unit storage deficit",
+                    "min": "0.001",
+                    "max": "40",
+                    "data_type": "double",
+                    "units": "hours"
+                },
+                {
+                    "name": "srmax",
+                    "initial_value": "0.04",
+                    "description": "maximum root zone storage deficit",
+                    "min": "0.005",
+                    "max": "0.05",
+                    "data_type": "double",
+                    "units": "meters"
+                },
+                {
+                    "name": "xk0",
+                    "initial_value": "2",
+                    "description": "surface soil hydraulic conductivity",
+                    "min": "0.0001",
+                    "max": "0.2",
+                    "data_type": "double",
+                    "units": "meters/hour"
+                },
+                {
+                    "name": "hf",
+                    "initial_value": "0.1",
+                    "description": "wetting front suction for G&A soln.",
+                    "min": "0.01",
+                    "max": "0.5",
+                    "data_type": "double",
+                    "units": "meters"
+                },
+                {
+                    "name": "dth",
+                    "initial_value": "0.1",
+                    "description": "water content change across the wetting front; dimensionless",
+                    "min": "0.01",
+                    "max": "0.6",
+                    "data_type": "double",
+                    "units": null
+                }
+            ],
+            "output_variables": [
+                {
+                    "variable": "Qout",
+                    "description": null
+                },
+                {
+                    "variable": "bal",
+                    "description": "land_surface_water__water_balance_volume"
+                },
+                {
+                    "variable": "ep",
+                    "description": "water_potential_evaporation_flux_out"
+                },
+                {
+                    "variable": "p",
+                    "description": "atmosphere_water__liquid_equivalent_precipitation_rate_out"
+                },
+                {
+                    "variable": "q(it)",
+                    "description": "land_surface_water__runoff_mass_flux"
+                },
+                {
+                    "variable": "qb",
+                    "description": "land_surface_water__baseflow_volume_flux"
+                },
+                {
+                    "variable": "qof",
+                    "description": "land_surface_water__domain_time_integral_of_overland_flow_volume_flux"
+                },
+                {
+                    "variable": "qz",
+                    "description": "soil_water_root-zone_unsat-zone_top__recharge_volume_flux"
+                },
+                {
+                    "variable": "sbar",
+                    "description": "soil_water__domain_volume_deficit"
+                },
+                {
+                    "variable": "sumae",
+                    "description": "land_surface_water__domain_time_integral_of_evaporation_volume_flux"
+                },
+                {
+                    "variable": "sump",
+                    "description": "land_surface_water__domain_time_integral_of_precipitation_volume_flux"
+                },
+                {
+                    "variable": "sumq",
+                    "description": "land_surface_water__domain_time_integral_of_runoff_volume_flux"
+                },
+                {
+                    "variable": "sumrz",
+                    "description": "soil_water__domain_root-zone_volume_deficit"
+                },
+                {
+                    "variable": "sumuz",
+                    "description": "soil_water__domain_unsaturated-zone_volume"
+                }
+            ]
+        }
+    ]
+}

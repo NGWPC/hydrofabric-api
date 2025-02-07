@@ -1,0 +1,61 @@
+{
+    "modules": [
+        {
+            "module_name": "SMP",
+            "parameter_file": {
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/SMP/2025_Feb_06_20_31_16"
+            },
+            "calibrate_parameters": [
+                {
+                    "name": "soil_params.b",
+                    "initial_value": "5.021543025970459",
+                    "description": "beta exponent on Clapp-Hornberger (1978) soil water relations",
+                    "min": "2",
+                    "max": "15",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "soil_params.satpsi",
+                    "initial_value": "0.01064312453240063",
+                    "description": "saturated capillary head",
+                    "min": "0.03",
+                    "max": "0.955",
+                    "data_type": "double",
+                    "units": "m"
+                },
+                {
+                    "name": "soil_params.smcmax",
+                    "initial_value": "0.48602351546287537",
+                    "description": "saturated soil moisture content",
+                    "min": null,
+                    "max": "1",
+                    "data_type": "double",
+                    "units": "m/m"
+                }
+            ],
+            "output_variables": [
+                {
+                    "variable": "soil_moisture_fraction",
+                    "description": "**Note: SoilMoistureProfiles has a bmi output called soil_moisture_fraction (water in the topsoil over total water in the soil column) needs the depth of the topsoil (soil_moisture_fraction_depth, default is set to 40 cm -- the top two cells in the soil column of the NWM 3.0)"
+                },
+                {
+                    "variable": "soil_moisture_profile",
+                    "description": "Entire profile of the soil column (1D array)"
+                },
+                {
+                    "variable": "soil_moisture_profile",
+                    "description": "Entire profile of the soil column (1D array)"
+                },
+                {
+                    "variable": "soil_water_table",
+                    "description": "Depth of the water table from the surface in meters"
+                },
+                {
+                    "variable": "soil_water_table",
+                    "description": "Depth of the water table from the surface in meters"
+                }
+            ]
+        }
+    ]
+}

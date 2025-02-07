@@ -1,0 +1,201 @@
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework import generics
+from django.db import connection
+from django.conf import settings
+from collections import OrderedDict
+
+from rest_framework.views import APIView
+
+from .models import HFFiles
+from .util.enums import FileTypeEnum
+from .util.gage_file_management import GageFileManagement
+from .serializers import HFFilesSerializers
+import logging
+from .DatabaseManager import DatabaseManager
+
+from .geopackage import get_geopackage
+from .initial_parameters import get_ipe
+
+logger = logging.getLogger(__name__)
+
+HTTP_OK = status.HTTP_200_OK
+HTTP_UNPROCESSABLE_ENTITY = status.HTTP_422_UNPROCESSABLE_ENTITY
+HTTP_INTERNAL_SERVER_ERROR = status.HTTP_500_INTERNAL_SERVER_ERROR
+HTTP_NOT_FOUND = status.HTTP_404_NOT_FOUND
+
+# Get the App Version
+@api_view(['GET'])
+def version(request):
+    return Response({'version': settings.VERSION})
+
+
+# Execute the query  to fetch all models and model_ids.
+@api_view(['GET'])
+def get_modules(request):
+    try:
+        with connection.cursor() as cursor:
+            db = DatabaseManager(cursor)
+            # cursor.execute("SELECT model_id, name FROM public.models ORDER BY model_id ASC")
+            # rows = cursor.fetchall()
+            rows = db.selectAllModules()
+            if rows:
+                results = [OrderedDict({"model_id": row[0], "name": row[1]}) for row in rows]
+                return Response(results, status=HTTP_OK)
+            else:
+                return Response({"error": "No data found"}, status=HTTP_NOT_FOUND)
+
+    except Exception as e:
+        logger.error(f"Error executing query: {e}")
+        return Response({"Error executing query": str(e)}, status=HTTP_INTERNAL_SERVER_ERROR)
+
+
+# Execute the query  to fetch all models details .
+@api_view(['GET'])
+def modules(request):
+    try:
+        with connection.cursor() as cursor:
+            db = DatabaseManager(cursor)
+            column_names, rows = db.selectAllModulesDetail()
+            if column_names and rows:
+                results = []
+                for row in rows:
+                    result = OrderedDict()
+                    result["module_name"] = row[column_names.index("name")]
+                    result["groups"] = row[column_names.index("groups")]
+                    results.append(result)
+
+                # Wrap results in the "modules" key
+                return Response({"modules": results}, status=HTTP_OK)
+
+    except Exception as e:
+        logger.error(f"Error executing query: {e}")
+        return Response({"Error executing query": str(e)}, status=HTTP_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+def return_geopackage(request):
+    gage_id = request.query_params.get('gage_id')
+    version = request.query_params.get('version')
+    source = request.query_params.get('source')
+    domain = request.query_params.get('domain')
+    gage_file_mgmt = GageFileManagement()
+    
+    results = None
+    loc_status = HTTP_OK
+
+    if version != '2.1' and version != '2.2':
+        error_str = 'Hydrofabric version must be 2.2 or 2.1'
+        logger.error(error_str)
+        results = {'error': error_str}
+        loc_status = HTTP_UNPROCESSABLE_ENTITY
+    elif version == '2.1' and domain != 'CONUS':
+        error_str = 'oCONUS domains not availiable in Hydrofabric version 2.1'
+        logger.error(error_str)
+        results = {'error': error_str}
+        loc_status = HTTP_UNPROCESSABLE_ENTITY
+    else:
+        # Determine if this has already been computed, Check DB HFFiles table and S3 for pre-existing data
+        file_found, results = gage_file_mgmt.file_exists(gage_id, version, domain, source, FileTypeEnum.GEOPACKAGE)
+        if not file_found:
+            results = get_geopackage(gage_id, version, source, domain)
+            if 'error' in results:
+                loc_status = HTTP_UNPROCESSABLE_ENTITY
+        else:
+            logger.debug(f"Prexisting Geopackage found for gage_id - {gage_id}, version - {version}, domain - {domain}, source - {source}")
+
+    return Response(results, status=loc_status)
+
+
+@api_view(['POST'])
+def return_ipe(request):
+    gage_id = request.data.get("gage_id")
+    version = request.data.get("version")
+    source = request.data.get("source")
+    domain = request.data.get("domain")
+    modules = request.data.get("modules")
+    gage_file_mgmt = GageFileManagement()
+
+    if version != '2.1' and version != '2.2':
+        error_str = 'Hydrofabric version must be 2.2 or 2.1'
+        logger.error(error_str)
+        results = {'error': error_str}
+        return Response(results, status=HTTP_UNPROCESSABLE_ENTITY)
+    elif version == '2.1' and domain != 'CONUS':
+        error_str = 'oCONUS domains not availiable in Hydrofabric version 2.1'
+        logger.error(error_str)
+        results = {'error': error_str}
+        return Response(results, status=HTTP_UNPROCESSABLE_ENTITY)
+
+    # TODO: Determine if IPE files already exists for this module and gage
+    modules_to_calculate = gage_file_mgmt.param_files_exists(gage_id, version, domain, source, FileTypeEnum.PARAMS, modules)
+    #Determine if GEOPACKAGE is necessary and file for this gage exists
+    if len(modules_to_calculate) != 0:
+        # Geopackage file needed
+        geopackage_file_found, results = gage_file_mgmt.file_exists(gage_id, version, domain, source, FileTypeEnum.GEOPACKAGE)
+        if geopackage_file_found:
+            # Get the Geopackage file from S3 and put into local directory
+            gage_file_mgmt.get_file_from_s3(gage_id, version, domain, source, FileTypeEnum.GEOPACKAGE)
+        else:
+            # Build the Geopackage file from scratch
+            results = get_geopackage(gage_id, version, source, domain, keep_file=True)
+            if 'error' in results:
+                return Response(results, status=HTTP_UNPROCESSABLE_ENTITY)
+
+    results = get_ipe(gage_id, version, source, domain, modules, gage_file_mgmt)
+    return results
+
+
+class GetObservationalData(APIView):
+
+    def get(self, request):
+        gage_id = request.query_params.get('gage_id')
+        source = request.query_params.get('source')
+        domain = request.query_params.get('domain')
+        gage_file_mgmt = GageFileManagement()
+        loc_status = HTTP_OK
+
+        #TODO:  file_exists needs a version after the 2.2 updates.  Observational data is currently
+        #tied to 2.1 so hardcoding this for now.
+        version = '2.1'
+
+        # Check DB and HFFiles table for pre-existing data
+        file_found, results = gage_file_mgmt.file_exists(gage_id, version, domain, source, FileTypeEnum.OBSERVATIONAL)
+        if not file_found:
+            loc_status = HTTP_UNPROCESSABLE_ENTITY
+            results = {"error": f"Non-Headwater Basin gage or missing data for gage_id - {gage_id}, source -  {source}, domain - {domain}"}
+            log_string = f"Database or S3 bucket missing gage_id - {gage_id}, data type - {FileTypeEnum.OBSERVATIONAL}, source -  {source}, domain - {domain}."
+            logger.error(log_string)
+
+        return Response(results, status=loc_status)
+
+
+class HFFilesCreate(generics.CreateAPIView):
+    # API endpoint that allows creation of a new HFFiles
+    queryset = HFFiles.objects.all(),
+    serializer_class = HFFilesSerializers
+
+
+class HFFilesList(generics.ListAPIView):
+    # API endpoint that allows HFFiles to be viewed.
+    queryset = HFFiles.objects.all()
+    serializer_class = HFFilesSerializers
+
+
+class HFFilesDetail(generics.RetrieveAPIView):
+    # API endpoint that returns a single HFFiles by pk.
+    queryset = HFFiles.objects.all()
+    serializer_class = HFFilesSerializers
+
+
+class HFFilesUpdate(generics.RetrieveUpdateAPIView):
+    # API endpoint that allows a HFFiles record to be updated.
+    queryset = HFFiles.objects.all()
+    serializer_class = HFFilesSerializers
+
+
+class HFFilesDelete(generics.RetrieveDestroyAPIView):
+    # API endpoint that allows a HFFiles record to be deleted.
+    queryset = HFFiles.objects.all()
+    serializer_class = HFFilesSerializers

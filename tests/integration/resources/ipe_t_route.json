@@ -1,0 +1,37 @@
+{
+    "modules": [
+        {
+            "module_name": "T-Route",
+            "parameter_file": {
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/T-Route/2025_Feb_06_20_31_30"
+            },
+            "calibrate_parameters": [],
+            "output_variables": [
+                {
+                    "variable": "channel_exit_water_x-section__volume_flow_rate",
+                    "description": "Channel X-Section exit volume flow rate"
+                },
+                {
+                    "variable": "channel_water__mean_depth",
+                    "description": "Channel depth mean"
+                },
+                {
+                    "variable": "channel_water_flow__speed",
+                    "description": "Channel flow speed"
+                },
+                {
+                    "variable": "lake_surface__elevation",
+                    "description": "Lake surface elevation"
+                },
+                {
+                    "variable": "lake_water~incoming__volume_flow_rate",
+                    "description": "Lake water incoming volume flow rate"
+                },
+                {
+                    "variable": "lake_water~outgoing__volume_flow_rate",
+                    "description": "Lake water outgoing volume flow rate"
+                }
+            ]
+        }
+    ]
+}
