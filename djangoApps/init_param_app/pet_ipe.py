@@ -19,4 +19,7 @@ def pet_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_meta
 
     # TODO: Fill this file out once PET is fully implemented.
     module_metadata["module_name"] = module
+    module_metadata["parameter_file"] = {"uri" : "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/PET/Placeholder-Date"}
+    module_metadata["calibrate_parameters"] = []
+    module_metadata["output_variables"] = []
     return module_metadata
