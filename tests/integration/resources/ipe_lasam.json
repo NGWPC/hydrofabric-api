@@ -1,0 +1,137 @@
+{
+    "modules": [
+        {
+            "module_name": "LASAM",
+            "parameter_file": {
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/LASAM/2025_Feb_06_20_31_36"
+            },
+            "calibrate_parameters": [
+                {
+                    "name": "theta_r",
+                    "initial_value": "0.095",
+                    "description": "residual water content - the minimum volumetric water content that a soil layer can naturally attain",
+                    "min": "0.01",
+                    "max": "0.15",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "theta_e",
+                    "initial_value": "0.41",
+                    "description": "the maximum volumetric water content that a soil layer can naturally attain",
+                    "min": "0.3",
+                    "max": "0.8",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "alpha",
+                    "initial_value": "0.019",
+                    "description": "the van Genuchton parameter related to the inverse of air entry pressure",
+                    "min": "0.001",
+                    "max": "0.3",
+                    "data_type": "double",
+                    "units": "1/cm"
+                },
+                {
+                    "name": "n",
+                    "initial_value": "1.31",
+                    "description": "the van Genuchton parameter related to pore size distribution",
+                    "min": "1.01",
+                    "max": "3",
+                    "data_type": "double",
+                    "units": null
+                },
+                {
+                    "name": "Ks",
+                    "initial_value": "0.26",
+                    "description": "the saturated hydraulic conductivity of a soil",
+                    "min": "0.001",
+                    "max": "100",
+                    "data_type": "double",
+                    "units": "cm/h"
+                },
+                {
+                    "name": "ponded_depth_max",
+                    "initial_value": "1.1",
+                    "description": "max amount of water unavailable for surface drainage",
+                    "min": "0",
+                    "max": "5",
+                    "data_type": "double",
+                    "units": "cm"
+                },
+                {
+                    "name": "field_capacity_psi",
+                    "initial_value": "340.9",
+                    "description": "capillary head corresponding to volumetric water content at which gravity drainage becomes slower - used in computing AET",
+                    "min": "10.3",
+                    "max": "516.6",
+                    "data_type": "double",
+                    "units": "cm"
+                }
+            ],
+            "output_variables": [
+                {
+                    "variable": "actual_evapotranspiration",
+                    "description": "volume of AET"
+                },
+                {
+                    "variable": "giuh_runoff",
+                    "description": "volume of giuh runoff"
+                },
+                {
+                    "variable": "groundwater_to_stream_recharge",
+                    "description": "outgoing water from ground reservoir to stream channel"
+                },
+                {
+                    "variable": "infiltration",
+                    "description": "volume of infiltrated water"
+                },
+                {
+                    "variable": "mass_balance",
+                    "description": "mass balance error"
+                },
+                {
+                    "variable": "percolation",
+                    "description": "volume of water leaving soil through the bottom of the domain (ground water recharge)"
+                },
+                {
+                    "variable": "potential_evapotranspiration",
+                    "description": "volume of PET"
+                },
+                {
+                    "variable": "precipitation",
+                    "description": "total precipitation"
+                },
+                {
+                    "variable": "soil_depth_layers",
+                    "description": "Soil depth layers"
+                },
+                {
+                    "variable": "soil_depth_wetting_fronts",
+                    "description": "Soil depth wetting fronts"
+                },
+                {
+                    "variable": "soil_moisture_wetting_fronts",
+                    "description": "Soil moisture wetting front"
+                },
+                {
+                    "variable": "soil_num_wetting_fronts",
+                    "description": "Number of soil wetting fronts"
+                },
+                {
+                    "variable": "soil_storage",
+                    "description": "volume of water left"
+                },
+                {
+                    "variable": "surface_runoff",
+                    "description": "volume of water surface runoff"
+                },
+                {
+                    "variable": "total_discharge",
+                    "description": "total outgoing water"
+                }
+            ]
+        }
+    ]
+}

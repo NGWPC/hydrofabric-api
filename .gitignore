@@ -1,0 +1,31 @@
+# Ignore the source Hydrofabric data
+Hydrofabric/
+
+# There's a default log file here. Let's not commit it before we get these things moved and configurable
+hf.log
+logs/
+
+# Ignore vs code settings
+.vscode/
+
+# Ignore Python bytecode files
+*.pyc
+
+# Ignore __pycache__ directories
+__pycache__/
+
+# Ignore other common Python artifacts
+*.pyo
+*.pyd
+*.db
+*.sqlite
+*.env
+*.venv
+
+# Ignore Test Output and Coverage reports
+.coverage
+coverage.xml
+test-results.xml
+pytest_cache/
+*.pytest_cache
+*.actual/

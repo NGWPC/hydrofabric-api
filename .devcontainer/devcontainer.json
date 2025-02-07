@@ -1,0 +1,43 @@
+{
+    "name": "Python 3.11 & PostgreSQL",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "app",
+    "workspaceFolder": "/workspace",
+    "remoteUser": "vscode",
+    "updateRemoteUserUID": true,
+    //"forwardPorts": [8000,5432],
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "mtxr.sqltools",
+                "mtxr.sqltools-driver-pg"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/bin/python",
+                "sqltools.connections": [
+                    {
+                        "name": "Local Postgres",
+                        "driver": "PostgreSQL",
+                        "previewLimit": 50,
+                        "server": "127.0.0.1",
+                        "port": 5432,
+                        "database": "postgres",
+                        "username": "postgres",
+                        "password": "postgres"
+                    },
+                    {
+                        "name": "Hydrofabric DB",
+                        "driver": "PostgreSQL",
+                        "previewLimit": 50,
+                        "server": "127.0.0.1",
+                        "port": 5432,
+                        "database": "hydrofabric_db",
+                        "username": "postgres",
+                        "password": "postgres"
+                    }
+                ]
+            }
+        }
+    }
+}

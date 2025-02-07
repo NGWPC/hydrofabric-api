@@ -1,0 +1,123 @@
+include:
+  - template: Security/Container-Scanning.gitlab-ci.yml
+
+# Define a top-level cache
+cache:
+  key: trivy-cache
+  paths:
+    - /home/gitlab/.cache/trivy/
+
+stages:
+  - lint
+  - unit_test
+  - sonarqube
+  - build
+  - test
+  - deploy
+
+image: registry.sh.nextgenwaterprediction.com/infrastructure/docker/docker:26.0.2
+
+variables:
+    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE
+
+lint:
+  stage: lint
+  image: registry.sh.nextgenwaterprediction.com/infrastructure/rockylinux/rockylinux:9.3
+  before_script:
+    - dnf install -y python pip
+    #- pip install .[testing] --index-url ${CI_SERVER_PROTOCOL}://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple
+    - pip install pytest flake8
+  script:
+    - flake8 . --max-line-length=120
+  allow_failure: true
+
+# There isn't a quick hack to fix everything that needs to be setup here.
+# TODO: Hydro needs a unit testing strategy and probably needs to run these tests in a Hydro Image
+unit_test:
+  stage: unit_test
+  image: registry.sh.nextgenwaterprediction.com/ngwpc/hydrofabric/hydrofabric:development
+  before_script:
+    - dnf install -y python311 python3.11-pip python3.11-devel
+    - update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+    - dnf remove pip -y
+    - update-alternatives --install /usr/bin/pip pip /usr/bin/pip3.11 1
+  script:
+    #- pip install . --index-url ${CI_SERVER_PROTOCOL}://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple
+    #- pip install .[testing] --index-url ${CI_SERVER_PROTOCOL}://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple
+    - pip install -r requirements.txt
+    - pip install pytest pytest-django coverage
+    - coverage run -m pytest tests/unit --junitxml=test-results.xml
+    - coverage xml
+  artifacts:
+    paths:
+      - coverage.xml
+    reports:
+      junit: test-results.xml
+
+analyze:sonar:
+  stage: sonarqube
+  image:
+    name: registry.sh.nextgenwaterprediction.com/infrastructure/sonar-scanner-cli/sonar-scanner-cli:5.0.1
+    entrypoint: [""]
+  variables:
+    # Defines the location of the analysis task cache
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+    # Shallow cloning needs to be disabled.
+    # See https://docs.sonarqube.org/latest/analysis/gitlab-cicd/.
+    GIT_DEPTH: 0
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  script:
+    - sonar-scanner -X -Dsonar.verbose=true
+  allow_failure: true
+
+build:
+  stage: build
+  script:
+    - echo "Logging in to Gitlab Container Registry..."
+    - echo $CI_JOB_TOKEN | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    - echo "Building Hydro Fabric API Docker Image for branch $CI_COMMIT_REF_NAME"
+    - echo docker build -f Dockerfile-gitlab -t $DOCKER_IMAGE_NAME:$CI_COMMIT_REF_NAME .
+    - docker build -f Dockerfile-gitlab -t "$DOCKER_IMAGE_NAME:$CI_COMMIT_REF_NAME" .
+    - docker push $DOCKER_IMAGE_NAME:$CI_COMMIT_REF_NAME
+    - docker logout
+
+container_scanning:
+  stage: test
+  needs:
+    - build
+  variables:
+    GIT_STRATEGY: fetch
+    TRIVY_TIMEOUT: 20m # Increase timeout to 20 minutes for large image
+    # SECURE_LOG_LEVEL: debug
+    CS_SEVERITY_THRESHOLD: LOW # Options: UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL
+    CS_IMAGE: $DOCKER_IMAGE_NAME:$CI_COMMIT_REF_NAME
+    TRIVY_DB_REPOSITORY: "https://trivy-light.aquasec.com" # Trying a mirror to avoid ghcr rate limits
+    TRIVY_CACHE_DIR: "/home/gitlab/.cache/trivy/"
+
+deploy_image:
+  stage: deploy
+  script:
+    - echo "Logging in to Gitlab Container Registry..."
+    - echo $CI_JOB_TOKEN | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+
+    # Retrieve version
+    - if [ ! -f VERSION ]; then echo "VERSION file not found!" && exit 1; fi
+    - VERSION_TAG=$(cat VERSION)
+    - echo "Deploying with version $VERSION_TAG..."
+
+    # Tag `latest` for main or release branches
+    - if [[ "$CI_COMMIT_BRANCH" == "main" || "$CI_COMMIT_BRANCH" =~ ^release/ ]]; then
+        docker tag $DOCKER_IMAGE_NAME:$CI_COMMIT_REF_NAME $DOCKER_IMAGE_NAME:latest;
+        docker push $DOCKER_IMAGE_NAME:latest;
+      fi
+
+    # Create and push version tag
+    - docker tag $DOCKER_IMAGE_NAME:$CI_COMMIT_REF_NAME $DOCKER_IMAGE_NAME:$VERSION_TAG
+    - docker push $DOCKER_IMAGE_NAME:$VERSION_TAG
+    - docker logout
+  only:
+    - main
+    - /^release\/.*$/
