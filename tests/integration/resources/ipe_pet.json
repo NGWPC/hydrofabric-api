@@ -1,0 +1,14 @@
+{
+    "modules": [
+        {
+            "module_name": "PET",
+            "parameter_file": {
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/PET/Placeholder-Date"
+            },
+            "calibrate_parameters": [
+            ],
+            "output_variables": [
+            ]
+        }
+    ]
+}

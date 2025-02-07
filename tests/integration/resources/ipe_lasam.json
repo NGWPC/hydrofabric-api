@@ -3,7 +3,7 @@
         {
             "module_name": "LASAM",
             "parameter_file": {
-                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/LASAM/2025_Jan_23_18_33_46"
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/LASAM/2025_Feb_06_20_31_36"
             },
             "calibrate_parameters": [
                 {
@@ -105,19 +105,19 @@
                 },
                 {
                     "variable": "soil_depth_layers",
-                    "description": null
+                    "description": "Soil depth layers"
                 },
                 {
                     "variable": "soil_depth_wetting_fronts",
-                    "description": null
+                    "description": "Soil depth wetting fronts"
                 },
                 {
                     "variable": "soil_moisture_wetting_fronts",
-                    "description": null
+                    "description": "Soil moisture wetting front"
                 },
                 {
                     "variable": "soil_num_wetting_fronts",
-                    "description": null
+                    "description": "Number of soil wetting fronts"
                 },
                 {
                     "variable": "soil_storage",
