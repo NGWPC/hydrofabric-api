@@ -3,7 +3,7 @@
         {
             "module_name": "UEB",
             "parameter_file": {
-                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/01123000/PARAMS/USGS/UEB/2025_Jan_23_19_28_32"
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/01123000/PARAMS/USGS/UEB/2025_Feb_06_20_31_40"
             },
             "calibrate_parameters": [
                 {
@@ -53,7 +53,7 @@
                 },
                 {
                     "name": "ems",
-                    "initial_value": null,
+                    "initial_value": "0.99",
                     "description": "Emissivity of snow",
                     "min": ".98",
                     "max": ".99",
@@ -62,16 +62,16 @@
                 },
                 {
                     "name": "cg",
-                    "initial_value": null,
+                    "initial_value": "2.09",
                     "description": "Ground heat capacity",
                     "min": "2.09",
                     "max": "2.12",
                     "data_type": "double",
-                    "units": "KJ/kg/ ̊C"
+                    "units": "KJ/kg/ \u030aC"
                 },
                 {
                     "name": "zo",
-                    "initial_value": null,
+                    "initial_value": "0.010",
                     "description": "Roughness length",
                     "min": "0.0002\n",
                     "max": "0.014",
@@ -80,7 +80,7 @@
                 },
                 {
                     "name": "rho",
-                    "initial_value": null,
+                    "initial_value": "450",
                     "description": "Snow density",
                     "min": "100",
                     "max": "600",
@@ -89,7 +89,7 @@
                 },
                 {
                     "name": "rhog",
-                    "initial_value": null,
+                    "initial_value": "1700",
                     "description": "Soil density\n",
                     "min": "1100\n",
                     "max": "1700\n",
@@ -98,7 +98,7 @@
                 },
                 {
                     "name": "Ks",
-                    "initial_value": null,
+                    "initial_value": "20",
                     "description": "Snow saturated hydraulic conductivity\n",
                     "min": "0",
                     "max": "20",
@@ -107,7 +107,7 @@
                 },
                 {
                     "name": "de",
-                    "initial_value": null,
+                    "initial_value": ".1",
                     "description": "Thermally active soil depth",
                     "min": ".1",
                     "max": ".4",
@@ -116,7 +116,7 @@
                 },
                 {
                     "name": "avo",
-                    "initial_value": null,
+                    "initial_value": ".95",
                     "description": "Visual new snow albedo\n",
                     "min": ".85",
                     "max": ".95\n",
@@ -231,7 +231,7 @@
                 },
                 {
                     "variable": "Qmc",
-                    "description": "The flux of energy removed from the canopy due to melt.  This represents the energy flux due to the latent heat of fusion energy difference between melt water and the reference condition of 0 °C solid phase.  This is subtracted from the canopy and added to the surface snow energy content. "
+                    "description": "The flux of energy removed from the canopy due to melt.  This represents the energy flux due to the latent heat of fusion energy difference between melt water and the reference condition of 0 \u00b0C solid phase.  This is subtracted from the canopy and added to the surface snow energy content. "
                 },
                 {
                     "variable": "Qnet",
@@ -239,7 +239,7 @@
                 },
                 {
                     "variable": "Qpc",
-                    "description": "The flux of energy added to the canopy by interception.  This represents the flux due to the energy difference between the phase and temperature of precipitation and the reference condition of 0 °C solid phase."
+                    "description": "The flux of energy added to the canopy by interception.  This represents the flux due to the energy difference between the phase and temperature of precipitation and the reference condition of 0 \u00b0C solid phase."
                 },
                 {
                     "variable": "Qsi",
@@ -331,7 +331,7 @@
                 },
                 {
                     "variable": "Us",
-                    "description": "State variable that gives the energy content of the snow pack plus thermally active soil per unit of horizontal area defined with respect to solid (ice) phase snow at 0 °C.."
+                    "description": "State variable that gives the energy content of the snow pack plus thermally active soil per unit of horizontal area defined with respect to solid (ice) phase snow at 0 \u00b0C.."
                 },
                 {
                     "variable": "V",

@@ -3,42 +3,24 @@
         {
             "module_name": "Snow-17",
             "parameter_file": {
-                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/Snow-17/2025_Jan_23_18_25_25"
+                "uri": "s3://ngwpc-hydrofabric/2.2/CONUS/06710385/PARAMS/USGS/Snow-17/2025_Feb_06_20_31_25"
             },
             "calibrate_parameters": [
                 {
-                    "name": "scf",
-                    "initial_value": "1.100",
-                    "description": "The multiplying factor which adjusts precipitation that is determined to be in the form of snow",
-                    "min": "0.900",
-                    "max": "1.800",
-                    "data_type": "double",
-                    "units": ""
-                },
-                {
                     "name": "mfmax",
                     "initial_value": "1.58939576148987",
-                    "description": " Maximum melt factor during non-rain periods – assumed to occur on June 21",
-                    "min": "0.10",
-                    "max": "2.20",
+                    "description": " Maximum melt factor during non-rain periods \u2013 assumed to occur on June 21",
+                    "min": "0.7",
+                    "max": "2.4",
                     "data_type": "double",
-                    "units": "mm/ ̊C/6 hr"
-                },
-                {
-                    "name": "mfmin",
-                    "initial_value": "0.485516011714935",
-                    "description": " Minimum melt factor during non-rain periods – assumed to occur on December 21",
-                    "min": "0.01",
-                    "max": "0.60",
-                    "data_type": "double",
-                    "units": "mm/ ̊C/6 hr"
+                    "units": "mm/ \u030aC/6 hr"
                 },
                 {
                     "name": "uadj",
                     "initial_value": "0.0284209009259939",
                     "description": " The average wind function during rain-on-snow periods",
-                    "min": "0.01",
-                    "max": "0.20",
+                    "min": "0.02",
+                    "max": "0.4",
                     "data_type": "double",
                     "units": "mm/mb/6 hr"
                 },
@@ -46,8 +28,8 @@
                     "name": "si",
                     "initial_value": "500.00",
                     "description": " The mean areal water equivalent above which there is always 100 percent areal snow cover",
-                    "min": "0",
-                    "max": "10000",
+                    "min": "10",
+                    "max": "120",
                     "data_type": "double",
                     "units": "mm"
                 },
@@ -124,6 +106,24 @@
                     "units": null
                 },
                 {
+                    "name": "mfmin",
+                    "initial_value": "0.485516011714935",
+                    "description": " Minimum melt factor during non-rain periods \u2013 assumed to occur on December 21",
+                    "min": "0.0001",
+                    "max": "1.5",
+                    "data_type": "double",
+                    "units": "mm/ \u030aC/6 hr"
+                },
+                {
+                    "name": "scf",
+                    "initial_value": "1.100",
+                    "description": "The multiplying factor which adjusts precipitation that is determined to be in the form of snow",
+                    "min": "1",
+                    "max": "1.3",
+                    "data_type": "double",
+                    "units": ""
+                },
+                {
                     "name": "adc9",
                     "initial_value": "0.800",
                     "description": " Curve that defines the areal extent of the snow cover as a function of how much of the original snow cover remains after significant bare ground shows up",
@@ -154,17 +154,17 @@
                     "name": "nmf",
                     "initial_value": "0.150",
                     "description": " Maximum negative melt factor",
-                    "min": "0.010",
-                    "max": "0.300",
+                    "min": "0.05",
+                    "max": "0.3",
                     "data_type": "double",
-                    "units": "mm/ ̊C/6 hr"
+                    "units": "mm/ \u030aC/6 hr"
                 },
                 {
                     "name": "tipm",
                     "initial_value": "0.100",
                     "description": " Antecedent temperature index parameter",
-                    "min": "0.000",
-                    "max": "1.000",
+                    "min": "0.05",
+                    "max": "0.2",
                     "data_type": "double",
                     "units": null
                 },
@@ -172,10 +172,10 @@
                     "name": "pxtemp",
                     "initial_value": "1.000",
                     "description": " Antecedent temperature index parameter",
-                    "min": "0.500",
-                    "max": "5",
+                    "min": "-1",
+                    "max": "3",
                     "data_type": "double",
-                    "units": " ̊C"
+                    "units": " \u030aC"
                 },
                 {
                     "name": "mbase",
@@ -184,14 +184,14 @@
                     "min": "0.000",
                     "max": "0.000",
                     "data_type": "double",
-                    "units": " ̊C"
+                    "units": " \u030aC"
                 },
                 {
                     "name": "plwhc",
                     "initial_value": "0.030",
                     "description": " maximum amount of liquid water as a fraction of the ice portion of the snow that can be held against gravity drainage",
-                    "min": "0.010",
-                    "max": "0.300",
+                    "min": "0.02",
+                    "max": "0.3",
                     "data_type": "double",
                     "units": " %"
                 },
@@ -200,7 +200,7 @@
                     "initial_value": "0.000",
                     "description": " Constant daily amount of melt which takes place at the snow-soil interface whenever there is a snow cover",
                     "min": "0.000",
-                    "max": "0.500",
+                    "max": "0.3",
                     "data_type": "double",
                     "units": "mm/day"
                 }
