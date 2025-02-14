@@ -1,5 +1,6 @@
 import os
 import logging
+import math
 
 import pandas as pd
 import geopandas as gpd
@@ -148,6 +149,8 @@ class UEB:
         self.gage_id = gage_id
         filename_list = []
 
+        csv_path_filename = f'{self.input_dir}/ueb_deltat_{version}.csv'
+
         # Get list of catchments from gpkg divides layer using geopandas
         # TODO: This code needs to be moved to a geopackage file utility it is duplicated all over
         try:
@@ -166,21 +169,32 @@ class UEB:
             logger.error(error_str)
             return error
 
-        #Read model attributes Hive partitioned Parquet dataset using pyarrow, remove rows containing null, convert to pandas dataframe
         try:
             #Read parameters from CSV file into dataframe and filter on divide ids in geopackage. 
-            parameters_df = pd.read_csv(f'{self.input_dir}/deltat.csv')
-            filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
-
-        except FileNotFoundError as fnfe:
-            logger.error(fnfe)
-            error_str = 'Hydrofabric data input directory does not exist'
-            error = dict(error=error_str)
+            parameters_df = pd.read_csv(csv_path_filename)
+        except FileNotFoundError:
+            error_str = f'Temperature delta CSV file not found: {csv_path_filename}'
+            error = {'error': error_str}
+            logger.error(error_str)
             return error
-        except Exception as exc:
-            error_str = 'Error opening deltat.csv'
-            error = dict(error = error_str)
-            logger.error(error_str, exc)
+        except Exception as e:
+            error_str = f'Temperature delta CSV read error: {csv_path_filename}'
+            error = {'error': error_str}
+            logger.error(error_str)
+            return error   
+
+        filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
+        if filtered_parameters.empty:
+            error_str = f'Catchments in geopackage not found in temperature delta CSV file'
+            error = {'error': error_str}
+            logger.error(error_str)
+            return error
+        
+        #Make sure that there are a matching number of catchements
+        if(len(catchments) != len(filtered_parameters.index)):
+            error_str = f'Number of matching catchments found in temperature delta CSV file does not match number of catchments in geopackage'
+            error = {'error': error_str}
+            logger.error(error_str)
             return error
 
         divide_attr = get_hydrofabric_attributes(gpkg_file, version)
@@ -201,6 +215,21 @@ class UEB:
             error = dict(error = error_str)
             logger.error(error_str)
             return error
+        
+        #Set month temperature delta to the average if a catchment is NA.  The average
+        #is taken monthy for all catchments in the csv file.
+        jan_temp_range = 11.04395
+        feb_temp_range = 11.79382
+        mar_temp_range = 12.72711
+        apr_temp_range = 13.67701
+        may_temp_range = 13.70334
+        jun_temp_range = 13.76782
+        jul_temp_range = 13.90212
+        aug_temp_range = 13.9958
+        sep_temp_range = 14.04895
+        oct_temp_range = 13.44001
+        nov_temp_range = 11.90162
+        dec_temp_range = 10.71597
 
         #Loop through catchments, get soil type, populate config file template, write config file to temp 
         for index, row in df_all.iterrows():
@@ -216,24 +245,37 @@ class UEB:
             elevation = round(row[attr['elevation']], 4)
             standard_atm_pressure = round(Atmosphere(elevation).pressure[0], 4)
             
+            if not math.isnan(temp_ranges['jan']): jan_temp_range = temp_ranges['jan']
+            if not math.isnan(temp_ranges['feb']): feb_temp_range = temp_ranges['feb']
+            if not math.isnan(temp_ranges['mar']): mar_temp_range = temp_ranges['mar']
+            if not math.isnan(temp_ranges['apr']): apr_temp_range = temp_ranges['apr']
+            if not math.isnan(temp_ranges['may']): may_temp_range = temp_ranges['may']
+            if not math.isnan(temp_ranges['jun']): jun_temp_range = temp_ranges['jun']
+            if not math.isnan(temp_ranges['jul']): jul_temp_range = temp_ranges['jul']
+            if not math.isnan(temp_ranges['aug']): aug_temp_range = temp_ranges['aug']
+            if not math.isnan(temp_ranges['sep']): sep_temp_range = temp_ranges['sep']
+            if not math.isnan(temp_ranges['oct']): oct_temp_range = temp_ranges['oct']
+            if not math.isnan(temp_ranges['nov']): nov_temp_range = temp_ranges['nov']
+            if not math.isnan(temp_ranges['dec']): dec_temp_range = temp_ranges['dec']
+
             filename = self.sitevar_filename_template.format(catchment = catchment_id)
             file_string = self.sitevar_file_template.format(std_atm_pressure = standard_atm_pressure, 
                                                             slope = slpe,
                                                             aspect = aspct, 
                                                             latitude = lat, 
                                                             longitude = lon, 
-                                                            jan_temp_range = temp_ranges['jan'],
-                                                            feb_temp_range = temp_ranges['feb'],
-                                                            mar_temp_range = temp_ranges['mar'],
-                                                            apr_temp_range = temp_ranges['apr'],
-                                                            may_temp_range = temp_ranges['may'],
-                                                            jun_temp_range = temp_ranges['jun'],
-                                                            jul_temp_range = temp_ranges['jul'],
-                                                            aug_temp_range = temp_ranges['aug'],
-                                                            sep_temp_range = temp_ranges['sep'],
-                                                            oct_temp_range = temp_ranges['oct'],
-                                                            nov_temp_range = temp_ranges['nov'],
-                                                            dec_temp_range = temp_ranges['dec'],
+                                                            jan_temp_range = jan_temp_range,
+                                                            feb_temp_range = feb_temp_range,
+                                                            mar_temp_range = mar_temp_range,
+                                                            apr_temp_range = apr_temp_range,
+                                                            may_temp_range = may_temp_range,
+                                                            jun_temp_range = jun_temp_range,
+                                                            jul_temp_range = jul_temp_range,
+                                                            aug_temp_range = aug_temp_range,
+                                                            sep_temp_range = sep_temp_range,
+                                                            oct_temp_range = oct_temp_range,
+                                                            nov_temp_range = nov_temp_range,
+                                                            dec_temp_range = dec_temp_range
                                                             )
             cfg_filename_path = os.path.join(subset_dir, filename)
             with open(cfg_filename_path, 'w') as outfile:
