@@ -33,11 +33,11 @@ def topmodel_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module
     module = "TopModel"
     filename_list = []
  
-    # Get list of catchments from gpkg divides layer using geopandas
+    # Get flowpath lengths from gpkg divides layer using geopandas
     try:
         divides_layer = gpd.read_file(gpkg_file, layer = "divides")
         try:
-            catchments = divides_layer["divide_id"].tolist()
+            flowpath_length = divides_layer[['divide_id','lengthkm']]
         except:
             # TODO: Replace 'except' with proper catch
             error_str = 'Error reading divides layer in ' + gpkg_file
@@ -51,6 +51,8 @@ def topmodel_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module
         return error
     
     divide_attr = get_hydrofabric_attributes(gpkg_file, version)
+    #Join parameters from csv and area into single dataframe.
+    df_all = divide_attr.join(flowpath_length.set_index('divide_id'), on='divide_id')
 
     attr21 = {'twi':'twi_dist_4'}
     attr22 = {'twi':'dist_4.twi'}
@@ -60,7 +62,7 @@ def topmodel_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module
     elif version == '2.2':
         attr=attr22
 
-    for index, row in divide_attr.iterrows():
+    for index, row in df_all.iterrows():
 
         #build subcatchment data
         #TWI values are from Hydrofabric divide attributes, num_channels, cum_dist_area_with_dist,
@@ -73,9 +75,9 @@ def topmodel_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module
         twi = json.loads(row[attr['twi']])
         num_topodex_values = len(twi)
         num_channels = 1
-        cum_dist_area_with_dist = 1
-        dist_from_outlet = 0
-    
+        cum_dist_area_with_dist = 1.0
+        dist_from_outlet = round(row['lengthkm']*1000) #convert km to m
+
         subcat_line1 = f"{num_sub_catchments} {imap} {yes_print_output} \n"
         subcat_line2 = f"Extracted study basin:  {divide_id} \n"
         subcat_line3 = f"{num_topodex_values} {area} \n"
