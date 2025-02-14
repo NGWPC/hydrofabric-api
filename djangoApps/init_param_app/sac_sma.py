@@ -33,6 +33,9 @@ def sac_sma_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_
     # setup input data dir
     config = get_config()
     input_dir = config['input_dir']
+
+    #Set Sac-SMA parameter CSV filename based on hydrofabric version
+    csv_path_filename = f'{input_dir}/sac_sma_params_{version}.csv'
     
     #Create empty list for collecting config files
     filename_list = []
@@ -77,9 +80,33 @@ def sac_sma_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_
         logger.error(error_str)
         return error
  
-    #Read parameters from CSV file into dataframe and filter on divide ids in geopackage. 
-    parameters_df = pd.read_csv(f'{input_dir}/sac_sma_params.csv')
+    #Read parameters from CSV file into dataframe and filter on divide ids in geopackage.
+    try:
+        parameters_df = pd.read_csv(csv_path_filename)
+    except FileNotFoundError:
+        error_str = f'Sac-SMA Parameters CSV file not found: {csv_path_filename}'
+        error = {'error': error_str}
+        logger.error(error_str)
+        return error
+    except Exception as e:
+        error_str = f'Sac-SMA Parameters CSV Pandas read error: {csv_path_filename}'
+        error = {'error': error_str}
+        logger.error(error_str)
+        return error   
+ 
     filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
+    if filtered_parameters.empty:
+        error_str = f'Catchments in geopackage not found in Sac-SMA CSV file'
+        error = {'error': error_str}
+        logger.error(error_str)
+        return error
+    
+    #Make sure that there are a matching number of catchements
+    if(len(catchments) != len(filtered_parameters.index)):
+        error_str = f'Number of matching catchments found in Sac-SMA CSV file does not match number of catchments in geopackage'
+        error = {'error': error_str}
+        logger.error(error_str)
+        return error
 
     #Join parameters from csv and area into single dataframe.
     df_all = filtered_parameters.join(area.set_index('divide_id'), on='divide_id')
