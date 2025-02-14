@@ -62,7 +62,10 @@ def get_ipe(gage_id, version, source, domain, modules, gage_file_mgmt):
                 # TODO Make this the correct response also some of the data
                 #      may have been generated do we return what we have
                 #      and try to keep processing the others
-                return Response(results, status=status.HTTP_404_NOT_FOUND)
+                #If only one module is being run and it is fails, return a 404 status.  If more than one
+                # module is being run, return error JSON for module and continue to process the rest of the
+                # modules.  
+                if len(modules) == 1: return Response(results, status=status.HTTP_404_NOT_FOUND)
         else:
             # Found IPE data file, clean and add to response list
             decoder = json.JSONDecoder(object_pairs_hook=collections.OrderedDict)
