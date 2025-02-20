@@ -100,7 +100,8 @@ def topmodel_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module
             outfile.write(subcat_line6)
 
         #Parameter values are set per InitialParametersValueSources.xlsx
-        #Q0 and sr0 set to 0 recommended in email with Deltares
+        #sr0 set to 0 recommended in email with Deltares.
+        #Q0 set to initial value used in the example param file in the TopModel repo.
         params = OrderedDict()
         params['szm'] = "0.0125"
         params['t0'] = "0.000075"
@@ -108,7 +109,7 @@ def topmodel_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module
         params['chv'] = "1000"
         params['rv'] = "1000"
         params['srmax'] = "0.04"
-        params['Q0'] = "0"
+        params['Q0'] = "0.0000328"
         params['sr0'] = "0"
         params['infex'] = "0"
         params['xk0'] = "2"
