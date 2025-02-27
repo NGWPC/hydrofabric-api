@@ -126,7 +126,7 @@ def create_smp_input(gage_id, version, source, domain, catch_dict, gpkg_file, ou
                       'soil_params.b=' + str(bexp_avg),
                       'soil_params.satpsi=' + str(psisat_avg),
                       'soil_z=0.1,0.3,1.0,2.0[m]',
-                      'soil_moisture_fraction_depth=40'
+                      'soil_moisture_fraction_depth=40[m]'
                       ]
 
         if 'CFE-S' in modules or 'CFE-X' in modules:
