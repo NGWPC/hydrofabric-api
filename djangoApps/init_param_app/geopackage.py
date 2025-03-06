@@ -38,8 +38,10 @@ def get_geopackage(gage_id, version, source, domain, keep_file=False):
         # hydrofabric input data version type
         hydrofabric_type = config['hydrofabric_type']
         # hydrofabric v2.2 filename by domain
-        if domain == 'CONUS':
+        if domain == 'CONUS' and source != 'ENVCA':
             hydrofabric_filename = config['hydrofabric_conus_filename']
+        elif domain == 'CONUS' and source == 'ENVCA':
+            hydrofabric_filename = config['hydrofabric_gl_filename']
         elif domain == 'Alaska':
             hydrofabric_filename = config['hydrofabric_ak_filename']
         elif domain == 'Hawaii':
@@ -74,7 +76,8 @@ def get_geopackage(gage_id, version, source, domain, keep_file=False):
                        hydrofabric_version_subsetter,
                        hydrofabric_type,
                        domain,
-                       hydrofabric_filename]
+                       hydrofabric_filename,
+                       source]
         
         
         result = run(run_command, capture_output=True)
