@@ -196,6 +196,10 @@ def create_sft_input(gage_id, version, source, domain, catch_dict, gpkg_file, ou
 
     # deep copy to return in response
     deep_copy_ipe_dict = copy.deepcopy(module_metadata_rec)
+    # At this time NWM does not want to return calibratable parameters for this module 
+    # set the calibrate_parameters to empty map, delete the line of code below to reverse this
+    deep_copy_ipe_dict["calibrate_parameters"] = []
+
     response.append(deep_copy_ipe_dict)
     logger.info("sft:create_sft_input:appended deep copy dict to response " + str(deep_copy_ipe_dict))
 
@@ -213,7 +217,7 @@ def set_ipe_json_values(param_list, module_metadata_rec, sep=' ')-> dict:
     for idx in range(len(module_metadata_rec['calibrate_parameters'])):
         key_name = module_metadata_rec['calibrate_parameters'][idx]['name']
         module_metadata_rec['calibrate_parameters'][idx]['initial_value'] = param_list_dict[key_name]
-
+    
     logger.info(f"{module_metadata_rec['module_name']}::set_ipe_json_values: set the ipe initial values " + str(module_metadata_rec))
     return module_metadata_rec
 

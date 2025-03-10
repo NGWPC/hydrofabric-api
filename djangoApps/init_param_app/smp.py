@@ -161,6 +161,10 @@ def create_smp_input(gage_id, version, source, domain, catch_dict, gpkg_file, ou
 
     # deep copy to return in response
     deep_copy_ipe_dict = copy.deepcopy(module_metadata_rec)
+    # At this time NWM does not want to return calibratable parameters for this module 
+    # set the calibrate_parameters to empty map, delete the line of code below to reverse this
+    deep_copy_ipe_dict["calibrate_parameters"] = []
+    
     response.append(deep_copy_ipe_dict)
     logger.info("smp:create_smp_input:appended deep copy dict to response " + str(deep_copy_ipe_dict))
 
