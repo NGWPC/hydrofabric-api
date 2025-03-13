@@ -366,6 +366,8 @@ class DatabaseManager:
             table_name = "lasam_params"
         elif model_type == "UEB":
             table_name = "ueb_params"
+        elif model_type == "TopoFlow":
+            table_name = "topoflow_params"
         else:
             return None, None
 
