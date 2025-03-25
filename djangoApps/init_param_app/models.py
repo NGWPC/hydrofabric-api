@@ -36,6 +36,7 @@ class HFFiles(models.Model):
     module_id = models.CharField()
     ipe_json = models.CharField()
     update_time = models.DateTimeField(default=timezone.now)
+    api_version = models.CharField()
 
     class Meta:
         managed = False

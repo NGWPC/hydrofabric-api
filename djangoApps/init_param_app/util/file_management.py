@@ -7,8 +7,10 @@ import requests
 import json
 from datetime import datetime, timezone
 from minio import Minio, S3Error
+from minio.deleteobjects import DeleteObject
 from .utilities import get_config
 from django.conf import settings
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
@@ -178,3 +180,26 @@ class FileManagement:
             logger.debug(f"File '{object_name}' successfully downloaded to '{local_dir}'.")
         except Exception as e:
             logger.error(f"Error downloading file: {e}")
+
+    def remove_minio_dir(self, uri):
+        # Delete using "remove_objects"
+        parsed_uri = urlparse(uri)
+        bucket_name = parsed_uri.netloc
+        folder_name = parsed_uri.path.lstrip('/')
+        # Get module name from folder_name
+        module_name = folder_name.split('/')[6]
+        folder_name = folder_name.split(module_name)[0].rstrip('/')
+
+        delete_object_list = map(
+            lambda x: DeleteObject(x.object_name),
+            self.client.list_objects(bucket_name, prefix=folder_name, recursive=True)
+        )
+        errors = self.client.remove_objects(bucket_name, delete_object_list)
+        # Handle potential errors during deletion
+        for error in errors:
+            logger.error("Error occurred while deleting object:", error)
+        
+        #objects_to_delete = self.client.list_objects(bucket_name, prefix=folder_name, recursive=True)
+        #objects_to_delete = [x.object_name for x in objects_to_delete]
+        #for del_err in self.client.remove_objects(bucket_name, objects_to_delete):
+        #    logger.error("Deletion Error: {}".format(del_err))

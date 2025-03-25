@@ -14,6 +14,7 @@ from .sft import *
 from .smp import *
 from .ueb import UEB
 from .lasam_ipe import *
+from .topoflow import TopoFlow
 from .pet_ipe import *
 
 # Setup logging
@@ -123,9 +124,21 @@ def calculate_module_params(gage_id, version, source, domain, module, subset_dir
     logger.debug(module_metadata)
     logger.info(f"Get IPEs for {module} module")
 
-    # TODO Create a Base class for all modules below
-    # TODO Replace with SWITCH or dict of module and function call
-    # TODO Validate module name to a Enum to prevent string/case corruption
+    """
+    TODO Create a Base class for all modules below
+    TODO Replace with SWITCH or dict of module and function call
+    TODO Validate module name to a Enum to prevent string/case corruption
+
+    TODO: TopoFlow is not ready for implementation/integration at the is time. However the TopoFlow class is created as 
+          as a Stub and will output a "fake" JSON Response document with the information on parameters and the output 
+          variables the HF team has at this time. This work to date also includes the creation/update of database tables 
+          necessary for Stub to produce the BMI Files and the JSON Response list document.
+          Once the module is ready for implementation/integration, and the coding necessary to complete the actually 
+          BMI files and JSON Response List Document, just put the code snippet below back into else-if chain below      
+    elif module == "TopoFlow":
+        topoflow = TopoFlow()
+        results = topoflow.initial_parameters(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
+    """
     if module == "CFE-S" or module == "CFE-X":
         results = cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "Noah-OWP-Modular":
