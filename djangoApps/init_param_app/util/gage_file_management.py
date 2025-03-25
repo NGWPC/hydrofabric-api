@@ -15,6 +15,7 @@ from ..models import HFFiles
 logger = logging.getLogger(__name__)
 
 from .file_management import FileManagement
+from .utilities import get_api_version
 
 
 class GageFileManagement(FileManagement):
@@ -36,6 +37,15 @@ class GageFileManagement(FileManagement):
         self.formatted_datetime = None
         self.input_path = None
         self.db_object = None
+        self.current_api_version = get_api_version()
+
+    def __check_api_version(self, api_version):
+        """
+        Private method to check the API version of the current Django app to the version stored in the DB
+        :param api_version:
+        :return: True if Django app version and version in DB match
+        """
+        return api_version is not None and self.current_api_version == api_version
 
     def __build_s3_param_path(self):
         """
@@ -135,12 +145,14 @@ class GageFileManagement(FileManagement):
 
     def ipe_files_exists(self, gage_id, version, domain, source, module):
         """
-        Determines if a ipe data files exists in S3 and in HFFILES table
+        Determines if ipe data files exists in S3 and in HFFILES table and matches the API_Version
         :param gage_id: The gage the data was requested for
+        :param version: The hydrofabric version
         :param domain: Domain of the gage (CONUS, Alaska, Hawaii, Puerto Rico, American Virgin Islands)
         :param source: Source or Agency owning the gage (Ex USGS, USARC, Env Canada ... etc)
+        :param module: The module to check for.
 
-        :return: If files exists in DB and S3 and return the ipe json document
+        :return: If the information matches the API_Version and files exists in DB and S3 then return the ipe json document
         """
         file_found = False
         results = None
@@ -151,29 +163,40 @@ class GageFileManagement(FileManagement):
             log_string = f"Database missing entry for gage_id - {gage_id}, module - {module}, data type - {data_type}, source -  {source}, domain - {domain}."
             logger.debug(log_string)
         else:
-            # Check S3 for file from DB call.
-            # Return file URL in schema dict
+            # Check api_version from DB call with current api version
             uri = my_data[0].get('uri')
-            ipe_json = my_data[0].get('ipe_json')
             # start MinIO client if not started
             self.start_minio_client()
-                        # Check S3 for file from DB call.
-            # Return file URL in schema dict
-            uri_stripped = uri.split(self.s3_bucket)[1].lstrip('/')
-            # start MinIO client if not started
-            self.start_minio_client()
-            
-            objects = self.client.list_objects(self.s3_bucket, prefix=uri_stripped, recursive=False)
-            for obj in objects:
-                file_found = True  # Found at least one object in the folder
-                break
+            if self.__check_api_version(my_data[0].get('api_version')):
+                # Check S3 for file from DB call.
+                # Return file URL in schema dict
+                ipe_json = my_data[0].get('ipe_json')
+                # start MinIO client if not started
+                self.start_minio_client()
+                # Check S3 for file from DB call.
+                # Return file URL in schema dict
+                uri_stripped = uri.split(self.s3_bucket)[1].lstrip('/')
 
-            if not file_found:
-                log_string = f"S3 bucket missing gage_id - {gage_id}, data type - {data_type}, module - {module}, source -  {source}, domain - {domain}. Database entry uri is {uri}. Also might be an AWS S3 Credentials issue"
-                logger.error(log_string)
+                objects = self.client.list_objects(self.s3_bucket, prefix=uri_stripped, recursive=False)
+                for obj in objects:
+                    file_found = True  # Found at least one object in the folder
+                    break
+
+                if not file_found:
+                    log_string = f"S3 bucket missing gage_id - {gage_id}, data type - {data_type}, module - {module}, source -  {source}, domain - {domain}. Database entry uri is {uri}. Also might be an AWS S3 Credentials issue"
+                    logger.error(log_string)
+                else:
+                    file_found = True
+                    results = ipe_json
+
             else:
-                file_found = True
-                results = ipe_json
+                # Delete DB entry and S3 entry if exists
+                self.remove_minio_dir(uri)
+                # Because Django Models will not allow a call to delete() after .values() or .values_list()
+                # need to re-run the filter
+                my_data = HFFiles.objects.filter(gage_id=gage_id, source=source, domain=domain, module_id=module, data_type=FileTypeEnum.PARAMS, hydrofabric_version=version) 
+                my_data.delete()
+
         return file_found, results
 
     def write_file_to_s3(self, gage_id, version, domain, data_type, source, input_directory, input_filenames, module=None):
@@ -227,14 +250,16 @@ class GageFileManagement(FileManagement):
                                     uri=self.full_s3_path, domain=self.domain, data_type=self.data_type,
                                     source=self.source,
                                     module_id=self.module,
-                                    update_time=now)
+                                    update_time=now, 
+                                    api_version = self.current_api_version)
                 
             else:
                 new_hffiles = HFFiles(gage_id=self.gage_id, hydrofabric_version=self.hydro_version,
                                     filename=self.input_filename,
                                     uri=self.full_s3_path, domain=self.domain, data_type=self.data_type,
                                     source=self.source,
-                                    update_time=now)
+                                    update_time=now,
+                                    api_version = self.current_api_version)
             new_hffiles.save()
             # Save off the db object to add the IPE json document to
             if self.module is not None:

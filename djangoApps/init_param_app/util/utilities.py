@@ -39,6 +39,16 @@ def get_hydrofabric_input_attr_file(version):
     return attr_file
 
 
+def get_api_version():
+    # Get the grandparent directory of BASE_DIR
+    grandparent_dir = os.path.dirname(settings.BASE_DIR)
+    directory = os.path.join(grandparent_dir, "VERSION")
+
+    with open(directory, 'r') as file:
+        api_version = file.read()
+    return api_version
+
+
 def get_subset_dir_file_names(subset_dir):
     """
     Lists only files in directory

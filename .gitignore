@@ -29,3 +29,5 @@ test-results.xml
 pytest_cache/
 *.pytest_cache
 *.actual/
+.idea
+/basins_group_1.png
