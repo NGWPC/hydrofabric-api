@@ -12,7 +12,7 @@ from .hf_attributes import *
 # Setup logging
 logger = logging.getLogger(__name__)
 
-def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
+def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt, dep_modules_included):
     ''' 
     Build initial parameter estimates (IPE) for CFE-S and CFE-X 
 
@@ -104,7 +104,10 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
         control_out.append('DEBUG=0')
         control_out.append('num_timesteps=1')
         if module == 'CFE-S':
-            control_out.append('is_sft_coupled=0')
+            if 'SFT' in dep_modules_included:
+                control_out.append('is_sft_coupled=1')
+            else:
+                control_out.append('is_sft_coupled=0')
             control_out.append('ice_content_threshold=0.15')
 
         #get items from divide attributes and CFE-X csv file
@@ -154,8 +157,9 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
     #Put data for last catchment into a dictionary and fill in the inital parameter values in the output JSON
     cfg_file_ipes = {}
     for line in params_out:
-        key, value = line.strip().split('=')
-        cfg_file_ipes[key.strip()] = value.strip()
+        k, value = line.strip().split('=')
+        v = value.split('[')[0]
+        cfg_file_ipes[k.strip()] = v.strip()
 
     for x in range(len(module_metadata["calibrate_parameters"])):
         module_metadata["calibrate_parameters"][x]["initial_value"] = cfg_file_ipes[module_metadata["calibrate_parameters"][x]["name"]]

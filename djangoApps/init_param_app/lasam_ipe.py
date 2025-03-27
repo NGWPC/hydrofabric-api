@@ -10,7 +10,7 @@ from .hf_attributes import *
 
 logger = logging.getLogger(__name__)
 
-def lasam_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt):
+def lasam_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt, dep_modules_included):
     ''' 
     Build initial parameter estimates (IPE) for the LASAM module
 
@@ -50,7 +50,7 @@ def lasam_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_me
                  'giuh_ordinates=0.06,0.51,0.28,0.12,0.03',
                  'calib_params=true',
                  'adaptive_timestep=true',
-                 'sft_coupled=true',
+                 'sft_coupled=' + str('SFT' in dep_modules_included).lower(),
                  'soil_z=' + soil_z
                 ]
     
