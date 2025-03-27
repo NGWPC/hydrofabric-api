@@ -54,10 +54,10 @@ def lasam_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_me
                  'soil_z=' + soil_z
                 ]
     
-    # Make directory and add soil params file there. Also add it to the filelist.
-    os.system('cp {0} {1}/{2}'.format(soil_param_file, subset_dir, soil_param_file.split("/")[-1]))
-    filename_list.append(soil_param_file.split("/")[-1])
-
+    # Make directory
+    if not os.path.isdir(subset_dir):
+        os.makedirs(subset_dir)
+    
     # Get divide attributes
     divide_attr = get_hydrofabric_attributes(gpkg_file, version)
     attr21 = {'soil_type':'ISLTYP'}

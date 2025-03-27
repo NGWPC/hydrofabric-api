@@ -103,6 +103,9 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
         control_out.append('surface_runoff_scheme=GIUH')
         control_out.append('DEBUG=0')
         control_out.append('num_timesteps=1')
+        if module == 'CFE-S':
+            control_out.append('is_sft_coupled=0')
+            control_out.append('ice_content_threshold=0.15')
 
         #get items from divide attributes and CFE-X csv file
         for param in from_attr:
