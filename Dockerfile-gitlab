@@ -13,7 +13,6 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 \
 # Copy application files
 COPY ./djangoApps /app/djangoApps
 COPY ./R /app/R
-COPY ./resources /app/resources
 
 COPY requirements.txt /app
 COPY config.yml /app/config.yml

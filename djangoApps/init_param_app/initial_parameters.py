@@ -41,6 +41,7 @@ def get_ipe(gage_id, version, source, domain, modules, gage_file_mgmt):
     module_results = None
 
     dependent_module_list = ["SFT","SMP"]
+    dep_modules_included = list(set(modules).intersection(set(dependent_module_list)))
 
     module_output_list = []
     for module in modules:
@@ -50,7 +51,7 @@ def get_ipe(gage_id, version, source, domain, modules, gage_file_mgmt):
                 module_results = calculate_dependent_module_params(gage_id, version, source, domain, module, modules,
                                                                    subset_dir, gpkg_file, gage_file_mgmt)
             else:
-                module_results = calculate_module_params(gage_id, version, source, domain, module, subset_dir, gpkg_file, gage_file_mgmt)
+                module_results = calculate_module_params(gage_id, version, source, domain, module, subset_dir, gpkg_file, gage_file_mgmt, dep_modules_included)
 
             if 'error' not in module_results:
                 # TODO: Remove PET module stipulation when the module is implemented
@@ -110,7 +111,7 @@ def calculate_dependent_module_params(gage_id, version, source, domain, module, 
     return results
 
 
-def calculate_module_params(gage_id, version, source, domain, module, subset_dir, gpkg_file, gage_file_mgmt):
+def calculate_module_params(gage_id, version, source, domain, module, subset_dir, gpkg_file, gage_file_mgmt, dep_modules_included):
     subset_dir = os.path.join(subset_dir, module)
     if not os.path.exists(subset_dir):
         os.mkdir(subset_dir)
@@ -140,7 +141,7 @@ def calculate_module_params(gage_id, version, source, domain, module, subset_dir
         results = topoflow.initial_parameters(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     """
     if module == "CFE-S" or module == "CFE-X":
-        results = cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
+        results = cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt, dep_modules_included)
     elif module == "Noah-OWP-Modular":
         results = noah_owp_modular_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "T-Route":
@@ -155,7 +156,7 @@ def calculate_module_params(gage_id, version, source, domain, module, subset_dir
         ueb = UEB()
         results = ueb.initial_parameters(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     elif module == "LASAM":
-        results = lasam_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
+        results = lasam_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt, dep_modules_included)
     elif module == "PET":
         results = pet_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     else:
