@@ -64,7 +64,7 @@ def snow17_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_m
         logger.error(error_str)
         return error
     
-    divide_attr = get_hydrofabric_attributes(gpkg_file, version)
+    divide_attr = get_hydrofabric_attributes(gpkg_file, version, domain)
 
     attr21 = {'elevation_mean':'elevation_mean', 'lat':'Y'}
     attr22 = {'elevation_mean':'mean.elevation', 'lat':'centroid_y'}
