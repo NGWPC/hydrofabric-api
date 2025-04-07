@@ -197,7 +197,7 @@ class UEB:
             logger.error(error_str)
             return error
 
-        divide_attr = get_hydrofabric_attributes(gpkg_file, version)
+        divide_attr = get_hydrofabric_attributes(gpkg_file, version, domain)
 
         attr21 = {'slope':'slope_mean', 'aspect':'aspect_c_mean', 'elevation':'elevation_mean', 'lat':'Y','lon':'X'}
         attr22 = {'slope':'mean.slope', 'aspect':'circ_mean.aspect', 'elevation':'mean.elevation', 'lat':'centroid_y','lon':'centroid_y'}

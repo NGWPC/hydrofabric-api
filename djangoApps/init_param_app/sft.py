@@ -85,7 +85,7 @@ def create_sft_input(gage_id, version, source, domain, catch_dict, gpkg_file, ou
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
 
-    divide_attr = get_hydrofabric_attributes(gpkg_file, version)
+    divide_attr = get_hydrofabric_attributes(gpkg_file, version, domain)
 
     attr21 = {'smcmax':'smcmax', 'bexp':'bexp', 'psisat':'psisat', 'quartz':'quartz'}
     attr22 = {'smcmax':'mean.smcmax', 'bexp':'mode.bexp', 'psisat':'geom_mean.psisat', 'quartz':'quartz'}
