@@ -81,53 +81,60 @@ def sac_sma_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_
         return error
  
     #Read parameters from CSV file into dataframe and filter on divide ids in geopackage.
-    try:
-        parameters_df = pd.read_csv(csv_path_filename)
-    except FileNotFoundError:
-        error_str = f'Sac-SMA Parameters CSV file not found: {csv_path_filename}'
-        error = {'error': error_str}
-        logger.error(error_str)
-        return error
-    except Exception as e:
-        error_str = f'Sac-SMA Parameters CSV Pandas read error: {csv_path_filename}'
-        error = {'error': error_str}
-        logger.error(error_str)
-        return error   
- 
-    filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
-    if filtered_parameters.empty:
-        error_str = f'Catchments in geopackage not found in Sac-SMA CSV file'
-        error = {'error': error_str}
-        logger.error(error_str)
-        return error
+    #Catchment specific parameters are only available for CONUS.  Use default values for oCONUS.
+    if domain == 'CONUS':
+        try:
+            parameters_df = pd.read_csv(csv_path_filename)
+        except FileNotFoundError:
+            error_str = f'Sac-SMA Parameters CSV file not found: {csv_path_filename}'
+            error = {'error': error_str}
+            logger.error(error_str)
+            return error
+        except Exception as e:
+            error_str = f'Sac-SMA Parameters CSV Pandas read error: {csv_path_filename}'
+            error = {'error': error_str}
+            logger.error(error_str)
+            return error   
     
-    #Make sure that there are a matching number of catchements
-    if(len(catchments) != len(filtered_parameters.index)):
-        error_str = f'Number of matching catchments found in Sac-SMA CSV file does not match number of catchments in geopackage'
-        error = {'error': error_str}
-        logger.error(error_str)
-        return error
+        filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
+        if filtered_parameters.empty:
+            error_str = f'Catchments in geopackage not found in Sac-SMA CSV file'
+            error = {'error': error_str}
+            logger.error(error_str)
+            return error
+        
+        #Make sure that there are a matching number of catchements
+        if(len(catchments) != len(filtered_parameters.index)):
+            error_str = f'Number of matching catchments found in Sac-SMA CSV file does not match number of catchments in geopackage'
+            error = {'error': error_str}
+            logger.error(error_str)
+            return error
 
-    #Join parameters from csv and area into single dataframe.
-    df_all = filtered_parameters.join(area.set_index('divide_id'), on='divide_id')
-    
+        #Join parameters from csv and area into single dataframe.
+        df_all = filtered_parameters.join(area.set_index('divide_id'), on='divide_id')
+    else:
+          df_all = area
+
     #Loop through divide IDs, get values and set NA values (represented as NaNs in Pandas) to default values.
     #Create parameter config file.
     for index, row in df_all.iterrows():
 
         hru_id = row['divide_id']
         hru_area = row['areasqkm']
-        if not math.isnan(row['UZTWM']):  uztwm = row['UZTWM']
-        if not math.isnan(row['UZFWM']) : uzfwm = row['UZFWM']
-        if not math.isnan(row['LZTWM']):  lztwm = row['LZTWM']
-        if not math.isnan(row['LZFPM']): lzfpm = row['LZFPM']
-        if not math.isnan(row['LZFSM']): lzfsm = row['LZFSM']
-        if not math.isnan(row['UZK']): uzk = row['UZK']  
-        if not math.isnan(row['LZPK']): lzpk = row['LZPK']
-        if not math.isnan(row['LZSK']): lzsk = row['LZSK'] 
-        if not math.isnan(row['ZPERC']): zperc = row['ZPERC']
-        if not math.isnan(row['REXP']): rexp = row['REXP']
-        if not math.isnan(row['PFREE']): pfree = row['PFREE']
+
+        #Skip for oCONUS -- use default values
+        if domain == 'CONUS':
+            if not math.isnan(row['UZTWM']):  uztwm = row['UZTWM']
+            if not math.isnan(row['UZFWM']) : uzfwm = row['UZFWM']
+            if not math.isnan(row['LZTWM']):  lztwm = row['LZTWM']
+            if not math.isnan(row['LZFPM']): lzfpm = row['LZFPM']
+            if not math.isnan(row['LZFSM']): lzfsm = row['LZFSM']
+            if not math.isnan(row['UZK']): uzk = row['UZK']  
+            if not math.isnan(row['LZPK']): lzpk = row['LZPK']
+            if not math.isnan(row['LZSK']): lzsk = row['LZSK'] 
+            if not math.isnan(row['ZPERC']): zperc = row['ZPERC']
+            if not math.isnan(row['REXP']): rexp = row['REXP']
+            if not math.isnan(row['PFREE']): pfree = row['PFREE']
 
         param_list = ['hru_id ' + hru_id,
                       'hru_area ' + str(hru_area),

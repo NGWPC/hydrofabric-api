@@ -50,7 +50,7 @@ def topmodel_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module
         logger.error(error_str)
         return error
     
-    divide_attr = get_hydrofabric_attributes(gpkg_file, version)
+    divide_attr = get_hydrofabric_attributes(gpkg_file, version, domain)
     #Join parameters from csv and area into single dataframe.
     df_all = divide_attr.join(flowpath_length.set_index('divide_id'), on='divide_id')
 

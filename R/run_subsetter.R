@@ -24,7 +24,7 @@ layers22 <- c('flowpaths', 'divides', 'lakes', 'nexus', 'pois',
 
 #Removed lake layer because subsetter fails because hl_uri is missing
 layers22_oCONUS <- c('flowpaths', 'divides', 'nexus', 'pois',
-           'hydrolocations', 'flowpath-attributes',
+           'hydrolocations', 'flowpath-attributes', 'divide-attributes',
            'network')
 
 layers22_GL <- c('flowpaths', 'divides', 'nexus', 'pois',
