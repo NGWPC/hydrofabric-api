@@ -73,37 +73,40 @@ def snow17_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_m
         attr = attr21
     elif version == '2.2':
         attr=attr22
- 
+  
     #Read parameters from ascii created CSV file into a dataframe and filter on divide ids in geopackage.
-    try:
-        parameters_df = pd.read_csv(csv_path_filename)
-    except FileNotFoundError:
-        error_str = f'Snow-17 Parameters CSV file not found: {csv_path_filename}'
-        error = {'error': error_str}
-        logger.error(error_str)
-        return error
-    except Exception as e:
-        error_str = f'Snow-17 Parameters CSV Pandas read error: {csv_path_filename}'
-        error = {'error': error_str}
-        logger.error(error_str)
-        return error   
+    if domain == 'CONUS':
+        try:
+            parameters_df = pd.read_csv(csv_path_filename)
+        except FileNotFoundError:
+            error_str = f'Snow-17 Parameters CSV file not found: {csv_path_filename}'
+            error = {'error': error_str}
+            logger.error(error_str)
+            return error
+        except Exception as e:
+            error_str = f'Snow-17 Parameters CSV Pandas read error: {csv_path_filename}'
+            error = {'error': error_str}
+            logger.error(error_str)
+            return error   
 
-    filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
-    if filtered_parameters.empty:
-        error_str = f'Catchments in geopackage not found in Snow-17 CSV file'
-        error = {'error': error_str}
-        logger.error(error_str)
-        return error
-    
-    #Make sure that there are a matching number of catchements
-    if(len(catchments) != len(filtered_parameters.index)):
-        error_str = f'Number of matching catchments found in Sac-SMA CSV file does not match number of catchments in geopackage'
-        error = {'error': error_str}
-        logger.error(error_str)
-        return error
+        filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
+        if filtered_parameters.empty:
+            error_str = f'Catchments in geopackage not found in Snow-17 CSV file'
+            error = {'error': error_str}
+            logger.error(error_str)
+            return error
+        
+        #Make sure that there are a matching number of catchements
+        if(len(catchments) != len(filtered_parameters.index)):
+            error_str = f'Number of matching catchments found in Sac-SMA CSV file does not match number of catchments in geopackage'
+            error = {'error': error_str}
+            logger.error(error_str)
+            return error
 
-    #Join parameters from csv, area, and attribute file into single dataframe using divide_id as index
-    df_all = filtered_parameters.join(area.set_index('divide_id'), on='divide_id').join(divide_attr.set_index('divide_id'), on='divide_id')
+        #Join parameters from csv, area, and attribute file into single dataframe using divide_id as index
+        df_all = filtered_parameters.join(area.set_index('divide_id'), on='divide_id').join(divide_attr.set_index('divide_id'), on='divide_id')
+    else:
+        df_all = divide_attr.join(area.set_index('divide_id'), on='divide_id')
 
     # set default values for vars (eventually this will be retrieved from db)
     mfmax = 1.00
@@ -116,9 +119,10 @@ def snow17_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_m
 
         hru_id = row['divide_id']  # need this for filenames as well as parameters
         #hru_area = row['areasqkm']
-        if not math.isnan(row['MFMIN']):  mfmin = row['MFMIN']
-        if not math.isnan(row['MFMAX']): mfmax = row['MFMAX']
-        if not math.isnan(row['UADJ']):  uadj = row['UADJ']
+        if domain == 'CONUS':
+            if not math.isnan(row['MFMIN']):  mfmin = row['MFMIN']
+            if not math.isnan(row['MFMAX']): mfmax = row['MFMAX']
+            if not math.isnan(row['UADJ']):  uadj = row['UADJ']
 
         param_list = ['hru_id ' + str(row['divide_id']),
                       'hru_area ' + str(row['areasqkm']),

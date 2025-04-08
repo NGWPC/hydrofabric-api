@@ -169,52 +169,56 @@ class UEB:
             logger.error(error_str)
             return error
 
-        try:
-            #Read parameters from CSV file into dataframe and filter on divide ids in geopackage. 
-            parameters_df = pd.read_csv(csv_path_filename)
-        except FileNotFoundError:
-            error_str = f'Temperature delta CSV file not found: {csv_path_filename}'
-            error = {'error': error_str}
-            logger.error(error_str)
-            return error
-        except Exception as e:
-            error_str = f'Temperature delta CSV read error: {csv_path_filename}'
-            error = {'error': error_str}
-            logger.error(error_str)
-            return error   
-
-        filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
-        if filtered_parameters.empty:
-            error_str = f'Catchments in geopackage not found in temperature delta CSV file'
-            error = {'error': error_str}
-            logger.error(error_str)
-            return error
-        
-        #Make sure that there are a matching number of catchements
-        if(len(catchments) != len(filtered_parameters.index)):
-            error_str = f'Number of matching catchments found in temperature delta CSV file does not match number of catchments in geopackage'
-            error = {'error': error_str}
-            logger.error(error_str)
-            return error
-
         divide_attr = get_hydrofabric_attributes(gpkg_file, version, domain)
 
+        if len(divide_attr) == 0:
+            error_str = 'No matching catchments in attribute file'
+            error = dict(error = error_str)
+            logger.error(error_str)
+            return error
+
         attr21 = {'slope':'slope_mean', 'aspect':'aspect_c_mean', 'elevation':'elevation_mean', 'lat':'Y','lon':'X'}
-        attr22 = {'slope':'mean.slope', 'aspect':'circ_mean.aspect', 'elevation':'mean.elevation', 'lat':'centroid_y','lon':'centroid_y'}
+        attr22 = {'slope':'mean.slope', 'aspect':'circ_mean.aspect', 'elevation':'mean.elevation', 'lat':'centroid_y','lon':'centroid_x'}
 
         if version == '2.1':
             attr = attr21
         elif version == '2.2':
             attr=attr22
 
-        #Join parameters from csv and area into single dataframe.
-        df_all = filtered_parameters.join(divide_attr.set_index('divide_id'), on='divide_id')
-        
-        if len(divide_attr) == 0:
-            error_str = 'No matching catchments in attribute file'
-            error = dict(error = error_str)
-            logger.error(error_str)
-            return error
+        #Read parameters from CSV file into dataframe and filter on divide ids in geopackage.
+        #Temperature deltas are only available for CONUS.  Use defaults otherwise.
+        if domain == 'CONUS':
+            try: 
+                parameters_df = pd.read_csv(csv_path_filename)
+            except FileNotFoundError:
+                error_str = f'Temperature delta CSV file not found: {csv_path_filename}'
+                error = {'error': error_str}
+                logger.error(error_str)
+                return error
+            except Exception as e:
+                error_str = f'Temperature delta CSV read error: {csv_path_filename}'
+                error = {'error': error_str}
+                logger.error(error_str)
+                return error   
+
+            filtered_parameters = parameters_df[parameters_df['divide_id'].isin(catchments)]
+            if filtered_parameters.empty:
+                error_str = f'Catchments in geopackage not found in temperature delta CSV file'
+                error = {'error': error_str}
+                logger.error(error_str)
+                return error
+            
+            #Make sure that there are a matching number of catchements
+            if(len(catchments) != len(filtered_parameters.index)):
+                error_str = f'Number of matching catchments found in temperature delta CSV file does not match number of catchments in geopackage'
+                error = {'error': error_str}
+                logger.error(error_str)
+                return error
+
+            #Join parameters from csv and area into single dataframe.
+            df_all = filtered_parameters.join(divide_attr.set_index('divide_id'), on='divide_id')
+        else:
+            df_all = divide_attr
         
         #Set month temperature delta to the average if a catchment is NA.  The average
         #is taken monthy for all catchments in the csv file.
@@ -235,9 +239,6 @@ class UEB:
         for index, row in df_all.iterrows():
 
             catchment_id = row['divide_id']
-
-            temp_ranges = self.get_monthly_temp_ranges(row)
-            
             slpe = round(row[attr['slope']], 4)
             aspct = round(row[attr['aspect']], 4)
             lat = round(row[attr['lat']], 4)
@@ -245,18 +246,21 @@ class UEB:
             elevation = round(row[attr['elevation']], 4)
             standard_atm_pressure = round(Atmosphere(elevation).pressure[0], 4)
             
-            if not math.isnan(temp_ranges['jan']): jan_temp_range = temp_ranges['jan']
-            if not math.isnan(temp_ranges['feb']): feb_temp_range = temp_ranges['feb']
-            if not math.isnan(temp_ranges['mar']): mar_temp_range = temp_ranges['mar']
-            if not math.isnan(temp_ranges['apr']): apr_temp_range = temp_ranges['apr']
-            if not math.isnan(temp_ranges['may']): may_temp_range = temp_ranges['may']
-            if not math.isnan(temp_ranges['jun']): jun_temp_range = temp_ranges['jun']
-            if not math.isnan(temp_ranges['jul']): jul_temp_range = temp_ranges['jul']
-            if not math.isnan(temp_ranges['aug']): aug_temp_range = temp_ranges['aug']
-            if not math.isnan(temp_ranges['sep']): sep_temp_range = temp_ranges['sep']
-            if not math.isnan(temp_ranges['oct']): oct_temp_range = temp_ranges['oct']
-            if not math.isnan(temp_ranges['nov']): nov_temp_range = temp_ranges['nov']
-            if not math.isnan(temp_ranges['dec']): dec_temp_range = temp_ranges['dec']
+            #If not CONUS, use defaults
+            if domain == 'CONUS':
+                temp_ranges = self.get_monthly_temp_ranges(row)
+                if not math.isnan(temp_ranges['jan']): jan_temp_range = temp_ranges['jan']
+                if not math.isnan(temp_ranges['feb']): feb_temp_range = temp_ranges['feb']
+                if not math.isnan(temp_ranges['mar']): mar_temp_range = temp_ranges['mar']
+                if not math.isnan(temp_ranges['apr']): apr_temp_range = temp_ranges['apr']
+                if not math.isnan(temp_ranges['may']): may_temp_range = temp_ranges['may']
+                if not math.isnan(temp_ranges['jun']): jun_temp_range = temp_ranges['jun']
+                if not math.isnan(temp_ranges['jul']): jul_temp_range = temp_ranges['jul']
+                if not math.isnan(temp_ranges['aug']): aug_temp_range = temp_ranges['aug']
+                if not math.isnan(temp_ranges['sep']): sep_temp_range = temp_ranges['sep']
+                if not math.isnan(temp_ranges['oct']): oct_temp_range = temp_ranges['oct']
+                if not math.isnan(temp_ranges['nov']): nov_temp_range = temp_ranges['nov']
+                if not math.isnan(temp_ranges['dec']): dec_temp_range = temp_ranges['dec']
 
             filename = self.sitevar_filename_template.format(catchment = catchment_id)
             file_string = self.sitevar_file_template.format(std_atm_pressure = standard_atm_pressure, 
