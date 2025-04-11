@@ -1,0 +1,3 @@
+icechunk
+xarray>=2025.1.1
+rioxarray
