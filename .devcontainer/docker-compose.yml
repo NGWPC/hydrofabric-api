@@ -13,6 +13,7 @@ services:
       DB_PASSWORD: postgres
       LD_LIBRARY_PATH: /usr/local/lib64
       S3_BUCKET: ngwpc-hydrofabric
+      DJANGO_SECRET_KEY: django-insecure&z#8d*w5x8+k%mdp=d88qjtz_!=0#5ha9e3seet+id4#=*-
       DJANGO_DB_LOG_LEVEL: DEBUG
       PYTHONUNBUFFERED: 1
     volumes:
