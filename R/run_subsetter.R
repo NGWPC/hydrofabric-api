@@ -29,7 +29,7 @@ layers22_oCONUS <- c('flowpaths', 'divides', 'nexus', 'pois',
 
 layers22_GL <- c('flowpaths', 'divides', 'nexus', 'pois',
            'hydrolocations', 'flowpath-attributes',
-           'network')
+           'network', 'divide-attributes')
 
 layers21 <- c('divides', 'flowlines',
             'model-attributes', 'network', 'nexus')

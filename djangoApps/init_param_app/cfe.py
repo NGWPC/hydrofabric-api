@@ -40,7 +40,10 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
         scheme = 'Xinanjiang'
 
     #Set CFE-X parameter CSV filename based on hydrofabric version
-    csv_path_filename = f'{input_dir}/CFE-X_params_{domain}_{version}.csv'
+    if(source == 'ENVCA' and domain == 'CONUS'):
+        csv_path_filename = f'{input_dir}/CFE-X_params_GL_{version}.csv'
+    else:
+        csv_path_filename = f'{input_dir}/CFE-X_params_{domain}_{version}.csv'
 
     #Create empty list to store BMI config file names
     filename_list = []

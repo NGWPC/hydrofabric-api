@@ -81,8 +81,8 @@ def sac_sma_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_
         return error
  
     #Read parameters from CSV file into dataframe and filter on divide ids in geopackage.
-    #Catchment specific parameters are only available for CONUS.  Use default values for oCONUS.
-    if domain == 'CONUS':
+    #Catchment specific parameters are only available for CONUS.  Use default values for oCONUS and ENVCA.
+    if domain == 'CONUS' and source != 'ENVCA':
         try:
             parameters_df = pd.read_csv(csv_path_filename)
         except FileNotFoundError:
@@ -122,8 +122,8 @@ def sac_sma_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_
         hru_id = row['divide_id']
         hru_area = row['areasqkm']
 
-        #Skip for oCONUS -- use default values
-        if domain == 'CONUS':
+        #Skip for oCONUS and ENVCA -- use default values
+        if domain == 'CONUS' and source != 'ENVCA':
             if not math.isnan(row['UZTWM']):  uztwm = row['UZTWM']
             if not math.isnan(row['UZFWM']) : uzfwm = row['UZFWM']
             if not math.isnan(row['LZTWM']):  lztwm = row['LZTWM']

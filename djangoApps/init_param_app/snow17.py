@@ -75,7 +75,8 @@ def snow17_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_m
         attr=attr22
   
     #Read parameters from ascii created CSV file into a dataframe and filter on divide ids in geopackage.
-    if domain == 'CONUS':
+    #These are only available for CONUS (except for ENVCA)
+    if domain == 'CONUS' and source != 'ENVCA':
         try:
             parameters_df = pd.read_csv(csv_path_filename)
         except FileNotFoundError:
@@ -119,7 +120,8 @@ def snow17_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_m
 
         hru_id = row['divide_id']  # need this for filenames as well as parameters
         #hru_area = row['areasqkm']
-        if domain == 'CONUS':
+        #Only use values from CSV file if CONUS and not ENVCA
+        if domain == 'CONUS' and source != 'ENVCA':
             if not math.isnan(row['MFMIN']):  mfmin = row['MFMIN']
             if not math.isnan(row['MFMAX']): mfmax = row['MFMAX']
             if not math.isnan(row['UADJ']):  uadj = row['UADJ']

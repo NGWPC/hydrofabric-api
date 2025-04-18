@@ -186,8 +186,8 @@ class UEB:
             attr=attr22
 
         #Read parameters from CSV file into dataframe and filter on divide ids in geopackage.
-        #Temperature deltas are only available for CONUS.  Use defaults otherwise.
-        if domain == 'CONUS':
+        #Temperature deltas are only available for CONUS (except for ENVCA).  Use defaults otherwise.
+        if domain == 'CONUS' and source != 'ENVCA':
             try: 
                 parameters_df = pd.read_csv(csv_path_filename)
             except FileNotFoundError:
@@ -246,8 +246,8 @@ class UEB:
             elevation = round(row[attr['elevation']], 4)
             standard_atm_pressure = round(Atmosphere(elevation).pressure[0], 4)
             
-            #If not CONUS, use defaults
-            if domain == 'CONUS':
+            #If not CONUS or ENVCA, use defaults
+            if domain == 'CONUS' and source != 'ENVCA':
                 temp_ranges = self.get_monthly_temp_ranges(row)
                 if not math.isnan(temp_ranges['jan']): jan_temp_range = temp_ranges['jan']
                 if not math.isnan(temp_ranges['feb']): feb_temp_range = temp_ranges['feb']
