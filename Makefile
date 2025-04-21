@@ -5,6 +5,7 @@ check-env:
 	@: $(or $(DB_USER),$(error DB_USER is not set))
     @: $(or $(DB_PASSWORD),$(error DB_PASSWORD is not set))
 	@: $(or $(DB_HOST),$(error DB_HOST is not set))
+	@: $(or $(DJANGO_SECRET_KEY),$(error DJANGO_SECRET_KEY is not set))
 
 
 get_deps: check-env
@@ -18,4 +19,4 @@ build:
 
 run: check-env
 	@echo "Starting the docker container running the hydrofabric_api on port 8000 \n"
-	@sudo docker run --network host -it -e DB_USER=$(DB_USER) -e DB_PASSWORD=$(DB_PASSWORD) -e DB_HOST=$(DB_HOST) -e AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) -e AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) -e AWS_SESSION_TOKEN=$(AWS_SESSION_TOKEN) -v $(shell pwd):/workspace -v $(shell pwd)/Hydrofabric:/Hydrofabric -p 8000:8000 hydrofabric_api
+	@sudo docker run --network host -it -e DB_USER=$(DB_USER) -e DB_PASSWORD=$(DB_PASSWORD) -e DB_HOST=$(DB_HOST) -e AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) -e AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) -e AWS_SESSION_TOKEN=$(AWS_SESSION_TOKEN) -e DJANGO_SECRET_KEY=$(DJANGO_SECRET_KEY) -v $(shell pwd):/workspace -v $(shell pwd)/Hydrofabric:/Hydrofabric -p 8000:8000 hydrofabric_api
