@@ -60,17 +60,9 @@ def get_ipe(gage_id, version, source, domain, modules, gage_file_mgmt):
                     hffiles_row = gage_file_mgmt.get_db_object()
                     hffiles_row.ipe_json = json.dumps(module_results)
                     hffiles_row.save()
-
             else:
-                results = module_results
-                logger.error(results)
-                # TODO Make this the correct response also some of the data
-                #      may have been generated do we return what we have
-                #      and try to keep processing the others
-                #If only one module is being run and it is fails, return a 404 status.  If more than one
-                # module is being run, return error JSON for module and continue to process the rest of the
-                # modules.  
-                if len(modules) == 1: return Response(results, status=status.HTTP_404_NOT_FOUND)
+                error_str = module_results['error']
+                logger.error(error_str)
         else:
             # Found IPE data file, clean and add to response list
             decoder = json.JSONDecoder(object_pairs_hook=collections.OrderedDict)
@@ -103,10 +95,7 @@ def calculate_dependent_module_params(gage_id, version, source, domain, module, 
                           gpkg_file, modules, module_metadata, gage_file_mgmt)
 
     else:
-        error_str = f"Module name not valid: {module}"
-        error = dict(error=error_str)
-        logger.error(error_str)
-        return error
+        results = module_json(module, [], [], error=f"module '{module}' does not exist")
 
     return results
 
@@ -160,11 +149,7 @@ def calculate_module_params(gage_id, version, source, domain, module, subset_dir
     elif module == "PET":
         results = pet_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     else:
-        error_str = f"Module name not valid: {module}"
-        error = dict(error=error_str)
-        logger.error(error_str)
-        return error
-    
+         results = module_json(module, [], [], error=f"module '{module}' does not exist")
     return results
 
 def get_initial_parameters(model_type):
@@ -204,19 +189,20 @@ def get_module_metadata(module_name):
     # Get the output variables data
     out_variables_data_response = module_out_variables_data(module_name)
 
-    # Combine the data
+    # Write JSON for module
+    module_output = module_json(module_name, calibrate_data_response, out_variables_data_response)
+
+    return module_output
+
+def module_json(module_name, calibrate_parameters, output_variables, error=''):
     combined_data = OrderedDict()
     combined_data["module_name"] = module_name
     combined_data["parameter_file"] = {"uri": None}
-    if not calibrate_data_response:
-        combined_data["calibrate_parameters"] = []
-    else:
-        combined_data["calibrate_parameters"] = calibrate_data_response
-
-    combined_data["output_variables"] = out_variables_data_response
-
+    combined_data["calibrate_parameters"] = calibrate_parameters
+    combined_data["output_variables"] = output_variables
+    if error:
+        combined_data["error"] = error
     return combined_data
-
 
 def module_calibrate_data(model_type):
     try:

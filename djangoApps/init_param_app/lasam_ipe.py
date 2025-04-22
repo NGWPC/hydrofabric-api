@@ -59,7 +59,7 @@ def lasam_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_me
         os.makedirs(subset_dir)
     
     # Get divide attributes
-    divide_attr = get_hydrofabric_attributes(gpkg_file, version)
+    divide_attr = get_hydrofabric_attributes(gpkg_file, version, domain)
     attr21 = {'soil_type':'ISLTYP'}
     attr22 = {'soil_type':'mode.ISLTYP'}
 
