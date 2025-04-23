@@ -40,7 +40,10 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
         scheme = 'Xinanjiang'
 
     #Set CFE-X parameter CSV filename based on hydrofabric version
-    csv_path_filename = f'{input_dir}/CFE-X_params_{version}.csv'
+    if(source == 'ENVCA' and domain == 'CONUS'):
+        csv_path_filename = f'{input_dir}/CFE-X_params_GL_{version}.csv'
+    else:
+        csv_path_filename = f'{input_dir}/CFE-X_params_{domain}_{version}.csv'
 
     #Create empty list to store BMI config file names
     filename_list = []
@@ -50,7 +53,7 @@ def cfe_ipe(module, version, gage_id, source, domain, subset_dir, gpkg_file, mod
     consts = CfeParams.objects.filter(source_file='const').values('name', 'nwm_name', 'default_value', 'units')
 
     #Get divide attributes from geopackage
-    divide_attr = get_hydrofabric_attributes(gpkg_file, version)
+    divide_attr = get_hydrofabric_attributes(gpkg_file, version, domain)
     if('error' in divide_attr): return divide_attr
     catchments = divide_attr["divide_id"].tolist()
 

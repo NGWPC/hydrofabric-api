@@ -29,7 +29,7 @@ def noah_owp_modular_ipe(gage_id, version, source, domain, subset_dir, gpkg_file
     num_soil_type = 19
     num_veg_type = 27
 
-    divide_attr = get_hydrofabric_attributes(gpkg_file, version)
+    divide_attr = get_hydrofabric_attributes(gpkg_file, version, domain)
 
     attr22 = {'divide_id':'divide_id', 'slope':'mean.slope', 'aspect': 'circ_mean.aspect',
               'lat':'centroid_y', 'lon':'centroid_x', 'soil_type':'mode.ISLTYP',
