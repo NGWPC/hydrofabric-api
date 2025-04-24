@@ -2,7 +2,7 @@ name: Hydrofabric CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, 'feature/actions' ]
   release:
     types: [ published ]
 
