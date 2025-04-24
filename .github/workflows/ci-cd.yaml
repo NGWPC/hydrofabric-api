@@ -2,18 +2,17 @@ name: Hydrofabric CI/CD
 
 on:
   push:
-    branches: [ main, 'test_actions' ]
+    branches: [ main, 'feature/actions' ]
   release:
     types: [ published ]
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ngwpc/hydrofabric_api/hydrofabric
-  VISIBILITY: private
 
 jobs:
-  build:
-    name: Build Docker Image
+  build_and_test:
+    name: Build and Test
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -44,76 +43,23 @@ jobs:
             echo "type=branch" >> $GITHUB_OUTPUT
           fi
       
-      - name: Build Docker image (locally only)
+      # First, build from scratch for testing
+      - name: Build testing Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile
+          file: ./Dockerfile  # This will be a standalone Dockerfile with no dependencies
           push: false
           load: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.ref_info.outputs.tag }}
+          tags: hydrofabric-test-image:${{ github.sha }}
       
-      - name: Save Docker image for testing
-        run: |
-          docker save ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.ref_info.outputs.tag }} > /tmp/image.tar
-      
-      - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-image
-          path: /tmp/image.tar
-          retention-days: 1
-          
-      - name: Store reference info for later jobs
-        run: |
-          mkdir -p /tmp/ref_info
-          echo "${{ steps.ref_info.outputs.tag }}" > /tmp/ref_info/tag
-          echo "${{ steps.ref_info.outputs.type }}" > /tmp/ref_info/type
-          
-      - name: Upload reference info artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ref-info
-          path: /tmp/ref_info
-          retention-days: 1
-
-  unit_test:
-    name: Unit Tests
-    runs-on: ubuntu-latest
-    needs: build
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Download Docker image
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-image
-          path: /tmp
-      
-      - name: Download reference info
-        uses: actions/download-artifact@v4
-        with:
-          name: ref-info
-          path: /tmp/ref_info
-          
-      - name: Load reference info
-        id: ref_info
-        run: |
-          TAG=$(cat /tmp/ref_info/tag)
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-      
-      - name: Load Docker image
-        run: |
-          docker load < /tmp/image.tar
-      
+      # Run tests on the freshly built image with the latest changes
       - name: Run tests in container
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.ref_info.outputs.tag }} \
+            hydrofabric-test-image:${{ github.sha }} \
             /bin/bash -c "pip install pytest pytest-django coverage && coverage run -m pytest tests/unit --junitxml=/workspace/test-results.xml && coverage xml -o /workspace/coverage.xml"
       
       - name: Upload test results
@@ -123,58 +69,31 @@ jobs:
           path: |
             test-results.xml
             coverage.xml
-
-  push:
-    name: Push Docker Image
-    runs-on: ubuntu-latest
-    needs: unit_test
-    permissions:
-      contents: read
-      packages: write
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
       
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+      # Only if tests pass, build and push the final image
+      - name: Build and push final Docker image
+        uses: docker/build-push-action@v5
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          context: .
+          file: ./Dockerfile  # Same full Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.ref_info.outputs.tag }}
       
-      - name: Download Docker image
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-image
-          path: /tmp
+      # Apply additional tags if needed
+      - name: Tag development (for main branch)
+        if: steps.ref_info.outputs.type == 'branch' && github.ref == 'refs/heads/main'
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.ref_info.outputs.tag }}
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.ref_info.outputs.tag }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:development
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:development
+      
+      - name: Handle version tags
+        if: (steps.ref_info.outputs.type == 'branch' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))) || steps.ref_info.outputs.type == 'release'
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.ref_info.outputs.tag }}
           
-      - name: Download reference info
-        uses: actions/download-artifact@v4
-        with:
-          name: ref-info
-          path: /tmp/ref_info
-          
-      - name: Load reference info
-        id: ref_info
-        run: |
-          TAG=$(cat /tmp/ref_info/tag)
-          TYPE=$(cat /tmp/ref_info/type)
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "type=$TYPE" >> $GITHUB_OUTPUT
-      
-      - name: Load Docker image
-        run: |
-          docker load < /tmp/image.tar
-      
-      - name: Push Docker image with tag
-        run: |
-          # Push with the tag from the branch name or release tag
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.ref_info.outputs.tag }}
-      
-      - name: Handle additional tags for branches
-        if: steps.ref_info.outputs.type == 'branch' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
-        run: |
+          # Tag with version from VERSION file if it exists
           if [ -f VERSION ]; then
             VERSION_TAG=$(cat VERSION)
             docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.ref_info.outputs.tag }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION_TAG}
@@ -183,18 +102,11 @@ jobs:
             echo "WARNING: VERSION file not found, skipping version tagging"
           fi
           
-          # Tag as latest for main or release branches
+          # Tag as latest for main, release branches, or release events
           docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.ref_info.outputs.tag }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
       
-      - name: Handle additional tags for releases
-        if: steps.ref_info.outputs.type == 'release'
-        run: |
-          # For releases, also tag as "latest"
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.ref_info.outputs.tag }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-      
-      # Single privacy check for the whole package
+      # Ensure package privacy
       - name: Ensure package privacy
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
