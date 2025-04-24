@@ -1,17 +1,14 @@
-FROM rockylinux:9
+FROM ghcr.io/ngwpc/hydrofabric_api/hydrofabric:base 
 
 # Update packages
 RUN dnf upgrade -y
 
 # Install Python, pip, and Git
-RUN dnf install -y python311 python3.11-pip python3.11-devel git
+RUN dnf install -y python311 python3.11-pip python3.11-devel
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 \
     && dnf remove pip -y \
     && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3.11 1
-
-# Create app directory
-RUN mkdir -p /app
 
 # Copy application files
 COPY ./djangoApps /app/djangoApps
@@ -25,7 +22,6 @@ COPY VERSION /app/VERSION
 COPY ./tests /app/tests
 
 # Install Python dependencies
-WORKDIR /app
 RUN pip install -r /app/requirements.txt
 
 # Set library path and expose port
