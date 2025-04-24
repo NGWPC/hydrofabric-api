@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ngwpc/Hydrofabric_API/hydrofabric
+  IMAGE_NAME: ngwpc/hydrofabric_api/hydrofabric
   VISIBILITY: private
 
 jobs:
