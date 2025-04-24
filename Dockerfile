@@ -1,4 +1,4 @@
-FROM ghcr.io/ngwpc/Hydrofabric_API/hydrofabric:development 
+FROM ghcr.io/ngwpc/hydrofabric_api/hydrofabric:development 
 
 # Update packages
 RUN dnf upgrade -y
