@@ -53,6 +53,10 @@ def get_hydrofabric_attributes(gpkg_file,version,domain):
         logger.error(error_str)
         return error
     
+    #Get catchement area from divides layer and append to attributes data frame
+    area = divide_layer[['divide_id','areasqkm']]
+    divide_attr = divide_attr.join(area.set_index('divide_id'), on='divide_id')
+    
     #Account for differences in column names between CONUS and oCONUS
     if version == '2.2' and domain != 'CONUS':
         divide_attr.rename(columns=column_names_xy, inplace=True)
