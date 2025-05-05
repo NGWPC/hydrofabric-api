@@ -16,6 +16,7 @@ from .ueb import UEB
 from .lasam_ipe import *
 from .topoflow import TopoFlow
 from .pet_ipe import *
+from .lstm import *
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -148,6 +149,8 @@ def calculate_module_params(gage_id, version, source, domain, module, subset_dir
         results = lasam_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt, dep_modules_included)
     elif module == "PET":
         results = pet_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
+    elif module == "LSTM":
+        results = lstm_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_metadata, gage_file_mgmt)
     else:
          results = module_json(module, [], [], error=f"module '{module}' does not exist")
     return results
@@ -244,9 +247,8 @@ def module_out_variables_data(model_type):
             db = DatabaseManager(cursor)
             column_names, rows = db.selectModuleOutVariablesData(model_type)
 
+            module_data = []
             if column_names and rows:
-                module_data = []
-
                 for row in rows:
                     output_var_data = {
                         "variable": row[column_names.index("name")],
@@ -254,12 +256,7 @@ def module_out_variables_data(model_type):
                     }
                     module_data.append(output_var_data)
 
-                return module_data
-            else:
-                error_str = {"error": "No data found for model outputs"}
-                logger.error(error_str)
-                return error_str
-
+            return module_data
     except Exception as e:
         # TODO: Replace 'except' with proper catch
         error_str = {"Error": "Error executing moduleOutVariablesData query: {e}"}
