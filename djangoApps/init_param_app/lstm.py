@@ -20,7 +20,7 @@ def lstm_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_met
     dict: JSON output with cfg file URI, calibratable parameters initial values, output variables.
     '''
 
-    module = "LSTM"
+    module = 'LSTM'
     filename_list = []
 
     divide_attr = get_hydrofabric_attributes(gpkg_file, version, domain)
@@ -40,15 +40,15 @@ def lstm_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_met
     #Loop through catchments, get soil type, populate config file template, write config file to temp 
     for index, row in divide_attr.iterrows():
 
-        area = str(row[attr['area']])
         catchment_id = row[attr['divide_id']]
+        area = str(row[attr['area']])
         slope = str(row[attr['slope']])
         elev = str(row[attr['elevation_mean']])
         lat = str(row[attr['lat']])
         lon = str(row[attr['lon']])
 
         namelist = ['area_sqkm: ' + area,
-                    'basin_id: ' + catchment_id,
+                    'basin_id: ' + gage_id,
                     'basin_name:',
                     'elev_mean: ' + elev,
                     'initial_state: zero',
@@ -60,7 +60,7 @@ def lstm_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_met
                     'verbose: 0'
                     ]
 
-        cfg_filename = f"{catchment_id}.yml"
+        cfg_filename = f'{catchment_id}.yml'
         filename_list.append(cfg_filename)
         cfg_filename_path = os.path.join(subset_dir, cfg_filename)
         with open(cfg_filename_path, 'w') as outfile:
@@ -70,10 +70,10 @@ def lstm_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_met
     # Write files to DB and S3
     uri = gage_file_mgmt.write_file_to_s3(gage_id, version, domain, FileTypeEnum.PARAMS, source, subset_dir, filename_list,
                                           module=module)
-    status_str = "Config files written to:  " + uri
+    status_str = 'Config files written to: ' + uri
     logger.info(status_str)
 
     #fill in parameter files uri 
-    module_metadata["parameter_file"]["uri"] = uri
+    module_metadata['parameter_file']['uri'] = uri
 
     return module_metadata
