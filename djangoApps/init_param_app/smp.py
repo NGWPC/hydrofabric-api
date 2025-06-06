@@ -135,7 +135,7 @@ def create_smp_input(gage_id, version, source, domain, catch_dict, gpkg_file, ou
         elif 'TopModel' in modules:
             param_list += ['soil_storage_model=TopModel',
                            'water_table_based_method=flux-based']
-        elif 'lasam' in modules:
+        elif 'LASAM' in modules:
             param_list += ['soil_storage_model=layered',
                            'soil_moisture_profile_option=constant',
                            'soil_depth_layers=2.0',
