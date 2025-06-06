@@ -105,9 +105,10 @@ def snow17_ipe(gage_id, version, source, domain, subset_dir, gpkg_file, module_m
             return error
 
         #Join parameters from csv, area, and attribute file into single dataframe using divide_id as index
-        df_all = filtered_parameters.join(area.set_index('divide_id'), on='divide_id').join(divide_attr.set_index('divide_id'), on='divide_id')
+        df_all = filtered_parameters.join(divide_attr.set_index('divide_id'), on='divide_id')
     else:
-        df_all = divide_attr.join(area.set_index('divide_id'), on='divide_id')
+        df_all = divide_attr
+
 
     # set default values for vars (eventually this will be retrieved from db)
     mfmax = 1.00
