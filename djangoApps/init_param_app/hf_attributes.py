@@ -92,7 +92,20 @@ def get_hydrofabric_attributes(gpkg_file,version,domain):
             wgs84_latlon = transformer.transform(x,y)
             divide_attr.loc[index, 'centroid_y'] = wgs84_latlon[0] #latitude
             divide_attr.loc[index, 'centroid_x'] = wgs84_latlon[1] #longitude
+
+    #If a soil divide attribute less than the min value or greater than the max value, 
+    #reset to min or max.
     
+    soil_attr = [{"name": "mode.bexp_soil_layers_stag=1", "min": 2, "max": 15},
+    {"name": "geom_mean.dksat_soil_layers_stag=1", "min": 0.0000000195, "max": 0.000141},
+    {"name": "geom_mean.psisat_soil_layers_stag=1", "min": 0.036, "max": 0.955},
+    {"name": "mean.smcmax_soil_layers_stag=1", "min": 0.16, "max": 0.58},
+    {"name": "mean.smcwlt_soil_layers_stag=1", "min": 0.05, "max": 0.30}]
+    
+    for attr in soil_attr:
+        divide_attr.loc[divide_attr[attr['name']] > attr['max'], attr['name']] = attr['max']
+        divide_attr.loc[divide_attr[attr['name']] < attr['min'], attr['name']] = attr['min']
+
     return divide_attr
 
     
