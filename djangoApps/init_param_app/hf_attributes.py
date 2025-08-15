@@ -14,34 +14,57 @@ def get_hydrofabric_attributes(gpkg_file,version,domain):
         attr_layer = 'model-attributes'
 
     #Map oCONUS lat/lon attribute names to CONUS names.
-    column_names_xy = {'X':'centroid_x', 'Y':'centroid_y'}
+    column_names_ak_hi = {'X':'centroid_x',
+                          'Y':'centroid_y',
+                          'mode.bexp_soil_layers_stag.1':'mode.bexp_soil_layers_stag=1',
+                          'mode.bexp_soil_layers_stag.2':'mode.bexp_soil_layers_stag=2',
+                          'mode.bexp_soil_layers_stag.3':'mode.bexp_soil_layers_stag=3',
+                          'mode.bexp_soil_layers_stag.4':'mode.bexp_soil_layers_stag=4',
+                          'geom_mean.dksat_soil_layers_stag.1':'geom_mean.dksat_soil_layers_stag=1',
+                          'geom_mean.dksat_soil_layers_stag.2':'geom_mean.dksat_soil_layers_stag=2',
+                          'geom_mean.dksat_soil_layers_stag.3':'geom_mean.dksat_soil_layers_stag=3',
+                          'geom_mean.dksat_soil_layers_stag.4':'geom_mean.dksat_soil_layers_stag=4',
+                          'mean.smcmax_soil_layers_stag.1':'mean.smcmax_soil_layers_stag=1',
+                          'mean.smcmax_soil_layers_stag.2':'mean.smcmax_soil_layers_stag=2',
+                          'mean.smcmax_soil_layers_stag.3':'mean.smcmax_soil_layers_stag=3',
+                          'mean.smcmax_soil_layers_stag.4':'mean.smcmax_soil_layers_stag=4',
+                          'geom_mean.psisat_soil_layers_stag.1':'geom_mean.psisat_soil_layers_stag=1',
+                          'geom_mean.psisat_soil_layers_stag.2':'geom_mean.psisat_soil_layers_stag=2',
+                          'geom_mean.psisat_soil_layers_stag.3':'geom_mean.psisat_soil_layers_stag=3',
+                          'geom_mean.psisat_soil_layers_stag.4':'geom_mean.psisat_soil_layers_stag=4',
+                          'mean.smcwlt_soil_layers_stag.1':'mean.smcwlt_soil_layers_stag=1',
+                          'mean.smcwlt_soil_layers_stag.2':'mean.smcwlt_soil_layers_stag=2',
+                          'mean.smcwlt_soil_layers_stag.3':'mean.smcwlt_soil_layers_stag=3',
+                          'mean.smcwlt_soil_layers_stag.4':'mean.smcwlt_soil_layers_stag=4'
+                       }
+    
     #Puerto Rico has a number of attribute names that don't match the other domains in HF v2.2
-    column_names_pr = {'dksat_Time._soil_layers_stag.1': 'geom_mean.dksat_soil_layers_stag.1',
-                       'dksat_Time._soil_layers_stag.2': 'geom_mean.dksat_soil_layers_stag.2',
-                       'dksat_Time._soil_layers_stag.3': 'geom_mean.dksat_soil_layers_stag.3',
-                       'dksat_Time._soil_layers_stag.4': 'geom_mean.dksat_soil_layers_stag.4',
+    column_names_pr = {'dksat_Time._soil_layers_stag.1': 'geom_mean.dksat_soil_layers_stag=1',
+                       'dksat_Time._soil_layers_stag.2': 'geom_mean.dksat_soil_layers_stag=2',
+                       'dksat_Time._soil_layers_stag.3': 'geom_mean.dksat_soil_layers_stag=3',
+                       'dksat_Time._soil_layers_stag.4': 'geom_mean.dksat_soil_layers_stag=4',
                        'mean.cwpvt_Time.': 'mean.cwpvt',
                        'mean.mfsno_Time.': 'mean.mfsno',
                        'mean.mp_Time.': 'mean.mp',
                        'mean.refkdt_Time.': 'mean.refkdt',
                        'mean.slope_Time.': 'mean.slope_1km',
-                       'mean.smcmax_Time._soil_layers_stag.1': 'mean.smcmax_soil_layers_stag.1',
-                       'mean.smcmax_Time._soil_layers_stag.2': 'mean.smcmax_soil_layers_stag.2',
-                       'mean.smcmax_Time._soil_layers_stag.3': 'mean.smcmax_soil_layers_stag.3',
-                       'mean.smcmax_Time._soil_layers_stag.4': 'mean.smcmax_soil_layers_stag.4',
-                       'mean.smcwlt_Time._soil_layers_stag.1': 'mean.smcwlt_soil_layers_stag.1',
-                       'mean.smcwlt_Time._soil_layers_stag.2': 'mean.smcwlt_soil_layers_stag.2',
-                       'mean.smcwlt_Time._soil_layers_stag.3': 'mean.smcwlt_soil_layers_stag.3',
-                       'mean.smcwlt_Time._soil_layers_stag.4': 'mean.smcwlt_soil_layers_stag.4',
+                       'mean.smcmax_Time._soil_layers_stag.1': 'mean.smcmax_soil_layers_stag=1',
+                       'mean.smcmax_Time._soil_layers_stag.2': 'mean.smcmax_soil_layers_stag=2',
+                       'mean.smcmax_Time._soil_layers_stag.3': 'mean.smcmax_soil_layers_stag=3',
+                       'mean.smcmax_Time._soil_layers_stag.4': 'mean.smcmax_soil_layers_stag=4',
+                       'mean.smcwlt_Time._soil_layers_stag.1': 'mean.smcwlt_soil_layers_stag=1',
+                       'mean.smcwlt_Time._soil_layers_stag.2': 'mean.smcwlt_soil_layers_stag=2',
+                       'mean.smcwlt_Time._soil_layers_stag.3': 'mean.smcwlt_soil_layers_stag=3',
+                       'mean.smcwlt_Time._soil_layers_stag.4': 'mean.smcwlt_soil_layers_stag=4',
                        'mean.vcmx25_Time.': 'mean.vcmx25',
-                       'mode.bexp_Time._soil_layers_stag.1': 'mode.bexp_soil_layers_stag.1',
-                       'mode.bexp_Time._soil_layers_stag.2': 'mode.bexp_soil_layers_stag.2',
-                       'mode.bexp_Time._soil_layers_stag.3': 'mode.bexp_soil_layers_stag.3',
-                       'mode.bexp_Time._soil_layers_stag.4': 'mode.bexp_soil_layers_stag.4',
-                       'psisat_Time._soil_layers_stag.1': 'geom_mean.psisat_soil_layers_stag.1',
-                       'psisat_Time._soil_layers_stag.2': 'geom_mean.psisat_soil_layers_stag.2',
-                       'psisat_Time._soil_layers_stag.3': 'geom_mean.psisat_soil_layers_stag.3',
-                       'psisat_Time._soil_layers_stag.4': 'geom_mean.psisat_soil_layers_stag.4'}
+                       'mode.bexp_Time._soil_layers_stag.1': 'mode.bexp_soil_layers_stag=1',
+                       'mode.bexp_Time._soil_layers_stag.2': 'mode.bexp_soil_layers_stag=2',
+                       'mode.bexp_Time._soil_layers_stag.3': 'mode.bexp_soil_layers_stag=3',
+                       'mode.bexp_Time._soil_layers_stag.4': 'mode.bexp_soil_layers_stag=4',
+                       'psisat_Time._soil_layers_stag.1': 'geom_mean.psisat_soil_layers_stag=1',
+                       'psisat_Time._soil_layers_stag.2': 'geom_mean.psisat_soil_layers_stag=2',
+                       'psisat_Time._soil_layers_stag.3': 'geom_mean.psisat_soil_layers_stag=3',
+                       'psisat_Time._soil_layers_stag.4': 'geom_mean.psisat_soil_layers_stag=4'}
 
     # Get list of catchments from gpkg divides layer using geopandas
     try:
@@ -59,7 +82,7 @@ def get_hydrofabric_attributes(gpkg_file,version,domain):
     
     #Account for differences in column names between CONUS and oCONUS
     if version == '2.2' and domain != 'CONUS':
-        divide_attr.rename(columns=column_names_xy, inplace=True)
+        divide_attr.rename(columns=column_names_ak_hi, inplace=True)
     if version == '2.2' and domain == 'Puerto_Rico':
         divide_attr.rename(columns=column_names_pr, inplace=True)
 
