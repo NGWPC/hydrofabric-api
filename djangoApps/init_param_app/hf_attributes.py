@@ -129,6 +129,32 @@ def get_hydrofabric_attributes(gpkg_file,version,domain):
         divide_attr.loc[divide_attr[attr['name']] > attr['max'], attr['name']] = attr['max']
         divide_attr.loc[divide_attr[attr['name']] < attr['min'], attr['name']] = attr['min']
 
+    #Lookup quartz value by soil type as recommended in the Deltares spreadsheet.  Add
+    #new column for quartz
+    quartz_map = {1: 0.92, #Sand
+              2: 0.82, #Loamy Sand
+              3: 0.6, #Sandy Loam
+              4: 0.25, #Silt Loam
+              5: 0.1, #Silt
+              6: 0.4, #Loam
+              7: 0.6, #Sandy Clay Loam
+              8: 0.1, #Silty Clay Loam
+              9: 0.35, #Clay Loam
+              10: 0.52, #Sandy Clay
+              11: 0.1, #Silty Clay
+              12: 0.25, #Clay
+              13: 0, #Organic Material,
+              14: 0, #Water
+              15: 0, #Bedrock
+              16: 0, #Other
+              17: 0, #Playa
+              18: 0, #Lava
+              19: 0, #White Sand
+              }
+    
+    divide_attr['quartz'] = divide_attr['mode.ISLTYP'].map(quartz_map)
+    print(divide_attr[['mode.ISLTYP','quartz']])
+
     return divide_attr
 
     
