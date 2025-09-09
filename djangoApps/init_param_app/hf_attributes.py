@@ -130,6 +130,7 @@ def get_hydrofabric_attributes(gpkg_file,version,domain):
         divide_attr.loc[divide_attr[attr['name']] < attr['min'], attr['name']] = attr['min']
 
     #Lookup quartz value by soil type as recommended in the Deltares spreadsheet.
+    #Quartz value by soil type source:  https://doi.org/10.1175/1520-0469(1998)055%3C1209:TEOSTC%3E2.0.CO;2
     #Dictionary maps soil type (ISLTYP) to quartz value.   
     #Add a new column in the dataframe for quartz.
     quartz_map = {1: 0.92, #Sand
