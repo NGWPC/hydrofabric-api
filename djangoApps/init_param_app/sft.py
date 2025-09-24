@@ -123,54 +123,18 @@ def create_sft_input(gage_id, version, source, domain, catch_dict, gpkg_file, ou
 
         catID = row['divide_id']
 
-        # Read cfe BMI files to obtain annual mean surface temperature as proxy for initial soil temperature
-        # OBE - This is now just being set as reasonable estimate (from Edwin)
-        ##cfe_bmi_file = os.path.join(cfe_dir, fnmatch.filter(os.listdir(cfe_dir), '*' + catID + '*.txt')[0])
-        #cfe_bmi_file = f"{output_dir}/{catID}_bmi_config.ini"    ##'/home/james.matera/DATA/Hydrofabric/data/temp/cat-1562743_bmi_config_sft.txt'
-        #df = pd.read_table(cfe_bmi_file, delimiter='=', names=["Params", "Values"], index_col=0)
-
-        # Obtain annual mean surface temperature as proxy for initial soil temperature
-        ##csv_file = f"lump_forcing_csv_dir-{catID}.csv"
-        ##fdf = pd.read_table(os.path.join(lump_forcing_csv_dir, catID + '.csv'), delimiter=',') # orig code from YL
-        ##fdf = pd.read_table(csv_file)
-        ##mtemp = round(fdf['T2D'].mean(), 2)
         # This value is just a reasonable estimate per new direction (Edwin)
         mtemp = (45 - 32) * 5/9 + 273.15  ##this is avg soil temp of 45 degrees F converted to Kelvin
-
-        # loop items in row to set/calc sft values
-        smcmax_val = bexp_val = psisat_val = quartz_val = 0.0
-        smcmax_count = bexp_count = psisat_count = quartz_count = 0
-        for key, value in row.items():
-            if key.startswith(attr['smcmax']):
-                smcmax_val += value
-                smcmax_count += 1
-            elif key.startswith(attr['bexp']):
-                bexp_val += value
-                bexp_count += 1
-            elif key.startswith(attr['psisat']):
-                psisat_val += value
-                psisat_count += 1
-            #elif key.startswith('quartz'):
-                #quartz_val += value
-                #quartz_count += 1
-
-        # get avgs for loop items
-        smcmax_avg = smcmax_val / smcmax_count
-        bexp_avg = bexp_val / bexp_count
-        psisat_avg = psisat_val / psisat_count
-        #quartz is missing from 2.2.  Use hardcoded value temporarily
-        #quartz_avg = quartz_val / quartz_count
-        quartz_avg = 1
 
         # Create sft param list
         param_list = ['verbosity=none',
                       'soil_moisture_bmi=1',
                       'end_time=1.[d]',
                       'dt=1.0[h]',
-                      'soil_params.smcmax=' + str(smcmax_avg),
-                      'soil_params.b=' + str(bexp_avg),
-                      'soil_params.satpsi=' + str(psisat_avg),
-                      'soil_params.quartz=' + str(quartz_avg),
+                      'soil_params.smcmax=' + str(row['mean.smcmax_soil_layers_stag=1']),
+                      'soil_params.b=' + str(row['mode.bexp_soil_layers_stag=1']),
+                      'soil_params.satpsi=' + str(row['geom_mean.psisat_soil_layers_stag=1']),
+                      'soil_params.quartz=' + str(row['quartz']),
                       'ice_fraction_scheme=' + icefscheme,
                       'soil_z=0.1,0.3,1.0,2.0[m]',
                       'soil_temperature=' + ','.join([str(mtemp)] * 4) + '[K]',
