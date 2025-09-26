@@ -100,31 +100,12 @@ def create_smp_input(gage_id, version, source, domain, catch_dict, gpkg_file, ou
         # This value is just a reasonable estimate per new direction (Edwin)
         mtemp = (45 - 32) * 5/9 + 273.15  ##this is avg soil temp of 45 degrees F converted to Kelvin
 
-        # loop items in row to set/calc smp values
-        smcmax_val = bexp_val = psisat_val = quartz_val = 0.0
-        smcmax_count = bexp_count = psisat_count = quartz_count = 0
-        for key, value in row.items():
-            if key.startswith(attr['smcmax']):
-                smcmax_val += value
-                smcmax_count += 1
-            elif key.startswith(attr['bexp']):
-                bexp_val += value
-                bexp_count += 1
-            elif key.startswith(attr['psisat']):
-                psisat_val += value
-                psisat_count += 1
-
-        # get avgs for loop items
-        smcmax_avg = smcmax_val / smcmax_count
-        bexp_avg = bexp_val / bexp_count
-        psisat_avg = psisat_val / psisat_count
-
         # Create smp param list
         # Note: verbosity, smcmax, b, satpsi are tracked in CFE param table
         param_list = ['verbosity=none',
-                      'soil_params.smcmax=' + str(smcmax_avg),
-                      'soil_params.b=' + str(bexp_avg),
-                      'soil_params.satpsi=' + str(psisat_avg),
+                      'soil_params.smcmax=' + str(row['mean.smcmax_soil_layers_stag=1']),
+                      'soil_params.b=' + str(row['mode.bexp_soil_layers_stag=1']),
+                      'soil_params.satpsi=' + str(row['geom_mean.psisat_soil_layers_stag=1']),
                       'soil_z=0.1,0.3,1.0,2.0[m]',
                       'soil_moisture_fraction_depth=0.4[m]'
                       ]
@@ -135,7 +116,7 @@ def create_smp_input(gage_id, version, source, domain, catch_dict, gpkg_file, ou
         elif 'TopModel' in modules:
             param_list += ['soil_storage_model=TopModel',
                            'water_table_based_method=flux-based']
-        elif 'lasam' in modules:
+        elif 'LASAM' in modules:
             param_list += ['soil_storage_model=layered',
                            'soil_moisture_profile_option=constant',
                            'soil_depth_layers=2.0',

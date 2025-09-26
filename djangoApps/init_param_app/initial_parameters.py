@@ -47,6 +47,8 @@ def get_ipe(gage_id, version, source, domain, modules, gage_file_mgmt):
     module_output_list = []
     for module in modules:
         found, ipe_json = gage_file_mgmt.ipe_files_exists(gage_id, version, domain, source, module)
+        if module == 'SMP':
+            found = False
         if not found:
             if module in dependent_module_list:
                 module_results = calculate_dependent_module_params(gage_id, version, source, domain, module, modules,
