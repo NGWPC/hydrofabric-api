@@ -63,7 +63,7 @@ jobs:
             uses: docker/build-push-action@v6
             with:
               context: .
-              file: ./docker/Dockerfile-gitlab
+              file: ./Dockerfile-gitlab
               # Load the image to the local Docker daemon, but do not push it
               load: true
               tags: ${{ needs.setup.outputs.image_base }}:${{ needs.setup.outputs.test_image_tag }}
