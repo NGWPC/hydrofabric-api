@@ -1,4 +1,4 @@
-FROM registry.sh.nextgenwaterprediction.com/ngwpc/hydrofabric/hydrofabric:development
+FROM ghcr.io/ngwpc/hydrofabric:latest
 
 # Update packages
 RUN dnf upgrade -y
