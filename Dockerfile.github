@@ -1,0 +1,35 @@
+FROM ghcr.io/ngwpc/hydrofabric_api/hydrofabric:base
+
+# Update packages
+RUN dnf upgrade -y
+
+# Install Python, pip, and Git
+RUN dnf install -y python311 python3.11-pip python3.11-devel
+
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 \
+    && dnf remove pip -y \
+    && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3.11 1
+
+# Copy application files
+COPY ./djangoApps /app/djangoApps
+COPY ./R /app/R
+
+COPY requirements.txt /app
+COPY config.yml /app/config.yml
+COPY VERSION /app/VERSION
+
+# We probably don't need these tests in the built image long term.
+COPY ./tests /app/tests
+
+# Install Python dependencies
+RUN pip install -r /app/requirements.txt
+
+# Set library path and expose port
+ENV LD_LIBRARY_PATH=/usr/local/lib64
+EXPOSE 8000
+
+# Set the working directory
+WORKDIR /app/djangoApps/
+
+# Start the application
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
